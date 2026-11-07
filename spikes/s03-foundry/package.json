@@ -1,0 +1,29 @@
+{
+  "name": "sargas-recap-spike-s03-foundry",
+  "version": "0.0.1",
+  "private": true,
+  "description": "THROWAWAY spike module for S03 (#13): Foundry v14/PF2e hook probe, IndexedDB durability and GM-only journal import. Not production code; must not be imported by src/ or packages/.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "package": "node scripts/build.mjs && node scripts/package.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . && tsc --noEmit"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "@types/node": "^24.19.2",
+    "esbuild": "^0.25.0",
+    "eslint": "^9.39.0",
+    "fake-indexeddb": "^6.2.0",
+    "fflate": "^0.8.2",
+    "typescript": "~5.9.0",
+    "typescript-eslint": "^8.46.0",
+    "vitest": "^4.1.12"
+  }
+}
