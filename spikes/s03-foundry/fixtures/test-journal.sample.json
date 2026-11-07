@@ -1,0 +1,20 @@
+{
+  "schema": "sargas-recap-spike/test-journal@1",
+  "name": "S03 GM-only import test (synthetic)",
+  "pages": [
+    {
+      "name": "Page 1 - GM secret (synthetic)",
+      "paragraphs": [
+        "SYNTHETIC TEST CONTENT. If a player account can read this sentence, GM-only import FAILED.",
+        "Canary token: S03-CANARY-PAGE-1"
+      ]
+    },
+    {
+      "name": "Page 2 - second page (synthetic)",
+      "paragraphs": [
+        "SYNTHETIC TEST CONTENT on a second page, to check page ownership separately.",
+        "Canary token: S03-CANARY-PAGE-2"
+      ]
+    }
+  ]
+}
