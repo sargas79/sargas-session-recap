@@ -1,0 +1,3 @@
+node_modules/
+# live-check output: review, then attach to issue #15 or `git add -f` deliberately
+results/
