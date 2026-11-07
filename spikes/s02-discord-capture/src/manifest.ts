@@ -58,7 +58,8 @@ export type ManifestRecord =
       samples: number;
       duration_ms: number;
       fragment_start_offset_ms: number | null;
-      status: "salvaged" | "empty" | "finalized_unrecorded";
+      /** Terminal: once present for a part_file, recovery never revisits that fragment. */
+      status: "salvaged" | "empty" | "finalized_unrecorded" | "missing";
       recovered_at_wall_iso: string;
     }
   | { type: "event"; t_ms: number; event: string; [k: string]: unknown }

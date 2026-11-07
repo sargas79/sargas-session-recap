@@ -69,7 +69,9 @@ export function analyzeSession(dir: string, windowMs = 3000): MarkResult[] {
       const o = opens.get(r.fragment_id);
       if (o) frags.push({ id: r.fragment_id, label: o.label, start: o.start, end: o.start + r.duration_ms, file: r.final_file });
     }
-    if (r.type === "fragment_recovered" && r.recovered_file && r.fragment_id && r.status === "salvaged") {
+    // Recovered audio counts too: `salvaged` (.part patched) and `finalized_unrecorded` (kill between the
+    // rename and fragment_close: a valid final WAV with no close record). Only empty/missing are skipped.
+    if (r.type === "fragment_recovered" && r.recovered_file && r.fragment_id && (r.status === "salvaged" || r.status === "finalized_unrecorded")) {
       const o = opens.get(r.fragment_id);
       if (o) frags.push({ id: r.fragment_id, label: o.label, start: o.start, end: o.start + r.duration_ms, file: r.recovered_file });
     }

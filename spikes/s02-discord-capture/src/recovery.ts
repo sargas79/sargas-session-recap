@@ -8,8 +8,11 @@
  *     size, any partial trailing sample is cut, and the file is renamed to `*.recovered.wav`;
  *     a zero-sample part becomes `*.wav.empty`;
  *   - fragments renamed to final but whose `fragment_close` never reached the manifest;
+ *   - fragments whose `.part` an earlier, interrupted recovery already renamed to `*.recovered.wav` /
+ *     `*.wav.empty` without recording it;
  *   - fragments with an open record and no file at all (reported as missing).
- * Each action is recorded as a `fragment_recovered` manifest record, so recovery is idempotent.
+ * Each outcome, including `missing`, is appended as a terminal `fragment_recovered` manifest record right
+ * after the action, so recovery is idempotent even if it is itself interrupted part-way.
  *
  * Loss bound: if the kill time is known on the same monotonic clock (kill-test.ts records it), each
  * interrupted fragment reports `loss_ms_if_speaking_at_kill = kill_offset_ms - salvaged_end_offset_ms`.
@@ -64,7 +67,7 @@ function salvagePart(dir: string, partName: string): { samples: number; recovere
     const dataBytes = size > WAV_HEADER_BYTES ? Math.floor((size - WAV_HEADER_BYTES) / blockAlign) * blockAlign : 0;
     if (dataBytes === 0) {
       fs.closeSync(fd);
-      const empty = partName.slice(0, -PART_SUFFIX.length) + ".empty";
+      const empty = recoveredNames(partName).empty;
       fs.renameSync(partPath, path.join(dir, empty));
       return { samples: 0, recovered: empty, status: "empty" };
     }
@@ -72,7 +75,7 @@ function salvagePart(dir: string, partName: string): { samples: number; recovere
     fs.ftruncateSync(fd, WAV_HEADER_BYTES + dataBytes);
     fs.fsyncSync(fd);
     fs.closeSync(fd);
-    const recovered = partName.slice(0, -".wav.part".length) + ".recovered.wav";
+    const recovered = recoveredNames(partName).recovered;
     fs.renameSync(partPath, path.join(dir, recovered));
     return { samples: dataBytes / blockAlign, recovered, status: "salvaged" };
   } catch (e) {
@@ -83,6 +86,14 @@ function salvagePart(dir: string, partName: string): { samples: number; recovere
     }
     throw e;
   }
+}
+
+/** Names salvagePart gives a part: `x.wav.part` -> `x.recovered.wav` / `x.wav.empty`. */
+function recoveredNames(partName: string): { recovered: string; empty: string } {
+  return {
+    recovered: partName.slice(0, -".wav.part".length) + ".recovered.wav",
+    empty: partName.slice(0, -PART_SUFFIX.length) + ".empty",
+  };
 }
 
 function wavSamples(file: string): number {
@@ -122,7 +133,11 @@ export function recoverSession(dir: string, opts: { killHrNs?: bigint; wallNow?:
   const killOffset = opts.killHrNs !== undefined && start?.type === "session_start" ? nsToMs(opts.killHrNs - BigInt(start.t0_hr_ns)) : null;
 
   const interrupted: InterruptedFragment[] = [];
-  const newRecords: ManifestRecord[] = [];
+  const out: { writer: ManifestWriter | null } = { writer: null };
+  const record = (r: ManifestRecord) => {
+    out.writer ??= new ManifestWriter(manifestPath);
+    out.writer.append(r);
+  };
   const files = new Set(fs.readdirSync(dir));
   const handled = new Set<string>();
 
@@ -141,50 +156,57 @@ export function recoverSession(dir: string, opts: { killHrNs?: bigint; wallNow?:
       salvaged_end_offset_ms: end,
       loss_ms_if_speaking_at_kill: killOffset !== null && end !== null ? Math.max(0, killOffset - end) : null,
     });
-    if (status !== "missing") {
-      newRecords.push({
-        type: "fragment_recovered",
-        fragment_id: open?.fragment_id ?? null,
-        part_file: partName,
-        recovered_file: recovered,
-        samples,
-        duration_ms: dur,
-        fragment_start_offset_ms: startMs,
-        status,
-        recovered_at_wall_iso: new Date(wallNow()).toISOString(),
-      });
-    }
+    // Recorded immediately (not batched), so an interruption later in this run cannot orphan this action.
+    record({
+      type: "fragment_recovered",
+      fragment_id: open?.fragment_id ?? null,
+      part_file: partName,
+      recovered_file: recovered,
+      samples,
+      duration_ms: dur,
+      fragment_start_offset_ms: startMs,
+      status,
+      recovered_at_wall_iso: new Date(wallNow()).toISOString(),
+    });
   };
 
-  // 1) .part files on disk.
-  for (const f of [...files].sort()) {
-    if (!f.endsWith(".wav" + PART_SUFFIX) || recoveredParts.has(f)) continue;
-    const open = opens.get(f);
-    const res = salvagePart(dir, f);
-    actions.push(`${f} -> ${res.recovered} (${res.status}, ${res.samples} samples)`);
-    push(open, f, res.status, res.recovered, res.samples);
-    handled.add(f);
-  }
-  // 2) open records whose .part is gone without a close record.
-  for (const [part, open] of opens) {
-    if (closed.has(open.fragment_id) || recoveredParts.has(part) || handled.has(part)) continue;
-    const finalName = part.slice(0, -PART_SUFFIX.length);
-    if (files.has(finalName)) {
-      const samples = wavSamples(path.join(dir, finalName));
-      actions.push(`${finalName} finalized but close record missing`);
-      push(open, part, "finalized_unrecorded", finalName, samples);
-    } else {
-      actions.push(`${open.fragment_id}: open record but no file on disk`);
-      push(open, part, "missing", null, 0);
-    }
-  }
-
   const abnormal = !stopped;
-  if (newRecords.length > 0 || abnormal) {
-    const w = new ManifestWriter(manifestPath);
-    for (const r of newRecords) w.append(r);
-    if (abnormal) w.append({ type: "session_stop", t_ms: lastT ?? 0, reason: "recovered_after_abnormal_end" });
-    w.close();
+  try {
+    // 1) .part files on disk.
+    for (const f of [...files].sort()) {
+      if (!f.endsWith(".wav" + PART_SUFFIX) || recoveredParts.has(f)) continue;
+      const open = opens.get(f);
+      const res = salvagePart(dir, f);
+      actions.push(`${f} -> ${res.recovered} (${res.status}, ${res.samples} samples)`);
+      push(open, f, res.status, res.recovered, res.samples);
+      handled.add(f);
+    }
+    // 2) open records whose .part is gone without a close record.
+    for (const [part, open] of opens) {
+      if (closed.has(open.fragment_id) || recoveredParts.has(part) || handled.has(part)) continue;
+      const finalName = part.slice(0, -PART_SUFFIX.length);
+      const prior = recoveredNames(part);
+      if (files.has(prior.recovered)) {
+        // An earlier recovery salvaged and renamed this part but was interrupted before recording it.
+        const samples = wavSamples(path.join(dir, prior.recovered));
+        actions.push(`${prior.recovered} already salvaged by an interrupted recovery; recording it`);
+        push(open, part, "salvaged", prior.recovered, samples);
+      } else if (files.has(prior.empty)) {
+        actions.push(`${prior.empty} already marked empty by an interrupted recovery; recording it`);
+        push(open, part, "empty", prior.empty, 0);
+      } else if (files.has(finalName)) {
+        const samples = wavSamples(path.join(dir, finalName));
+        actions.push(`${finalName} finalized but close record missing`);
+        push(open, part, "finalized_unrecorded", finalName, samples);
+      } else {
+        actions.push(`${open.fragment_id}: open record but no file on disk`);
+        push(open, part, "missing", null, 0);
+      }
+    }
+
+    if (abnormal) record({ type: "session_stop", t_ms: lastT ?? 0, reason: "recovered_after_abnormal_end" });
+  } finally {
+    out.writer?.close();
   }
   const losses = interrupted.map((i) => i.loss_ms_if_speaking_at_kill).filter((x): x is number => x !== null);
   const report: RecoveryReport = {

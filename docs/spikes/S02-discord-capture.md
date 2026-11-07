@@ -115,7 +115,8 @@ time on a monotonic clock.
 2. **Fragment anchor.** A fragment's first sample is placed at the arrival time of its first Opus packet:
    `fragment_start_offset_ms = round((first_packet_arrival_ns − t0_ns) / 1e6) − latency_compensation_ms`, clamped ≥ 0.
    `latency_compensation_ms` defaults to 0; it can cancel a constant capture→arrival delay measured with the
-   reference marks, but cannot fix jitter.
+   reference marks, but cannot fix jitter. The anchor is the first packet even if it fails to decode; rule 3 then
+   gap-fills before the first successfully decoded frame, so leading decode failures cannot shift audio earlier.
 3. **Silence gaps inside a fragment.** Samples inside a fragment are contiguous at 48 kHz. Discord stops sending during
    silence, so for each packet `drift_ms = arrival − (first_arrival + samples_written / 48 kHz)`. If
    `drift_ms > gap_fill_threshold_ms` (default 100), `floor(drift_ms / 20)` frames of zeros are written first (a gap
@@ -147,7 +148,9 @@ On every startup (and via `npm run recover -- <output_root>`), `recoverAll` scan
 - **Final file without `fragment_close`** (kill between rename and manifest append): reported `finalized_unrecorded`.
 - **`fragment_open` with no file**: reported `missing`.
 - A missing `session_stop` → `abnormal_end: true`; recovery appends `session_stop` (`recovered_after_abnormal_end`).
-  Each action is recorded as `fragment_recovered`, so a second run is a no-op. A `recovery-<stamp>.json` report is
+  Each action (including `missing`) is recorded as `fragment_recovered` immediately after it is taken, and a part that
+  an interrupted recovery already renamed (`*.recovered.wav` / `*.wav.empty`) is recognised on the next run, so a
+  second run is a no-op. A `recovery-<stamp>.json` report is
   written next to the manifest.
 
 **Loss bound measurement (live case 10).** `npm run kill-test -- s02.config.json` starts the harness as a child,
@@ -174,8 +177,16 @@ Discord noise suppression / echo cancellation **off** (Krisp removes beeps). The
 `onset_ms` per speaker (on the session timeline via rule 2/3), `delta_ms` to `mark_beep_playing`, and `spread_ms`
 across speakers.
 
-- **Cross-speaker timing error** = `spread_ms` minus the known acoustic/route difference (assume it is constant and
-  subtract the session median of the per-pair difference). Target ≤ ~100 ms at every mark.
+- **Cross-speaker timing error (absolute alignment)** = raw `spread_ms`, reported as measured. Do **not** subtract a
+  per-pair session median: that removes a systematic recorder misalignment along with the route difference (a track
+  consistently shifted by 400 ms would look perfectly aligned). The raw spread mixes recorder misalignment with the
+  per-participant acoustic/network route difference, and the two can add or cancel, so it is not a bound on either.
+  To isolate misalignment, the route difference must be measured **independently** of the captured tracks (e.g. the
+  local-recording clap fallback below, which gives each participant's own capture→arrival delay) and only that
+  independently measured difference may be subtracted. Without it, absolute alignment is reported as
+  **unresolved**. Target ≤ ~100 ms at every mark.
+- **Cross-speaker stability** = per-pair difference minus its session median. This shows whether alignment is stable
+  over the session (jitter), not whether it is correct; report it separately and never as the alignment result.
 - **Drift** = change of `delta_ms` per speaker from first to last mark. Target ≤ ~100 ms over the session.
 
 Fallback (if acoustic pickup fails): each participant records their own mic locally (Audacity/OBS) and claps 3× at
@@ -236,15 +247,23 @@ detected ____ / ____.
   stop finalizes all, decode-error counting.
 - `offsets.test.ts` — rule 2 anchor/compensation/clamp, rule 3 gap fill and `max_early_ms`, sample alignment after an
   intra-fragment pause, rule 4 re-anchoring after a 10-minute silence, independent anchors for simultaneous speakers,
-  rule 6 reconnect discontinuity (epoch, same t0, gap logged, no gap fill), monotonic event/mark times.
+  rule 6 reconnect discontinuity (epoch, same t0, gap logged, no gap fill), monotonic event/mark times, gap fill
+  before a late first valid frame after leading decode errors.
 - `recovery.test.ts` — simulated forced kill (open `.part` files + truncated manifest line + odd trailing byte):
   tail detection/preservation/truncation, salvage with valid header, loss computation, idempotency, empty part,
-  finalized-but-unrecorded, missing file, multi-session scan.
+  finalized-but-unrecorded, missing file (recorded as terminal, second run a no-op), parts already renamed by an
+  interrupted recovery, multi-session scan.
 - `kill-process.test.ts` — real child process hard-killed while writing; recovery salvages and bounds loss (synthetic).
 - `allowlist.test.ts` — non-allowlisted packets never decoded/written/named; config requires allowlist, rejects
-  duplicates, a token in the file, and an output root inside the repo; token only from env.
+  duplicates, a token in the file, and an output root inside the repo (also when the config file lives outside the
+  checkout); `session_start.params` holds only numeric parameters (no GM/guild/channel IDs, no paths); events after
+  stop are dropped; token only from env.
+- `receive-subscriptions.test.ts` — voice 0.19.2 `subscribe()` semantics: streams destroyed at a discontinuity, no
+  double `data` listener on resubscribe, late `end`/`close` from a replaced stream ignored.
+- `interaction-reply.test.ts` — failures on deferred interactions use `editReply`; reporting never rejects.
+- `hard-kill.test.ts` — kill-test driver refuses a child that already exited instead of hanging.
 - `opus-analyze.test.ts` — opusscript decode/downmix, beep encode→decode round trip, onset detection and per-speaker
-  spread on the session timeline.
+  spread on the session timeline, including fragments recovered as `finalized_unrecorded`.
 
 Passing these says the bookkeeping is right. It says **nothing** about Discord/DAVE reliability, which only the live
 run can show.

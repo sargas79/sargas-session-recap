@@ -96,6 +96,36 @@ describe("startup recovery after forced kill", () => {
     expect(rep.manifest_corrupt_lines.length).toBe(1);
   });
 
+  it("records a missing-file fragment as terminal, so the next startup is a no-op", () => {
+    const k = killedSession();
+    fs.appendFileSync(k.manifest, "\n" + JSON.stringify({ type: "fragment_open", fragment_id: "p1-000004", user_id: P1, label: "p1", epoch: 0, fragment_start_offset_ms: 4990, part_file: "p1_000004.wav.part", t_ms: 4990 }) + "\n");
+    const rep1 = recoverSession(k.dir, { killHrNs: k.killHrNs });
+    expect(rep1.interrupted.find((i) => i.fragment_id === "p1-000004")).toMatchObject({ status: "missing" });
+    const recs = readManifest(k.manifest).records;
+    expect(recs.some((r) => r.type === "fragment_recovered" && r.status === "missing" && r.fragment_id === "p1-000004")).toBe(true);
+    const lines = fs.readFileSync(k.manifest, "utf8");
+    const reports = fs.readdirSync(k.dir).filter((f) => f.startsWith("recovery-")).length;
+    const rep2 = recoverSession(k.dir, { wallNow: () => Date.now() + 60_000 });
+    expect(rep2.actions).toEqual([]);
+    expect(rep2.interrupted).toEqual([]);
+    expect(fs.readFileSync(k.manifest, "utf8")).toBe(lines);
+    expect(fs.readdirSync(k.dir).filter((f) => f.startsWith("recovery-")).length).toBe(reports);
+  });
+
+  it("recognises parts an interrupted recovery already renamed instead of reporting them missing", () => {
+    const k = killedSession();
+    // Recovery #1 renamed both parts, then died before appending any fragment_recovered record.
+    fs.renameSync(path.join(k.dir, "p1_000002.wav.part"), path.join(k.dir, "p1_000002.recovered.wav"));
+    fs.truncateSync(path.join(k.dir, "p2_000003.wav.part"), 44);
+    fs.renameSync(path.join(k.dir, "p2_000003.wav.part"), path.join(k.dir, "p2_000003.wav.empty"));
+    const rep = recoverSession(k.dir, { killHrNs: k.killHrNs });
+    const by = Object.fromEntries(rep.interrupted.map((i) => [i.fragment_id, i]));
+    expect(by["p1-000002"]).toMatchObject({ status: "salvaged", recovered_file: "p1_000002.recovered.wav", samples: 100 * 960, salvaged_end_offset_ms: 4500 });
+    expect(by["p2-000003"]).toMatchObject({ status: "empty", recovered_file: "p2_000003.wav.empty", samples: 0 });
+    expect(rep.interrupted.some((i) => i.status === "missing")).toBe(false);
+    expect(recoverSession(k.dir).actions).toEqual([]);
+  });
+
   it("recoverAll scans every session directory under the output root and ignores clean ones", () => {
     const k = killedSession();
     const clean = makeSession(path.join(k.root, "other-root"), new FakeClock());

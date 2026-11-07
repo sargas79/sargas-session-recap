@@ -80,7 +80,8 @@ export class FragmentTimeline {
    * (rule 3). The caller must then call `commit(decodedSamples)`.
    */
   padBefore(arrivalNs: bigint): number {
-    if (this.samplesWritten === 0) return 0;
+    // No shortcut for samplesWritten === 0: the fragment is anchored at the first packet's arrival even
+    // if that packet failed to decode, so a late first valid frame must be gap-filled too.
     const expectedNs = this.firstArrivalNs + (BigInt(this.samplesWritten) * 1_000_000_000n) / BigInt(SAMPLE_RATE);
     const driftMs = Number(arrivalNs - expectedNs) / 1e6;
     if (driftMs > this.params.gapFillThresholdMs) {

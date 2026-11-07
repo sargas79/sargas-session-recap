@@ -6,6 +6,7 @@
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { fileURLToPath } from "node:url";
 
 export const TOKEN_ENV = "S02_DISCORD_TOKEN";
 
@@ -67,12 +68,54 @@ export class Allowlist {
 
 function findRepoRoot(start: string): string | null {
   let dir = path.resolve(start);
+  // Walk up from the nearest existing ancestor (output_root usually does not exist yet).
+  while (!fs.existsSync(dir)) {
+    const parent = path.dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
   for (;;) {
     if (fs.existsSync(path.join(dir, ".git"))) return dir;
     const parent = path.dirname(dir);
     if (parent === dir) return null;
     dir = parent;
   }
+}
+
+/** Harness package directory; the checkout is located from here, never from the config file location. */
+const HARNESS_DIR = path.dirname(fileURLToPath(import.meta.url));
+
+/**
+ * Git working trees that output_root must not fall inside: the checkout that contains the output path
+ * itself (catches any repository), plus the checkouts containing the harness module and the probe dir
+ * (default: cwd). The config file's directory is deliberately not used: a config stored outside the
+ * checkout must not disable the safeguard.
+ */
+function forbiddenRoots(out: string, probeDir: string): string[] {
+  const roots = [findRepoRoot(out), findRepoRoot(HARNESS_DIR), findRepoRoot(probeDir)];
+  return [...new Set(roots.filter((r): r is string => r !== null))];
+}
+
+function isInside(p: string, root: string): boolean {
+  const rel = path.relative(root, p);
+  return rel === "" || (!rel.startsWith("..") && !path.isAbsolute(rel));
+}
+
+/** Only the numeric session parameters; this is what goes into `session_start.params`. */
+export function sessionParamsOf(cfg: HarnessConfig): {
+  silence_close_ms: number;
+  gap_fill_threshold_ms: number;
+  latency_compensation_ms: number;
+  max_fragment_ms: number;
+  flush_interval_ms: number;
+} {
+  return {
+    silence_close_ms: cfg.silence_close_ms,
+    gap_fill_threshold_ms: cfg.gap_fill_threshold_ms,
+    latency_compensation_ms: cfg.latency_compensation_ms,
+    max_fragment_ms: cfg.max_fragment_ms,
+    flush_interval_ms: cfg.flush_interval_ms,
+  };
 }
 
 export function validateConfig(raw: unknown, opts: { repoProbeDir?: string } = {}): HarnessConfig {
@@ -102,10 +145,12 @@ export function validateConfig(raw: unknown, opts: { repoProbeDir?: string } = {
     if (!Number.isInteger(cfg[k]) || cfg[k] < 0) errors.push(`${k} must be a non-negative integer`);
   }
   if (typeof cfg.output_root === "string" && cfg.output_root !== "") {
-    const root = findRepoRoot(opts.repoProbeDir ?? process.cwd());
     const out = path.resolve(cfg.output_root);
-    if (root && (out === root || out.startsWith(root + path.sep))) {
-      errors.push(`output_root must be outside the git repository (${root}); recordings must never be committed`);
+    for (const root of forbiddenRoots(out, opts.repoProbeDir ?? process.cwd())) {
+      if (isInside(out, root)) {
+        errors.push(`output_root must be outside the git repository (${root}); recordings must never be committed`);
+        break;
+      }
     }
   }
   if (errors.length) throw new Error("invalid S02 config:\n  - " + errors.join("\n  - "));
@@ -113,7 +158,7 @@ export function validateConfig(raw: unknown, opts: { repoProbeDir?: string } = {
 }
 
 export function loadConfig(file: string): HarnessConfig {
-  return validateConfig(JSON.parse(fs.readFileSync(file, "utf8")), { repoProbeDir: path.dirname(path.resolve(file)) });
+  return validateConfig(JSON.parse(fs.readFileSync(file, "utf8")));
 }
 
 /** Reads the token from the environment only. Never log the return value. */

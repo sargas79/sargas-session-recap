@@ -4,7 +4,10 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { FakeClock } from "../src/clock.js";
-import { Allowlist, TOKEN_ENV, readToken, validateConfig } from "../src/config.js";
+import { Allowlist, TOKEN_ENV, loadConfig, readToken, sessionParamsOf, validateConfig } from "../src/config.js";
+import { readManifest } from "../src/manifest.js";
+import { CaptureSession } from "../src/session.js";
+import { fakeDecoder } from "./helpers.js";
 import { P1, STRANGER, makeSession, pkt, talk, tmpDir } from "./helpers.js";
 
 const base = {
@@ -63,6 +66,50 @@ describe("opt-in allowlist enforcement", () => {
   it("config rejects a token in the file and an output_root inside the git repo", () => {
     expect(() => validateConfig({ ...base, output_root: outside, token: "x" }, { repoProbeDir: os.tmpdir() })).toThrow(new RegExp(TOKEN_ENV));
     expect(() => validateConfig({ ...base, output_root: path.join(here, "..", "recordings") }, { repoProbeDir: here })).toThrow(/outside the git repository/);
+  });
+
+  it("output_root safeguard holds when the config file lives outside the checkout", () => {
+    const cfgDir = tmpDir();
+    const cfgFile = path.join(cfgDir, "s02.config.json");
+    const inside = path.join(here, "..", "recordings-test-should-not-exist");
+    fs.writeFileSync(cfgFile, JSON.stringify({ ...base, output_root: inside }));
+    expect(() => loadConfig(cfgFile)).toThrow(/outside the git repository/);
+    // Probe dir outside the repo (e.g. cwd elsewhere): the output path itself still locates the checkout.
+    expect(() => validateConfig({ ...base, output_root: inside }, { repoProbeDir: os.tmpdir() })).toThrow(/outside the git repository/);
+    fs.writeFileSync(cfgFile, JSON.stringify({ ...base, output_root: outside }));
+    expect(loadConfig(cfgFile).output_root).toBe(outside);
+  });
+
+  it("session_start.params holds only numeric session parameters, never config IDs or paths", () => {
+    const cfg = validateConfig({ ...base, output_root: outside }, { repoProbeDir: os.tmpdir() });
+    const params = sessionParamsOf(cfg);
+    expect(Object.keys(params).sort()).toEqual(["flush_interval_ms", "gap_fill_threshold_ms", "latency_compensation_ms", "max_fragment_ms", "silence_close_ms"]);
+    // Even if a caller passes the whole config, CaptureSession must not serialize it.
+    const root = tmpDir();
+    const s = new CaptureSession({
+      outputRoot: root,
+      sessionId: "s02-params",
+      clock: new FakeClock(),
+      allowlist: new Allowlist(cfg.allowlist),
+      params: cfg,
+      decoderFactory: fakeDecoder,
+    });
+    s.stop();
+    const text = fs.readFileSync(path.join(s.dir, "manifest.jsonl"), "utf8");
+    for (const id of [base.gm_user_id, base.guild_id, base.application_id, base.voice_channel_id]) expect(text).not.toContain(id);
+    expect(text).not.toContain("s02-out");
+    const start = readManifest(path.join(s.dir, "manifest.jsonl")).records[0]!;
+    expect(start.type === "session_start" && start.params).toEqual(params);
+  });
+
+  it("events after stop are ignored instead of writing to the closed manifest", () => {
+    const s = makeSession(tmpDir(), new FakeClock());
+    s.stop();
+    expect(() => s.event("late_callback", {})).not.toThrow();
+    expect(() => s.beginDiscontinuity("late")).not.toThrow();
+    const text = fs.readFileSync(path.join(s.dir, "manifest.jsonl"), "utf8");
+    expect(text).not.toContain("late_callback");
+    expect(text).not.toContain("discontinuity_start");
   });
 
   it("token comes only from the environment", () => {

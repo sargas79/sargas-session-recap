@@ -43,6 +43,20 @@ interface Speaker {
   fragment: OpenFragment | null;
 }
 
+const SESSION_PARAM_KEYS = [
+  "silence_close_ms",
+  "gap_fill_threshold_ms",
+  "latency_compensation_ms",
+  "max_fragment_ms",
+  "flush_interval_ms",
+] as const satisfies readonly (keyof SessionParams)[];
+
+export function pickSessionParams(p: SessionParams): Record<(typeof SESSION_PARAM_KEYS)[number], number> {
+  const out = {} as Record<(typeof SESSION_PARAM_KEYS)[number], number>;
+  for (const k of SESSION_PARAM_KEYS) out[k] = p[k];
+  return out;
+}
+
 export type EndReason = "silence" | "rotate" | "discontinuity" | "stop";
 
 export class CaptureSession {
@@ -79,7 +93,9 @@ export class CaptureSession {
       sample_rate: SAMPLE_RATE,
       channels: 1,
       offset_algorithm: OFFSET_ALGORITHM,
-      params: { ...opts.params },
+      // Copy only the known numeric session parameters. Never spread a caller object here: a full
+      // HarnessConfig would leak gm_user_id / guild ids / output path into the manifest.
+      params: pickSessionParams(opts.params),
     });
   }
 
@@ -138,7 +154,7 @@ export class CaptureSession {
 
   /** Voice connection left Ready: close everything, bump epoch (offset algorithm rule 6). */
   beginDiscontinuity(reason: string): void {
-    if (this.discontinuityStartMs !== null) return;
+    if (this.stopped || this.discontinuityStartMs !== null) return;
     for (const sp of this.speakers.values()) {
       if (sp.fragment) this.closeFragment(sp, "discontinuity");
       // Opus decoder state is per stream; start fresh after a reconnect.
@@ -150,18 +166,21 @@ export class CaptureSession {
   }
 
   endDiscontinuity(): void {
-    if (this.discontinuityStartMs === null) return;
+    if (this.stopped || this.discontinuityStartMs === null) return;
     const now = this.nowMs();
     this.event("discontinuity_end", { epoch: this.epoch, start_ms: this.discontinuityStartMs, gap_ms: now - this.discontinuityStartMs });
     this.discontinuityStartMs = null;
   }
 
+  /** No-op after stop(): late Discord callbacks must not write to the closed manifest. */
   event(name: string, fields: Record<string, unknown>): void {
+    if (this.stopped) return;
     this.manifest.append({ type: "event", t_ms: this.nowMs(), event: name, epoch: this.epoch, ...fields });
   }
 
   mark(label: string, extra: Record<string, unknown> = {}): number {
     const t = this.nowMs();
+    if (this.stopped) return t;
     this.manifest.append({ type: "event", t_ms: t, event: "mark", label, epoch: this.epoch, ...extra });
     return t;
   }

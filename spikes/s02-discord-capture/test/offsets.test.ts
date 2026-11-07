@@ -59,6 +59,23 @@ describe("fragment_start_offset_ms (s02-arrival-anchor/1)", () => {
     expect(closes[0]).toMatchObject({ gap_fill_count: 1, gap_fill_ms: 400, duration_ms: 700, end_offset_ms: 1700 });
   });
 
+  it("rule 2+3: a late first valid frame after leading decode errors is gap-filled, not pulled early", () => {
+    const root = tmpDir();
+    const clock = new FakeClock();
+    const s = makeSession(root, clock);
+    clock.advanceMs(1000);
+    s.onPacket(P1, Buffer.alloc(0), clock.nowNs()); // opens the fragment (anchor 1000), fails to decode
+    clock.advanceMs(500);
+    talk(s, clock, P1, 5, 300); // first valid frame arrives at 1500
+    s.stop();
+    const { opens, closes } = frags(s.dir);
+    expect(opens[0]!.fragment_start_offset_ms).toBe(1000);
+    const x = readWavMono(path.join(s.dir, closes[0]!.final_file));
+    const firstLoud = x.findIndex((v) => v === 300);
+    expect(1000 + (firstLoud * 1000) / 48_000).toBe(1500);
+    expect(closes[0]).toMatchObject({ decode_errors: 1, gap_fill_count: 1, gap_fill_ms: 500 });
+  });
+
   it("rule 4: long silence ends the fragment; the next fragment re-anchors without accumulating drift", () => {
     const root = tmpDir();
     const clock = new FakeClock();
