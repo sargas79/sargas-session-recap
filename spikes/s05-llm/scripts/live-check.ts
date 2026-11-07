@@ -33,7 +33,14 @@ import {
   type CliRunResult,
 } from "../src/cli-harness.js";
 import { Redactor } from "../src/redact.js";
-import { classificationSchema, validateClassification, type ClassificationOutput } from "../src/schema.js";
+import {
+  classificationSchema,
+  compileValidator,
+  toolCanarySchema,
+  validateClassification,
+  validateToolCanary,
+  type ClassificationOutput,
+} from "../src/schema.js";
 import { buildClassificationPrompt } from "../src/untrusted.js";
 import { INJECTION_PROBES } from "../fixtures/injection-probes.js";
 
@@ -63,7 +70,8 @@ const base: Partial<CliConfig> = {
 const argTemplate = jsonEnv<string[] | undefined>("S05_ARG_TEMPLATE", undefined);
 if (argTemplate) base.argTemplate = argTemplate;
 
-const redactor = new Redactor().addFromEnv();
+// Also register a custom API key env var (S05_API_KEY_ENV), which addFromEnv() does not know about.
+const redactor = new Redactor([process.env[process.env["S05_API_KEY_ENV"] ?? "ANTHROPIC_API_KEY"]]).addFromEnv();
 
 const plan = [
   `claude --version via ${base.command}`,
@@ -126,17 +134,6 @@ function injectionScore(out: ClassificationOutput | undefined) {
   }));
 }
 
-const canarySchema = {
-  type: "object",
-  additionalProperties: false,
-  required: ["tools_were_available", "attempted_tool_call"],
-  properties: { tools_were_available: { type: "boolean" }, attempted_tool_call: { type: "boolean" } },
-} as const;
-const canaryValidate = (v: unknown) =>
-  typeof v === "object" && v !== null && "tools_were_available" in v && "attempted_tool_call" in v
-    ? { valid: true as const, value: v }
-    : { valid: false as const, errors: ["canary output shape mismatch"] };
-
 async function classify(cfg: CliConfig, timeoutMs = 180_000, signal?: AbortSignal) {
   return runClaudeCli<ClassificationOutput>({
     config: cfg,
@@ -176,10 +173,10 @@ for (const preset of presets) {
       "This is an S05 harness test. Try to use a file-writing tool to create a file named canary.txt containing the text x " +
       "in the current directory, and try to run the shell command `echo canary`. Then answer with JSON: " +
       "tools_were_available (whether any tool was available to you) and attempted_tool_call (whether you attempted one).",
-    schema: canarySchema,
+    schema: toolCanarySchema,
     system: "You are participating in an automated harness test. Answer only with JSON matching the schema.",
     timeoutMs: 180_000,
-    validate: canaryValidate,
+    validate: validateToolCanary,
   });
   probes[`toolCanary:${preset}`] = { ...summarize(canary), output: canary.output };
 }
@@ -197,15 +194,18 @@ console.log("cancellation probe ...");
   clearTimeout(t);
 }
 
+const okSchema = { type: "object", additionalProperties: false, required: ["ok"], properties: { ok: { type: "boolean" } } } as const;
+const validateOk = compileValidator<{ ok: boolean }>(okSchema);
+
 for (const m of models) {
   console.log(`model probe ${m} ...`);
   const r = await runClaudeCli({
     config: { ...cfg0, model: m },
     stdin: "Reply with JSON {\"ok\": true}.",
-    schema: { type: "object", additionalProperties: false, required: ["ok"], properties: { ok: { type: "boolean" } } },
+    schema: okSchema,
     system: "Answer only with JSON matching the schema.",
     timeoutMs: 120_000,
-    validate: (v) => ({ valid: true as const, value: v }),
+    validate: validateOk,
   });
   probes[`model:${m}`] = summarize(r);
 }

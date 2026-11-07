@@ -15,7 +15,8 @@
  *  - Structured output via `output_config.format = { type: "json_schema" }`;
  *    the response is still validated locally with Ajv (never trusted).
  *  - Usage fields captured verbatim from `response.usage`.
- *  - Errors are redacted before they leave this module.
+ *  - Errors, usage, validated output and validation errors are redacted with a
+ *    request-local redactor (which knows the exact key) before they leave this module.
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { Redactor } from "./redact.js";
@@ -86,26 +87,13 @@ export async function runClaudeApi<T>(opts: {
         signal ? { signal } : {},
       )
       .withResponse();
-    const msg = response.data;
-    const common = {
-      model: msg.model,
+    return interpretApiResponse({
+      message: response.data,
       requestId: response.request_id ?? null,
-      stopReason: msg.stop_reason,
-      usage: redactor.redactValue(msg.usage as unknown as Record<string, unknown>),
+      validate,
+      redactor,
       durationMs: Date.now() - started,
-    };
-    if (msg.stop_reason === "refusal") return { ...common, status: "refusal" };
-    if (msg.stop_reason === "max_tokens") return { ...common, status: "max_tokens" };
-    const text = msg.content.flatMap((b) => (b.type === "text" ? [b.text] : [])).join("");
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(text);
-    } catch {
-      return { ...common, status: "non_json", detail: `response text not JSON (${text.length} chars)` };
-    }
-    const v = validate(parsed);
-    if (!v.valid) return { ...common, status: "schema_invalid", validationErrors: v.errors };
-    return { ...common, status: "ok", output: v.value };
+    });
   } catch (e) {
     const durationMs = Date.now() - started;
     if (e instanceof Anthropic.APIUserAbortError) return { status: "cancelled", durationMs };
@@ -113,4 +101,49 @@ export async function runClaudeApi<T>(opts: {
     const status = e instanceof Anthropic.APIError ? ` status=${String(e.status)}` : "";
     return { status: "api_error", detail: `${safe.name}${status}: ${safe.message}`, durationMs };
   }
+}
+
+/** The subset of an SDK `Message` that the harness reads. */
+export interface ApiMessageLike {
+  model: string;
+  stop_reason: string | null;
+  usage: unknown;
+  content: readonly { type: string; text?: string }[];
+}
+
+/**
+ * Turn a Messages API response into a run result. Pure (no network), so it is
+ * unit-tested directly. Everything that leaves this function — usage, the
+ * validated output and validation errors — passes through the request-local
+ * redactor, which knows the exact key in use (including a custom env var).
+ */
+export function interpretApiResponse<T>(o: {
+  message: ApiMessageLike;
+  requestId: string | null;
+  validate: (v: unknown) => { valid: true; value: T } | { valid: false; errors: string[] };
+  redactor: Redactor;
+  durationMs: number;
+}): ApiRunResult<T> {
+  const { message: msg, requestId, validate, redactor, durationMs } = o;
+  const common = {
+    model: redactor.redact(msg.model),
+    requestId,
+    stopReason: msg.stop_reason,
+    usage: redactor.redactValue(msg.usage as Record<string, unknown>),
+    durationMs,
+  };
+  if (msg.stop_reason === "refusal") return { ...common, status: "refusal" };
+  if (msg.stop_reason === "max_tokens") return { ...common, status: "max_tokens" };
+  const text = msg.content.flatMap((b) => (b.type === "text" && typeof b.text === "string" ? [b.text] : [])).join("");
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return { ...common, status: "non_json", detail: `response text not JSON (${text.length} chars)` };
+  }
+  const v = validate(parsed);
+  if (!v.valid) {
+    return { ...common, status: "schema_invalid", validationErrors: redactor.redactValue(v.errors) };
+  }
+  return { ...common, status: "ok", output: redactor.redactValue(v.value) };
 }

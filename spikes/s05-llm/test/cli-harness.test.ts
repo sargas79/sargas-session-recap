@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import type { ChildProcess } from "node:child_process";
 import { afterAll, describe, expect, it } from "vitest";
 import {
+  STDERR_TAIL,
   TOOL_DISABLE_PRESETS,
   buildArgs,
   buildChildEnv,
@@ -272,5 +273,84 @@ describe("runClaudeCli with an injected spawn (no process at all)", () => {
     });
     expect(r.status).toBe("cli_error");
     expect(JSON.stringify(r)).not.toContain(secret);
+  });
+});
+
+describe("review fixes: abort race, stderr redaction and bounds", () => {
+  /** Injected child that writes the given stderr chunks, then exits with `code`. */
+  function stderrChild(chunks: string[], code: number, calls?: { n: number }): SpawnFn {
+    return () => {
+      if (calls) calls.n++;
+      const child = new EventEmitter() as unknown as ChildProcess;
+      const out = new PassThrough();
+      const err = new PassThrough();
+      const inp = new PassThrough();
+      Object.assign(child, { stdout: out, stderr: err, stdin: inp, pid: undefined, kill: () => true });
+      inp.on("finish", async () => {
+        for (const c of chunks) {
+          err.write(c);
+          await new Promise((r) => setImmediate(r));
+        }
+        err.end();
+        out.end();
+        setImmediate(() => child.emit("close", code, null));
+      });
+      inp.resume();
+      return child;
+    };
+  }
+
+  it("an abort while the temp cwd is being created never spawns", async () => {
+    const calls = { n: 0 };
+    const ac = new AbortController();
+    const p = runClaudeCli({
+      config: defaultCliConfig(), stdin: "x", schema: classificationSchema, system: "s", timeoutMs: 5_000,
+      validate: (v) => validateClassification(v), signal: ac.signal, spawnImpl: stderrChild([], 0, calls),
+    });
+    // runClaudeCli is now suspended in `await mkdtemp(...)`, past the first signal check.
+    ac.abort();
+    const r = await p;
+    expect(r.status).toBe("cancelled");
+    expect(calls.n).toBe(0);
+  });
+
+  it("redacts the complete stderr before taking the tail, so a cut cannot expose a secret fragment", async () => {
+    const secret = "opaque-unprefixed-secret-SECRETTAILPART";
+    const stderr = `auth failed with ${secret}` + "y".repeat(STDERR_TAIL - 8);
+    const r = await runClaudeCli({
+      config: defaultCliConfig(), stdin: "x", schema: classificationSchema, system: "s", timeoutMs: 5_000,
+      validate: (v) => validateClassification(v), spawnImpl: stderrChild([stderr], 3), redactor: new Redactor([secret]),
+    });
+    expect(r.status).toBe("exit_nonzero");
+    expect(r.stderrTail.length).toBeLessThanOrEqual(STDERR_TAIL);
+    expect(r.stderrTail).not.toContain("TAILPART");
+  });
+
+  it("caps stderr buffering, stops the run, and drops a possibly split trailing token", async () => {
+    const secret = "opaque-unprefixed-secret-SPLITMEPLEASE";
+    const r = await runClaudeCli({
+      config: defaultCliConfig({ maxStderrBytes: 64 }),
+      stdin: "x", schema: classificationSchema, system: "s", timeoutMs: 5_000,
+      validate: (v) => validateClassification(v),
+      // The first chunk fills the 64-byte cap and ends mid-secret; the next chunk overflows it.
+      spawnImpl: stderrChild(["x".repeat(30) + " noisy " + secret.slice(0, 27), secret.slice(27) + " more\n", "z".repeat(10_000)], 0),
+      redactor: new Redactor([secret]),
+    });
+    expect(r.status).toBe("output_too_large");
+    expect(r.detail).toContain("stderr exceeded 64 bytes");
+    expect(r.stderrTail).toContain("[stderr truncated]");
+    expect(r.stderrTail).not.toContain("opaque-unprefixed");
+    expect(r.stderrTail).not.toContain("SPLITME");
+    expect(r.stderrTail).toContain("noisy");
+  });
+
+  it("getCliVersion redacts full stderr before truncating it", async () => {
+    const stderr = "bad key sk-ant-api03-" + "S".repeat(20) + "LEAKTAIL" + " " + "y".repeat(490);
+    const v = await getCliVersion(
+      { command: "claude", prefixArgs: [], envAllowlist: [], authMode: "subscription-login" },
+      { spawnImpl: stderrChild([stderr], 1) },
+    );
+    expect(v.ok).toBe(false);
+    expect(v.version).not.toContain("LEAKTAIL");
   });
 });

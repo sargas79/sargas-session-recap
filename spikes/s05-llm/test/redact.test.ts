@@ -31,6 +31,16 @@ describe("Redactor", () => {
     expect(out).toContain("Bearer [REDACTED]");
   });
 
+  it("x-api-key pattern keeps JSON escapes intact so redactValue never produces invalid JSON", () => {
+    const fresh = new Redactor();
+    const v = fresh.redactValue({ msg: 'x-api-key=opaque-synthetic-123456" trailing message' });
+    expect(v.msg).toBe(`x-api-key=${REDACTED}" trailing message`);
+    // Double-serialized header (escaped quotes) is still masked and stays valid JSON.
+    const nested = fresh.redactValue({ body: JSON.stringify({ "x-api-key": "opaque-synthetic-abcdef" }) });
+    expect(nested.body).not.toContain("opaque-synthetic-abcdef");
+    expect(JSON.parse(nested.body)).toEqual({ "x-api-key": REDACTED });
+  });
+
   it("reads secrets from known env vars", () => {
     const er = new Redactor().addFromEnv({ ANTHROPIC_API_KEY: TOKEN });
     expect(er.redact(TOKEN)).toBe(REDACTED);

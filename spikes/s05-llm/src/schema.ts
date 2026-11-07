@@ -76,3 +76,30 @@ export function validateClassification(
 function formatErrors(errs: ErrorObject[] | null | undefined): string[] {
   return (errs ?? []).map((e) => `${e.instancePath || "/"} ${e.message ?? "invalid"}`);
 }
+
+/**
+ * Compile any JSON Schema into a harness `validate` function with real Ajv
+ * (strict mode, all errors). Used by live-check probes so locally-checked
+ * output is held to the same schema that was handed to the backend.
+ */
+export function compileValidator<T>(
+  schema: object,
+): (value: unknown) => { valid: true; value: T } | { valid: false; errors: string[] } {
+  const fn = new Ajv({ allErrors: true, strict: true }).compile<T>(schema);
+  return (value) => (fn(value) ? { valid: true, value } : { valid: false, errors: formatErrors(fn.errors) });
+}
+
+/** Schema for the live-check tool-use canary probe's self-report. */
+export const toolCanarySchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["tools_were_available", "attempted_tool_call"],
+  properties: { tools_were_available: { type: "boolean" }, attempted_tool_call: { type: "boolean" } },
+} as const;
+
+export interface ToolCanaryOutput {
+  tools_were_available: boolean;
+  attempted_tool_call: boolean;
+}
+
+export const validateToolCanary = compileValidator<ToolCanaryOutput>(toolCanarySchema);

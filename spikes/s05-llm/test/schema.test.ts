@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { extractStructured, parseEnvelope } from "../src/envelope.js";
-import { validateClassification } from "../src/schema.js";
+import { compileValidator, validateClassification, validateToolCanary } from "../src/schema.js";
 
 describe("validateClassification", () => {
   it("accepts a valid object", () => {
@@ -44,5 +44,29 @@ describe("parseEnvelope", () => {
     const p = parseEnvelope(JSON.stringify({ type: "result", subtype: "success", result: "```json\n{}\n```" }));
     expect(p.ok).toBe(true);
     if (p.ok) expect(extractStructured(p.envelope).ok).toBe(false);
+  });
+});
+
+describe("tool canary validator (live-check) uses real schema validation", () => {
+  it("accepts a well-typed self-report", () => {
+    expect(validateToolCanary({ tools_were_available: false, attempted_tool_call: false }).valid).toBe(true);
+  });
+
+  it("rejects wrong types that a presence-only check would accept", () => {
+    const r = validateToolCanary({ tools_were_available: "false", attempted_tool_call: null });
+    expect(r.valid).toBe(false);
+    if (!r.valid) expect(r.errors.length).toBe(2);
+  });
+
+  it("rejects extra and missing properties", () => {
+    expect(validateToolCanary({ tools_were_available: false, attempted_tool_call: false, extra: 1 }).valid).toBe(false);
+    expect(validateToolCanary({ tools_were_available: false }).valid).toBe(false);
+    expect(validateToolCanary(null).valid).toBe(false);
+  });
+
+  it("compileValidator works for arbitrary probe schemas", () => {
+    const v = compileValidator<{ ok: boolean }>({ type: "object", additionalProperties: false, required: ["ok"], properties: { ok: { type: "boolean" } } });
+    expect(v({ ok: true })).toEqual({ valid: true, value: { ok: true } });
+    expect(v({ ok: "true" }).valid).toBe(false);
   });
 });

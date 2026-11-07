@@ -13,6 +13,8 @@
  *    mode explicitly needs them (prevents silently billing an API key when the
  *    GM intends to use a subscription login, and vice versa).
  *  - Timeout and AbortSignal cancellation kill the whole process tree.
+ *  - stdout and stderr are both byte-capped; stderr is redacted in full before
+ *    the diagnostic tail is taken.
  *  - Output: JSON envelope parsed, structured output validated with Ajv.
  *
  * Nothing here is invoked by the unit tests against a real CLI; tests point
@@ -50,6 +52,8 @@ export interface CliConfig {
   extraEnv?: Record<string, string>;
   /** Max bytes of stdout accepted before the run is aborted. */
   maxStdoutBytes: number;
+  /** Max bytes of stderr buffered; beyond this the run is aborted (output_too_large). */
+  maxStderrBytes: number;
   /** Grace period after kill before the harness stops waiting for 'close'. */
   killGraceMs: number;
 }
@@ -117,6 +121,7 @@ export function defaultCliConfig(overrides: Partial<CliConfig> = {}): CliConfig 
     authMode: "subscription-login",
     envAllowlist: [...DEFAULT_ENV_ALLOWLIST],
     maxStdoutBytes: 10 * 1024 * 1024,
+    maxStderrBytes: 1024 * 1024,
     killGraceMs: 5_000,
     ...overrides,
   };
@@ -191,7 +196,22 @@ export interface RunOptions<T> {
   parentEnv?: NodeJS.ProcessEnv;
 }
 
-const STDERR_TAIL = 4_000;
+export const STDERR_TAIL = 4_000;
+
+/**
+ * Redact the COMPLETE stderr first, then take the tail, so a cut can never
+ * split a secret into an unrecognisable fragment. If the buffer itself was
+ * capped (`truncated`), its last token may be a partial secret: drop
+ * everything after the last whitespace before redacting.
+ */
+export function redactedTail(stderr: string, redactor: Redactor, max: number, truncated = false): string {
+  let text = stderr;
+  if (truncated) {
+    const cut = text.search(/\s\S*$/);
+    text = (cut >= 0 ? text.slice(0, cut + 1) : "") + "[stderr truncated]";
+  }
+  return redactor.redact(text).slice(-max);
+}
 
 export async function runClaudeCli<T>(opts: RunOptions<T>): Promise<CliRunResult<T>> {
   const {
@@ -222,6 +242,11 @@ export async function runClaudeCli<T>(opts: RunOptions<T>): Promise<CliRunResult
 
   const cwd = await mkdtemp(join(tmpdir(), "s05-claude-cwd-"));
   try {
+    // The abort listener is only attached at spawn time and does not replay
+    // an abort that happened while mkdtemp() was pending: re-check here.
+    if (signal?.aborted) {
+      return { ...base, status: "cancelled", durationMs: Date.now() - started, detail: "aborted before spawn" };
+    }
     const raw = await runProcess({
       command: config.command,
       args,
@@ -231,6 +256,7 @@ export async function runClaudeCli<T>(opts: RunOptions<T>): Promise<CliRunResult
       timeoutMs,
       ...(signal ? { signal } : {}),
       maxStdoutBytes: config.maxStdoutBytes,
+      maxStderrBytes: config.maxStderrBytes,
       killGraceMs: config.killGraceMs,
       spawnImpl,
       killTree,
@@ -241,7 +267,7 @@ export async function runClaudeCli<T>(opts: RunOptions<T>): Promise<CliRunResult
       exitCode: raw.exitCode,
       signal: raw.signal,
       durationMs: Date.now() - started,
-      stderrTail: redactor.redact(raw.stderr.slice(-STDERR_TAIL)),
+      stderrTail: redactedTail(raw.stderr, redactor, STDERR_TAIL, raw.stderrTruncated),
       cwdEntriesAfter,
     };
 
@@ -289,6 +315,8 @@ interface ProcessOutcome {
   signal: NodeJS.Signals | null;
   stdout: string;
   stderr: string;
+  /** True when stderr hit maxStderrBytes and later bytes were discarded. */
+  stderrTruncated: boolean;
   detail?: string;
 }
 
@@ -301,6 +329,7 @@ interface RunProcessOptions {
   timeoutMs: number;
   signal?: AbortSignal;
   maxStdoutBytes: number;
+  maxStderrBytes: number;
   killGraceMs: number;
   spawnImpl: SpawnFn;
   killTree: KillTreeFn;
@@ -314,6 +343,8 @@ function runProcess(o: RunProcessOptions): Promise<ProcessOutcome> {
     const out: Buffer[] = [];
     const err: Buffer[] = [];
     let outBytes = 0;
+    let errBytes = 0;
+    let errTruncated = false;
 
     let child: ReturnType<SpawnFn>;
     try {
@@ -333,6 +364,7 @@ function runProcess(o: RunProcessOptions): Promise<ProcessOutcome> {
         signal: null,
         stdout: "",
         stderr: "",
+        stderrTruncated: false,
         detail: (e as Error).message,
       });
       return;
@@ -363,6 +395,7 @@ function runProcess(o: RunProcessOptions): Promise<ProcessOutcome> {
             signal: null,
             stdout: Buffer.concat(out).toString("utf8"),
             stderr: Buffer.concat(err).toString("utf8"),
+            stderrTruncated: errTruncated,
             detail: `${detail}; process did not close within ${o.killGraceMs}ms of kill`,
           }),
         o.killGraceMs,
@@ -382,6 +415,16 @@ function runProcess(o: RunProcessOptions): Promise<ProcessOutcome> {
       out.push(d);
     });
     child.stderr?.on("data", (d: Buffer) => {
+      if (errTruncated) return;
+      errBytes += d.length;
+      if (errBytes > o.maxStderrBytes) {
+        // Keep what fits, discard the rest, stop the run: memory stays bounded.
+        const room = o.maxStderrBytes - (errBytes - d.length);
+        if (room > 0) err.push(d.subarray(0, room));
+        errTruncated = true;
+        terminate("output_too_large", `stderr exceeded ${o.maxStderrBytes} bytes`);
+        return;
+      }
       err.push(d);
     });
     child.once("error", (e) => {
@@ -391,6 +434,7 @@ function runProcess(o: RunProcessOptions): Promise<ProcessOutcome> {
         signal: null,
         stdout: "",
         stderr: Buffer.concat(err).toString("utf8"),
+        stderrTruncated: errTruncated,
         detail: e.message,
       });
     });
@@ -400,6 +444,7 @@ function runProcess(o: RunProcessOptions): Promise<ProcessOutcome> {
         signal: sig,
         stdout: Buffer.concat(out).toString("utf8"),
         stderr: Buffer.concat(err).toString("utf8"),
+        stderrTruncated: errTruncated,
       };
       if (terminating) finish({ ...base, kind: terminating, ...(terminateDetail ? { detail: terminateDetail } : {}) });
       else finish({ ...base, kind: "exited" });
@@ -427,12 +472,14 @@ export async function getCliVersion(
       stdin: "",
       timeoutMs,
       maxStdoutBytes: 64 * 1024,
+      maxStderrBytes: 64 * 1024,
       killGraceMs: 2_000,
       spawnImpl,
       killTree: killProcessTree,
     });
     if (r.kind === "exited" && r.exitCode === 0) return { ok: true, version: r.stdout.trim() };
-    return { ok: false, version: defaultRedactor.redact(`${r.kind} exit=${r.exitCode} ${r.detail ?? ""} ${r.stderr.slice(-500)}`.trim()) };
+    const stderr = redactedTail(r.stderr, defaultRedactor, 500, r.stderrTruncated);
+    return { ok: false, version: defaultRedactor.redact(`${r.kind} exit=${r.exitCode} ${r.detail ?? ""} ${stderr}`.trim()) };
   } finally {
     await rm(cwd, { recursive: true, force: true }).catch(() => undefined);
   }

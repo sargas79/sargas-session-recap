@@ -30,8 +30,10 @@ const PATTERNS: RegExp[] = [
   /\bsk-[A-Za-z0-9_-]{20,}/g,
   // Authorization headers / bearer tokens.
   /(Bearer\s+)[A-Za-z0-9._~+/=-]{12,}/gi,
-  // x-api-key header values in serialized requests.
-  /(x-api-key["']?\s*[:=]\s*["']?)[^\s"',}]{8,}/gi,
+  // x-api-key header values in serialized requests. The prefix tolerates
+  // JSON-escaped quotes (\"x-api-key\":\"...\"); the value excludes `\` so a
+  // following escaped quote stays intact and JSON stays parseable.
+  /(x-api-key\\?["']?\s*[:=]\s*\\?["']?)[^\s"',}\\]{8,}/gi,
 ];
 
 const MIN_SECRET_LEN = 8;
