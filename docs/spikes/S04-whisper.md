@@ -1,0 +1,384 @@
+# S04: whisper.cpp Vulkan on Windows, Portuguese/English benchmark
+
+- Issue: #14 (`S04`, parent #2 `F00`, roadmap #1)
+- Pickup: agent-assisted. The agent wrote the harness in `spikes/s04-whisper/`. The GM runs it on the RX 9070 XT PC
+  and hand-checks accuracy. Every number in this document must come from a recorded run. Blank cells stay blank
+  until then.
+- Blocks: #17 `G01`, #26 `T08`, #47 `T23`
+
+**Outcome: PENDING (human run required)**
+
+## 1. Question
+
+Does whisper.cpp with the Vulkan backend run reliably on the Windows PC (AMD RX 9070 XT)? For Portuguese speech
+with English game terms and names, which model is better: `large-v3-turbo` or `large-v3`? What timestamp and
+confidence data does whisper.cpp actually give us, and how much of it is usable for `low_confidence`, chunking and
+resumability?
+
+## 2. Timebox
+
+2 days of GM time, including model downloads, the hand-checked reference transcript and the runs. If Vulkan is not
+working by the end of day 1, record what happened and set the outcome to FAIL or UNRESOLVED. Do not keep debugging
+drivers past the timebox.
+
+## 3. Harness (what the agent built)
+
+All under `spikes/s04-whisper/` (Node 24, TypeScript run directly by Node, Vitest). Nothing in it downloads
+anything. Every external program is started with an argument array and no shell.
+
+| Script | Purpose |
+|---|---|
+| `npm run bench -- --config <cfg.json> [--dry-run] [--no-hash] [--driver "..."] [--whisper-version "..."]` | Runs models × audio × prompt (none/glossary) × VAD (off/whisper-vad) × optional CPU baseline × repeats. Records wall time, RTF, exit code, output paths, sha256 of binary/models/audio/outputs/prompt, Vulkan lines from stderr, `whisper_print_timings`, PROVISIONAL confidence summary and, when a reference transcript is given, WER/CER/term accuracy. Writes `<outDir>/results.json` and `results.md`. `--dry-run` only prints the commands. |
+| `npm run parse -- <out.json> [--text]` | Parses one whisper.cpp JSON file (`-oj` or `-ojf`) and prints segments (integer ms), token counts and per-segment PROVISIONAL confidence. Prints text only with `--text`. |
+| `npm run score -- --ref ref.txt --hyp out.json [--glossary g.json] [--strip-diacritics]` | WER and CER (S/D/I breakdown) plus count-based term/name accuracy. |
+| `npm run drift -- --whisper ... --model ... --input long.wav --out <dir> [--chunk-sec 20,25,30] [--mode fixed\|pause] [--overlap-ms N] [--dry-run]` | Chunk-boundary and timestamp drift probe. Needs ffmpeg. |
+| `npm run silence -- --input long.wav [--noise-db -35] [--min-silence-ms 500] [--target-ms 25000] [--max-ms 30000]` | ffmpeg `silencedetect` plus a pause-split chunk plan. Outputs timings only. Needs ffmpeg. |
+
+Safety rails: the bench and drift scripts refuse an output directory inside a git checkout, except the git-ignored
+`spikes/s04-whisper/results/`. The spike `.gitignore` also excludes audio and model files. Results contain
+transcripts, so keep them in a private folder such as `D:\s04-private\`.
+
+Normalisation used for scores: lower-case, punctuation removed (intra-word `-` and `'` kept), diacritics **kept** by
+default. The bench also reports a WER with diacritics stripped. CER is computed over normalised characters,
+spaces included. Term accuracy is count-based (per term: min(ref count, hyp count) / ref count). It is not
+alignment-based, so it can over-credit a term that shows up in the wrong place.
+
+JSON shape: the parser and the synthetic fixtures (`spikes/s04-whisper/fixtures/`) were written against the
+`output_json()` writer of whisper.cpp `examples/cli/cli.cpp`, v1.7.x line. **They were not captured from a real run
+and must be re-verified in step 6.** The CLI flags in `src/commands.ts` (`-oj -ojf -of -l --prompt -ng -t -bs -bo
+--vad -vm -vt -vspd -vsd -vp`) must also be checked against `--help` of the pinned binary.
+
+## 4. Procedure for the GM
+
+Keep everything private (audio, references, results, config with local paths) outside the repo, e.g. in
+`D:\s04-private\{audio,reference,results}`. Use only consented samples.
+
+### Step 0: prerequisites
+
+1. Node 24 (`node -v`), then `cd spikes\s04-whisper; npm ci; npm test` (should be green).
+2. **ffmpeg** on `PATH` (or pass `--ffmpeg <path>`). It is required for audio conversion, the drift probe and
+   `silencedetect`. Record `ffmpeg -version` (first line) and where you got it. This also answers G-1 in
+   `docs/implementation-plan.md`.
+3. If you build whisper.cpp yourself: Git, CMake, Visual Studio 2022 Build Tools (C++ workload), the LunarG
+   Vulkan SDK. Record the version of each.
+
+### Step 1: record the environment
+
+```powershell
+Get-CimInstance Win32_VideoController | Select-Object Name, DriverVersion, DriverDate
+Get-CimInstance Win32_OperatingSystem | Select-Object Caption, Version, BuildNumber
+vulkaninfo --summary   # from the Vulkan SDK; note apiVersion and driverVersion of the RX 9070 XT
+```
+
+Also note the AMD Adrenalin version from the AMD Software UI (it is not the same as the Windows `DriverVersion`).
+
+### Step 2: get a Vulkan whisper.cpp binary
+
+Option A: build from source (recommended, because the commit is exact):
+
+```powershell
+git clone https://github.com/ggml-org/whisper.cpp C:\tools\whisper.cpp
+cd C:\tools\whisper.cpp
+git checkout <tag>            # use a release tag; record it
+git rev-parse HEAD            # record
+cmake -B build -DGGML_VULKAN=ON
+cmake --build build --config Release -j
+# binary: build\bin\Release\whisper-cli.exe  (check the path; it may differ between versions)
+```
+
+Option B: a prebuilt binary. Record the exact download URL, release tag, archive sha256 and how you confirmed it
+is a Vulkan build (the log line in step 3). Do not use a binary whose source you cannot name.
+
+Record the binary sha256: `Get-FileHash -Algorithm SHA256 <whisper-cli.exe>` (the bench also records it).
+
+### Step 3: Vulkan smoke test
+
+```powershell
+cd C:\tools\whisper.cpp
+.\build\bin\Release\whisper-cli.exe --help > D:\s04-private\whisper-help.txt
+.\build\bin\Release\whisper-cli.exe -m <model> -f samples\jfk.wav 2> D:\s04-private\smoke-gpu.txt
+.\build\bin\Release\whisper-cli.exe -m <model> -f samples\jfk.wav -ng 2> D:\s04-private\smoke-cpu.txt
+```
+
+Check `smoke-gpu.txt` for `ggml_vulkan` lines that name the RX 9070 XT, and for whether the encoder actually ran on
+the GPU. Compare `whisper_print_timings` between the GPU and CPU runs. If Vulkan is missing or crashes, record the
+exact error, driver and binary, and stop at the timebox (section 2).
+
+### Step 4: models (download manually, then hash)
+
+From the whisper.cpp model repository on Hugging Face (`ggerganov/whisper.cpp`), or with
+`models\download-ggml-model.cmd <name>` from the checkout:
+
+- `ggml-large-v3-turbo.bin`
+- `ggml-large-v3.bin`
+- optional: a quantized variant (e.g. `-q5_0`) if VRAM or speed is an issue. If you test one, record it as its own model.
+- optional, for the VAD comparison: the Silero VAD ggml model (e.g. `ggml-silero-v5.1.2.bin`, via
+  `models\download-vad-model.cmd` if your version has it).
+
+```powershell
+Get-FileHash -Algorithm SHA256 C:\tools\whisper-models\*.bin | Format-List
+```
+
+Compare with the hash published on the Hugging Face file page, if there is one. Write the hashes in table 5.1.
+
+### Step 5: audio, reference and glossary (all private)
+
+1. Convert each sample to 16 kHz mono PCM WAV (the bench reads the WAV header for an exact duration):
+   `ffmpeg -hide_banner -i in.m4a -ar 16000 -ac 1 -c:a pcm_s16le D:\s04-private\audio\excerpt01.wav`
+2. **Excerpt** (3 to 5 min, several speakers, dense with English game terms and character names): write a
+   hand-checked reference transcript `D:\s04-private\reference\excerpt01.txt` (UTF-8, plain text, verbatim, with
+   canonical spellings of terms/names).
+3. **Long file** (20 to 60 min) for RTF and drift. It needs no reference.
+4. Glossary: `D:\s04-private\glossary.json` in the format of `spikes/s04-whisper/fixtures/glossary.example.json`
+   (`kind`: `term` or `name`; `aliases` are accepted spellings), and the exact prompt text in
+   `D:\s04-private\glossary-prompt.txt` (see `fixtures/glossary-prompt.example.txt`). Keep the prompt short:
+   whisper keeps only about 224 tokens of prompt.
+
+### Step 6: verify the JSON shape and flags
+
+```powershell
+whisper-cli.exe -m <turbo> -f D:\s04-private\audio\excerpt01.wav -l pt -oj -ojf -of D:\s04-private\shape-check
+cd <repo>\spikes\s04-whisper
+npm run parse -- D:\s04-private\shape-check.json
+```
+
+- Compare field names and nesting with `fixtures/whisper-ojf.synthetic.json`: `transcription[].offsets.{from,to}`
+  in ms, `timestamps`, `text`, `tokens[].{text,id,p,t_dtw,offsets}`. Note any differences (for example new fields
+  like per-segment no-speech probability). If something differs, fix `src/whisper-json.ts` and the fixtures before
+  you go on.
+- Check every flag in `src/commands.ts` against `whisper-help.txt` from step 3.
+- **Windows prompt encoding check.** Node passes arguments to the process as UTF-16. Whether `whisper-cli`
+  turns them into UTF-8 depends on its `main()`. Check the pinned source
+  (`Select-String -Path examples\cli\cli.cpp -Pattern 'GetCommandLineW|CommandLineToArgvW|wmain'`). Then confirm
+  it in practice: put a made-up accented name that is spoken in the excerpt (e.g. `Zéfirão`) into the prompt and
+  check whether the output spells it with correct accents. Output like `Ã©` or `?` means the prompt was mangled.
+  If it is mangled, record it and use an ASCII-only prompt for the benchmark.
+
+### Step 7: benchmark
+
+1. Copy `fixtures/bench.config.example.json` to `D:\s04-private\bench.config.json` and edit the paths.
+   Use `"repeats": 2` (needed for the determinism check). Set `"includeCpuBaseline": true` on the excerpt only if
+   you want a CPU reference (slow).
+2. Dry run, and check the commands:
+   `npm run bench -- --config D:\s04-private\bench.config.json --dry-run`
+3. Real run (the driver and version are copied into the results as given; the harness never guesses them):
+   `npm run bench -- --config D:\s04-private\bench.config.json --driver "Adrenalin <x.y.z> / <DriverVersion>" --whisper-version "<tag> <commit>"`
+4. Keep `results.json`/`results.md` private. Copy only the **numbers** (no transcript text) into section 5.
+
+RTF in the table is wall time (including model load) divided by audio duration. `whisper_print_timings` in
+`results.json` gives the load/encode/decode split, so record both if model load dominates on short files.
+
+### Step 8: hand-check
+
+1. Read the transcripts of the excerpt for each model with and without the glossary prompt. Note systematic errors
+   (terms, names, numbers, code-switching, crosstalk, hallucinated text in silence or music).
+2. Confidence: for the turbo and large `-ojf` outputs of the excerpt, run `npm run parse -- <out.json> --text` and
+   mark each segment as actually wrong or OK. Count, per model, how many segments flagged `lowConfidence: yes` were
+   wrong (true positives), how many flagged ones were fine (false positives), and how many wrong segments were not
+   flagged (misses). If the PROVISIONAL thresholds (`minTokenP 0.35`, `meanTokenP 0.7` in `src/confidence.ts`) are
+   clearly off, try others in the parse script and record what works better.
+
+### Step 9: chunk-boundary and drift probe
+
+```powershell
+npm run drift -- --whisper <whisper-cli.exe> --model <best model> --input D:\s04-private\audio\long01.wav --out D:\s04-private\results\drift-fixed --chunk-sec 20,25,30 --mode fixed
+npm run drift -- --whisper <whisper-cli.exe> --model <best model> --input D:\s04-private\audio\long01.wav --out D:\s04-private\results\drift-pause --chunk-sec 20,25,30 --mode pause
+# optional: --overlap-ms 1000 (fixed mode) and --vad-model <silero.bin>
+```
+
+Each run transcribes the whole file once as the reference timeline, then each chunk on its own, and compares them
+(`drift-summary.md` plus `drift-<mode>-<sec>s.json`). It reports start/end offsets for interior vs near-boundary
+segments, segments that end past their chunk, non-monotonic or zero-length segments, word differences within
+±2 s of each boundary, and overall WER between the full and the chunked transcript. Spot-check a few boundaries by
+ear.
+
+### Step 10: VAD and pause-split comparison
+
+1. `npm run silence -- --input D:\s04-private\audio\long01.wav --out D:\s04-private\results\silence-35.json` with
+   `--noise-db -30`, `-35`, `-40` and `--min-silence-ms 300`, `500`, `800`. Record the number of pauses and of hard
+   cuts (chunks with no pause available).
+2. Compare with the bench results for `vad-off` vs `vad-whisper-vad` (WER, RTF, hallucinated text in silence) and
+   with the `--mode pause` drift results.
+
+### Step 11: record and decide
+
+Fill in section 5 and 6, list limitations, set the outcome line at the top, and post `Outcome: PASS | FAIL |
+UNRESOLVED` as the last comment on #14, with links to this document. Never commit audio, transcripts or
+`results.json`.
+
+## 5. Results (to be filled in by the GM)
+
+### 5.1 Environment and provenance
+
+| Item | Value |
+|---|---|
+| Date of runs | |
+| Windows version / build | |
+| GPU | |
+| AMD Adrenalin version | |
+| Windows `DriverVersion` | |
+| Vulkan `apiVersion` / `driverVersion` (vulkaninfo) | |
+| whisper.cpp tag and commit | |
+| Binary source (built: CMake / MSVC / Vulkan SDK versions; or prebuilt: URL + archive sha256) | |
+| `whisper-cli.exe` sha256 | |
+| ffmpeg version and source | |
+| `ggml-large-v3-turbo.bin` sha256 / size | |
+| `ggml-large-v3.bin` sha256 / size | |
+| Other models (quantized, VAD) sha256 | |
+| Glossary prompt sha256 (from `results.json`) | |
+| Prompt diacritics passed intact on Windows? (step 6) | |
+| JSON shape matches fixture? Differences: | |
+
+### 5.2 Vulkan reliability
+
+| Check | Result |
+|---|---|
+| Vulkan device detected (log line) | |
+| GPU vs CPU encode time on jfk.wav | |
+| Crashes / hangs / driver resets across all runs | |
+| Long file (≥ 20 min) completes on GPU | |
+| Output identical across repeats (compare `jsonSha256` of r1 vs r2) | |
+| VRAM use, peak (Task Manager / Adrenalin) turbo / large | |
+
+### 5.3 Speed (long file, GPU)
+
+| Model | Prompt | VAD | Audio duration (s) | Wall (s) r1 / r2 | RTF r1 / r2 | Load ms | Encode ms | Decode ms |
+|---|---|---|---|---|---|---|---|---|
+| large-v3-turbo | none | off | | | | | | |
+| large-v3-turbo | glossary | off | | | | | | |
+| large-v3-turbo | none | whisper-vad | | | | | | |
+| large-v3 | none | off | | | | | | |
+| large-v3 | glossary | off | | | | | | |
+| large-v3 | none | whisper-vad | | | | | | |
+| (CPU baseline, optional) | | | | | | | | |
+
+### 5.4 Accuracy on the hand-checked excerpt
+
+Excerpt length: ____ s, ____ reference words, ____ glossary-term occurrences, ____ name occurrences.
+
+| Model | Prompt | VAD | WER | WER (no diacritics) | CER | Term accuracy | Name accuracy | Notable errors (no private text) |
+|---|---|---|---|---|---|---|---|---|
+| large-v3-turbo | none | off | | | | | | |
+| large-v3-turbo | glossary | off | | | | | | |
+| large-v3-turbo | glossary | whisper-vad | | | | | | |
+| large-v3 | none | off | | | | | | |
+| large-v3 | glossary | off | | | | | | |
+| large-v3 | glossary | whisper-vad | | | | | | |
+
+### 5.5 Drift / chunk boundaries (from `drift-summary.md`)
+
+| Mode | Chunk s | Chunks | Hard cuts | Interior mean abs Δstart ms | Boundary mean abs Δstart ms | Boundary max abs Δstart ms | Issues (end past chunk, non-monotonic, zero length) | Mean boundary WER | Overall WER full vs chunked |
+|---|---|---|---|---|---|---|---|---|---|
+| fixed | 20 | | n/a | | | | | | |
+| fixed | 25 | | n/a | | | | | | |
+| fixed | 30 | | n/a | | | | | | |
+| pause | 20 | | | | | | | | |
+| pause | 25 | | | | | | | | |
+| pause | 30 | | | | | | | | |
+| fixed + overlap ___ ms (optional) | | | | | | | | | |
+
+### 5.6 Confidence vs hand-check (excerpt, `-ojf`)
+
+| Model | Segments | Actually wrong | Flagged | Flagged and wrong | Flagged but fine | Wrong but not flagged | Thresholds used |
+|---|---|---|---|---|---|---|---|
+| large-v3-turbo | | | | | | | |
+| large-v3 | | | | | | | |
+
+### 5.7 VAD / pause detection
+
+| Method | Settings | Pauses found | Hard cuts at 30 s max | Effect on WER (excerpt) | Effect on RTF (long) | Text hallucinated in silence? |
+|---|---|---|---|---|---|---|
+| none | | n/a | | | | |
+| whisper.cpp built-in VAD (Silero) | threshold / min speech / min silence | n/a | n/a | | | |
+| ffmpeg silencedetect | -30 dB / 500 ms | | | n/a | n/a | n/a |
+| ffmpeg silencedetect | -35 dB / 500 ms | | | n/a | n/a | n/a |
+| ffmpeg silencedetect | -40 dB / 500 ms | | | n/a | n/a | n/a |
+
+## 6. Findings (to be filled in from the measurements)
+
+### 6.1 Timestamp findings
+
+What the agent can say before any run, from the output format only (to be confirmed):
+
+- `-oj` gives segment-level `offsets.from/to` in integer milliseconds and SRT-style strings. Internally whisper.cpp
+  works in 10 ms units, so expect values that are multiples of 10 ms.
+- `-ojf` adds per-token offsets, `id`, probability `p` and `t_dtw`. `t_dtw` is -1 unless `--dtw <model>` is given.
+  Without DTW, token times come from whisper's timestamp heuristics, so treat them as approximate.
+- Word-level output can also come from `--max-len 1` / `--split-on-word`, which re-segments the output. That
+  changes segment counts, so it would need its own run if word timing matters.
+
+GM to fill in:
+
+- Segment vs token/word timestamp accuracy (spot-checked by ear at ___ points): 
+- Drift over the long file (do full-file timestamps stay aligned to the audio at the end?): 
+- Behaviour at chunk boundaries (cut words, repeated words, segments past the chunk end): 
+- Segments in silence/music (hallucinations), and whether VAD removes them: 
+- Anything T09 must validate or reject (e.g. `end < start`, `end > chunk duration`, non-monotonic starts): 
+
+### 6.2 Confidence findings
+
+- Token probability `p` available: yes / no (only with `-ojf`).
+- Does a low `p` match the segments that are actually wrong (table 5.6)? 
+- Recommended `low_confidence` rule and thresholds for T09 (or "not useful: do not use"): 
+- Other signals worth keeping (e.g. language detection, no-speech probability if present in this version): 
+
+### 6.3 Recommended chunk length and pause-split strategy
+
+GM to fill in from 5.5 and 5.7. Questions to answer:
+
+- Chunk length (the issue proposes a 20 to 30 s default): ____ s target, ____ s maximum, ____ s minimum.
+- Split rule: cut at the midpoint of a detected pause nearest the target (`planPauseChunks` in `src/drift.ts`), and
+  hard-cut at the maximum when there is none? Keep chunks contiguous (no audio removed), so the chunk-to-source
+  map is a pure offset? Or remove long silences, which needs piecewise maps in T08?
+- Overlap at hard cuts: needed? If yes, how much, and how should duplicated words be de-duplicated?
+- Pause detector: ffmpeg `silencedetect` (settings: ____ dB, ____ ms) vs whisper.cpp built-in VAD vs both
+  (silencedetect for planning cuts, built-in VAD inside each chunk). Note: whisper.cpp VAD runs inside whisper
+  and does not hand cut points back to us, so it cannot replace a planner that T08 controls. It can only reduce
+  hallucination within a chunk.
+- Short speech: confirm that short utterances (< 1 s) between pauses survive both VAD settings.
+
+### 6.4 Resumability inputs (what to hash per chunk)
+
+Proposed for T08/T09/T23. The GM should confirm or correct this, mainly by checking determinism (5.2):
+
+| Input | Why |
+|---|---|
+| sha256 of the chunk's decoded 16 kHz mono PCM, or source file sha256 + chunk start/end ms + decode params + ffmpeg version | Same audio in means same result; ffmpeg version can change resampling. |
+| Chunk plan params (target/max/min length, overlap, silencedetect noise dB and min duration) | A changed plan moves boundaries. |
+| whisper.cpp version/commit + binary sha256 | Decoding changes between versions. |
+| Model file sha256 | Turbo vs large, quantization. |
+| VAD on/off, VAD model sha256 and VAD params | Changes what is transcribed. |
+| Backend/device (Vulkan vs CPU, device index) | Floating-point differences may change output; confirm with the determinism check. |
+| Full argument vector, normalised (language, beam size, best-of, temperature, `-ojf`, max-len, split-on-word) | Any decode param changes output. |
+| sha256 of the exact prompt text (UTF-8, normalised line endings) | The glossary prompt changes output; T09 must allow explicit re-transcription after a glossary change. |
+| Parser/schema version of the stored output | Re-parse vs re-run. |
+| Thread count | Only if the determinism check shows it changes output. |
+
+### 6.5 Known limitations
+
+Of the harness (agent):
+
+- The JSON shape, flags and stderr line formats are taken from the v1.7.x source, not a real run. Step 6 checks
+  them.
+- Term accuracy is count-based, not aligned.
+- The drift comparison is segment-level and text-matched (word Jaccard ≥ 0.5). It is approximate, and with overlap
+  enabled the duplicated words show up as insertions in the overall WER.
+- The confidence thresholds are placeholders until step 8.
+- RTF includes process start and model load.
+- `vulkanMentioned` / `cpuFallbackSuspected` are text heuristics over stderr. The raw stderr is kept and is the
+  evidence.
+
+Of whisper.cpp / the setup (GM to fill in):
+
+- 
+
+## 7. Recommendation (GM to fill in)
+
+- Model: 
+- Invocation (exact flags): 
+- Prompt: with / without glossary, and the size limit: 
+- Chunking: 
+- Confidence: 
+- Pinned versions for `tools.lock.json` (#47 `T23`): binary source + sha256, model sha256, VAD model sha256: 
+
+**Outcome: PENDING (human run required)**

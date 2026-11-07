@@ -1,0 +1,69 @@
+{
+  "systeminfo": "WHISPER : COREML = 0 | OPENVINO = 0 | CPU : SSE3 = 1 | AVX2 = 1 | (SYNTHETIC FIXTURE)",
+  "model": {
+    "type": "large",
+    "multilingual": true,
+    "vocab": 51866,
+    "audio": { "ctx": 1500, "state": 1280, "head": 20, "layer": 32 },
+    "text": { "ctx": 448, "state": 1280, "head": 20, "layer": 32 },
+    "mels": 128,
+    "ftype": 1
+  },
+  "params": {
+    "model": "models/ggml-large-v3.bin",
+    "language": "pt",
+    "translate": false
+  },
+  "result": {
+    "language": "pt"
+  },
+  "transcription": [
+    {
+      "timestamps": { "from": "00:00:00,000", "to": "00:00:02,500" },
+      "offsets": { "from": 0, "to": 2500 },
+      "text": " O Valeros fica flat-footed.",
+      "tokens": [
+        { "text": "[_BEG_]", "timestamps": { "from": "00:00:00,000", "to": "00:00:00,000" }, "offsets": { "from": 0, "to": 0 }, "id": 50365, "p": 0.912, "t_dtw": -1 },
+        { "text": " O", "timestamps": { "from": "00:00:00,000", "to": "00:00:00,300" }, "offsets": { "from": 0, "to": 300 }, "id": 422, "p": 0.981, "t_dtw": -1 },
+        { "text": " Val", "timestamps": { "from": "00:00:00,300", "to": "00:00:00,700" }, "offsets": { "from": 300, "to": 700 }, "id": 7188, "p": 0.902, "t_dtw": -1 },
+        { "text": "eros", "timestamps": { "from": "00:00:00,700", "to": "00:00:01,100" }, "offsets": { "from": 700, "to": 1100 }, "id": 35045, "p": 0.874, "t_dtw": -1 },
+        { "text": " fica", "timestamps": { "from": "00:00:01,100", "to": "00:00:01,500" }, "offsets": { "from": 1100, "to": 1500 }, "id": 21005, "p": 0.993, "t_dtw": -1 },
+        { "text": " flat", "timestamps": { "from": "00:00:01,500", "to": "00:00:01,900" }, "offsets": { "from": 1500, "to": 1900 }, "id": 4962, "p": 0.951, "t_dtw": -1 },
+        { "text": "-", "timestamps": { "from": "00:00:01,900", "to": "00:00:02,000" }, "offsets": { "from": 1900, "to": 2000 }, "id": 12, "p": 0.962, "t_dtw": -1 },
+        { "text": "footed", "timestamps": { "from": "00:00:02,000", "to": "00:00:02,400" }, "offsets": { "from": 2000, "to": 2400 }, "id": 31226, "p": 0.944, "t_dtw": -1 },
+        { "text": ".", "timestamps": { "from": "00:00:02,400", "to": "00:00:02,500" }, "offsets": { "from": 2400, "to": 2500 }, "id": 13, "p": 0.889, "t_dtw": -1 },
+        { "text": "[_TT_125]", "timestamps": { "from": "00:00:02,500", "to": "00:00:02,500" }, "offsets": { "from": 2500, "to": 2500 }, "id": 50490, "p": 0.611, "t_dtw": -1 }
+      ]
+    },
+    {
+      "timestamps": { "from": "00:00:02,500", "to": "00:00:05,800" },
+      "offsets": { "from": 2500, "to": 5800 },
+      "text": " Ele usa Shield Block contra o ogro.",
+      "tokens": [
+        { "text": " Ele", "timestamps": { "from": "00:00:02,500", "to": "00:00:02,800" }, "offsets": { "from": 2500, "to": 2800 }, "id": 15349, "p": 0.972, "t_dtw": -1 },
+        { "text": " usa", "timestamps": { "from": "00:00:02,800", "to": "00:00:03,100" }, "offsets": { "from": 2800, "to": 3100 }, "id": 29909, "p": 0.958, "t_dtw": -1 },
+        { "text": " Shield", "timestamps": { "from": "00:00:03,100", "to": "00:00:03,700" }, "offsets": { "from": 3100, "to": 3700 }, "id": 29972, "p": 0.412, "t_dtw": -1 },
+        { "text": " Block", "timestamps": { "from": "00:00:03,700", "to": "00:00:04,200" }, "offsets": { "from": 3700, "to": 4200 }, "id": 17500, "p": 0.533, "t_dtw": -1 },
+        { "text": " contra", "timestamps": { "from": "00:00:04,200", "to": "00:00:04,700" }, "offsets": { "from": 4200, "to": 4700 }, "id": 10742, "p": 0.967, "t_dtw": -1 },
+        { "text": " o", "timestamps": { "from": "00:00:04,700", "to": "00:00:04,900" }, "offsets": { "from": 4700, "to": 4900 }, "id": 277, "p": 0.985, "t_dtw": -1 },
+        { "text": " og", "timestamps": { "from": "00:00:04,900", "to": "00:00:05,300" }, "offsets": { "from": 4900, "to": 5300 }, "id": 5360, "p": 0.802, "t_dtw": -1 },
+        { "text": "ro", "timestamps": { "from": "00:00:05,300", "to": "00:00:05,700" }, "offsets": { "from": 5300, "to": 5700 }, "id": 340, "p": 0.913, "t_dtw": -1 },
+        { "text": ".", "timestamps": { "from": "00:00:05,700", "to": "00:00:05,800" }, "offsets": { "from": 5700, "to": 5800 }, "id": 13, "p": 0.871, "t_dtw": -1 }
+      ]
+    },
+    {
+      "timestamps": { "from": "00:00:05,800", "to": "00:00:08,200" },
+      "offsets": { "from": 5800, "to": 8200 },
+      "text": " Hmm, talvez Absalão?",
+      "tokens": [
+        { "text": " Hmm", "timestamps": { "from": "00:00:05,800", "to": "00:00:06,300" }, "offsets": { "from": 5800, "to": 6300 }, "id": 8239, "p": 0.355, "t_dtw": -1 },
+        { "text": ",", "timestamps": { "from": "00:00:06,300", "to": "00:00:06,400" }, "offsets": { "from": 6300, "to": 6400 }, "id": 11, "p": 0.611, "t_dtw": -1 },
+        { "text": " talvez", "timestamps": { "from": "00:00:06,400", "to": "00:00:06,900" }, "offsets": { "from": 6400, "to": 6900 }, "id": 23484, "p": 0.705, "t_dtw": -1 },
+        { "text": " Abs", "timestamps": { "from": "00:00:06,900", "to": "00:00:07,400" }, "offsets": { "from": 6900, "to": 7400 }, "id": 25075, "p": 0.211, "t_dtw": -1 },
+        { "text": "al", "timestamps": { "from": "00:00:07,400", "to": "00:00:07,700" }, "offsets": { "from": 7400, "to": 7700 }, "id": 304, "p": 0.398, "t_dtw": -1 },
+        { "text": "ão", "timestamps": { "from": "00:00:07,700", "to": "00:00:08,100" }, "offsets": { "from": 7700, "to": 8100 }, "id": 2851, "p": 0.287, "t_dtw": -1 },
+        { "text": "?", "timestamps": { "from": "00:00:08,100", "to": "00:00:08,200" }, "offsets": { "from": 8100, "to": 8200 }, "id": 30, "p": 0.744, "t_dtw": -1 }
+      ]
+    }
+  ]
+}

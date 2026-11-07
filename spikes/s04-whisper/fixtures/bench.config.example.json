@@ -1,0 +1,33 @@
+{
+  "whisperBin": "C:/tools/whisper.cpp/build/bin/Release/whisper-cli.exe",
+  "models": [
+    { "id": "large-v3-turbo", "path": "C:/tools/whisper-models/ggml-large-v3-turbo.bin" },
+    { "id": "large-v3", "path": "C:/tools/whisper-models/ggml-large-v3.bin" }
+  ],
+  "audio": [
+    {
+      "id": "excerpt01",
+      "path": "D:/s04-private/audio/excerpt01.wav",
+      "referenceTextFile": "D:/s04-private/reference/excerpt01.txt"
+    },
+    { "id": "long01", "path": "D:/s04-private/audio/long01.wav" }
+  ],
+  "language": "pt",
+  "promptVariants": ["none", "glossary"],
+  "glossaryPromptFile": "D:/s04-private/glossary-prompt.txt",
+  "glossaryFile": "D:/s04-private/glossary.json",
+  "vadVariants": ["off", "whisper-vad"],
+  "vad": {
+    "modelPath": "C:/tools/whisper-models/ggml-silero-v5.1.2.bin",
+    "threshold": 0.5,
+    "minSpeechMs": 250,
+    "minSilenceMs": 500
+  },
+  "includeCpuBaseline": false,
+  "threads": 8,
+  "fullJson": true,
+  "repeats": 2,
+  "timeoutSec": 3600,
+  "extraArgs": [],
+  "outDir": "D:/s04-private/results/run-01"
+}
