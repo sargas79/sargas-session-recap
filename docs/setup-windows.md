@@ -132,6 +132,10 @@ The audio integration tests generate synthetic sine + silence WAVs with ffmpeg a
 ffmpeg they are skipped locally (the test run prints `[audio integration] SKIPPED`); in CI, where the
 workflow installs ffmpeg, they must run.
 
+After changing a contract in `packages/contracts/src`, regenerate the committed JSON Schemas with
+`npm run schemas -w @sargas-recap/contracts` (see `docs/adr/README.md`). `npm test` fails if they are
+stale.
+
 ## Data location
 
 Never put real session recordings or transcripts inside the repository. `sessions/`, audio files,

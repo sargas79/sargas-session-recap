@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sargas-recap:schema:classification-result:v1",
+  "title": "Classification result",
+  "$comment": "Generated from packages/contracts/src by npm run schemas. Do not edit. Stored as: classify/<classification_run_id>/results.jsonl (one record per line).",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "enum": [
+              "mixed",
+              "uncertain"
+            ]
+          }
+        },
+        "required": [
+          "label"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "review_required": {
+            "const": true
+          }
+        }
+      }
+    }
+  ],
+  "type": "object",
+  "required": [
+    "schema_version",
+    "classification_run_id",
+    "transcription_run_id",
+    "segment_id",
+    "window_index",
+    "label",
+    "review_required",
+    "corrections",
+    "event_ids",
+    "flags"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Per-record schema version (ADR-002).",
+      "const": 1,
+      "type": "number"
+    },
+    "classification_run_id": {
+      "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$",
+      "type": "string"
+    },
+    "transcription_run_id": {
+      "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$",
+      "description": "Input run; must prefix segment_id (ADR-004).",
+      "type": "string"
+    },
+    "segment_id": {
+      "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}:(?:0|[1-9][0-9]{0,15}):(?:0|[1-9][0-9]{0,15})$",
+      "description": "<transcription_run_id>:<chunk_index>:<n> (ADR-004).",
+      "type": "string"
+    },
+    "window_index": {
+      "minimum": 0,
+      "maximum": 9007199254740991,
+      "type": "integer"
+    },
+    "label": {
+      "description": "Classification label (T11).",
+      "type": "string",
+      "enum": [
+        "ic",
+        "narration",
+        "rules",
+        "ooc",
+        "mixed",
+        "uncertain"
+      ]
+    },
+    "review_required": {
+      "description": "Always true for mixed and uncertain.",
+      "type": "boolean"
+    },
+    "text_corrected": {
+      "minLength": 1,
+      "maxLength": 20000,
+      "description": "text_original with corrections applied.",
+      "type": "string"
+    },
+    "corrections": {
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "kind",
+          "from",
+          "to"
+        ],
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "name",
+              "term",
+              "spelling"
+            ]
+          },
+          "from": {
+            "minLength": 1,
+            "maxLength": 200,
+            "type": "string"
+          },
+          "to": {
+            "minLength": 1,
+            "maxLength": 200,
+            "type": "string"
+          },
+          "glossary_id": {
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+            "description": "Glossary entry that justified it (T04).",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "event_ids": {
+      "uniqueItems": true,
+      "description": "Foundry events used as evidence; only with verified alignment (T18).",
+      "type": "array",
+      "items": {
+        "pattern": "^fvtt:[0-7][0-9A-HJKMNP-TV-Z]{25}:(?:0|[1-9][0-9]{0,15})$",
+        "description": "fvtt:<capture_id>:<seq> (ADR-004).",
+        "type": "string"
+      }
+    },
+    "flags": {
+      "uniqueItems": true,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "names_unmatched",
+          "event_context_used",
+          "low_asr_confidence",
+          "possible_spoiler"
+        ]
+      }
+    }
+  }
+}

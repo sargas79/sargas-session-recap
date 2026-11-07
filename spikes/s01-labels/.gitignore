@@ -1,0 +1,3 @@
+node_modules/
+# Real labels must never be committed. Keep them outside the repo; this is a backstop.
+*.real.json

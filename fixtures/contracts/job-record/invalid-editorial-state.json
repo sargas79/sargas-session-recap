@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "job_id": "01JBX8A1B2C3D4E5F6G7H8J9KA",
+  "campaign_id": "abomination-vaults",
+  "session_id": "s07",
+  "stage": "classify",
+  "status": "succeeded",
+  "attempt": 1,
+  "max_attempts": 3,
+  "inputs": [
+    {
+      "kind": "artifact",
+      "ref": "transcript/01JBX7Q8M2N4P6R8S0T2V4W6XY/segments.jsonl",
+      "hash": "sha256:08fddbc83d3de346b066c02bde82e898a0a75742cdc23c0b87706152c6facebd"
+    },
+    {
+      "kind": "prompt",
+      "ref": "classify/v1",
+      "hash": "sha256:cf07194ee232eb531e15f690000d19846dea69cf05504782658afcfacb9228a2"
+    },
+    {
+      "kind": "glossary",
+      "ref": "abomination-vaults",
+      "hash": "sha256:3f5dcb46d4381c493d386708b01a8d0a1a07e15a3ae635bf4c151fa1e2226361"
+    },
+    {
+      "kind": "model",
+      "ref": "synthetic-model-id",
+      "hash": "sha256:9372c470eeadd5ecd9c3c74c2b3cb633f8e2f2fad799250a0f70d652b6b825e4"
+    }
+  ],
+  "output_run_id": "01JBX7RA3C5E7G9J1K3M5N7P9Q",
+  "outputs": [
+    {
+      "path": "classify/01JBX7RA3C5E7G9J1K3M5N7P9Q/results.jsonl",
+      "hash": "sha256:c099142bc3186ded72786ba27e9ea6d2da240fb9fd3fe79b479ecf8e734b2850"
+    }
+  ],
+  "usage": {
+    "input_tokens": 182000,
+    "output_tokens": 24000,
+    "cost_micro_usd": 910000
+  },
+  "created_at": "2026-11-02T19:00:00.000Z",
+  "started_at": "2026-11-02T19:00:01.000Z",
+  "finished_at": "2026-11-02T19:12:44.000Z",
+  "editorial_state": "approved"
+}

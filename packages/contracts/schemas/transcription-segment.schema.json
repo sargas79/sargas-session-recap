@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sargas-recap:schema:transcription-segment:v1",
+  "title": "Transcription segment (immutable)",
+  "$comment": "Generated from packages/contracts/src by npm run schemas. Do not edit. Stored as: transcript/<transcription_run_id>/segments.jsonl (one record per line).",
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "schema_version",
+    "transcription_run_id",
+    "segment_id",
+    "chunk_index",
+    "seq",
+    "speaker_id",
+    "language",
+    "text_original",
+    "text_hash",
+    "start_offset_ms",
+    "end_offset_ms",
+    "timing_uncertainty_ms",
+    "chunk_start_ms",
+    "chunk_end_ms",
+    "source_spans",
+    "flags"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Per-record schema version (ADR-002).",
+      "const": 1,
+      "type": "number"
+    },
+    "transcription_run_id": {
+      "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$",
+      "type": "string"
+    },
+    "segment_id": {
+      "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}:(?:0|[1-9][0-9]{0,15}):(?:0|[1-9][0-9]{0,15})$",
+      "description": "<transcription_run_id>:<chunk_index>:<n> (ADR-004).",
+      "type": "string"
+    },
+    "chunk_index": {
+      "minimum": 0,
+      "maximum": 9007199254740991,
+      "type": "integer"
+    },
+    "seq": {
+      "minimum": 0,
+      "maximum": 9007199254740991,
+      "description": "n-th segment within the chunk.",
+      "type": "integer"
+    },
+    "speaker_id": {
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+      "description": "Speaker identifier from campaign config.",
+      "type": "string"
+    },
+    "language": {
+      "pattern": "^[a-z]{2,3}(?:-[A-Z]{2})?$",
+      "type": "string"
+    },
+    "text_original": {
+      "minLength": 1,
+      "maxLength": 20000,
+      "description": "ASR output, never modified (ADR-001).",
+      "type": "string"
+    },
+    "text_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "sha256 of UTF-8 NFC text_original (ADR-005).",
+      "type": "string"
+    },
+    "start_offset_ms": {
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991,
+      "type": "integer"
+    },
+    "end_offset_ms": {
+      "minimum": -9007199254740991,
+      "maximum": 9007199254740991,
+      "type": "integer"
+    },
+    "timing_uncertainty_ms": {
+      "minimum": 0,
+      "maximum": 9007199254740991,
+      "type": "integer"
+    },
+    "chunk_start_ms": {
+      "minimum": 0,
+      "maximum": 9007199254740991,
+      "description": "Start within the chunk audio, as reported by ASR.",
+      "type": "integer"
+    },
+    "chunk_end_ms": {
+      "minimum": 0,
+      "maximum": 9007199254740991,
+      "type": "integer"
+    },
+    "source_spans": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "fragment_id",
+          "start_sample",
+          "end_sample"
+        ],
+        "properties": {
+          "fragment_id": {
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?:(?:0|[1-9][0-9]{0,15})$",
+            "description": "<speaker_id>:<n> (ADR-004).",
+            "type": "string"
+          },
+          "start_sample": {
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "type": "integer"
+          },
+          "end_sample": {
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Exclusive.",
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "confidence_permille": {
+      "minimum": 0,
+      "maximum": 1000,
+      "description": "ASR confidence x1000 (no floats).",
+      "type": "integer"
+    },
+    "flags": {
+      "uniqueItems": true,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "short",
+          "low_confidence",
+          "overlap",
+          "timestamp_clamped"
+        ]
+      }
+    }
+  }
+}

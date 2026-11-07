@@ -1,0 +1,15 @@
+{
+  "schema": "sargas-recap-spike/test-journal@1",
+  "name": "S03 injection probe (must be REJECTED)",
+  "pages": [
+    {
+      "name": "Injection page",
+      "paragraphs": [
+        "<script>alert('S03 injection')</script>",
+        "<img src=x onerror=\"alert(1)\">",
+        "[[/r 1d20]] and @UUID[Actor.SyntheticActor01]{Synthetic}",
+        "javascript:alert(1)"
+      ]
+    }
+  ]
+}
