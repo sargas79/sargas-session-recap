@@ -6,6 +6,11 @@ import type { ImportOutcome, SpikeRuntime } from "./runtime.js";
 
 export const SETTING_WRITER = "designatedWriter";
 
+/** Hash of the current world id: namespaces IndexedDB, the loss ledger and export filenames. */
+export function worldNamespace(): string {
+  return fnv1a32(String(game.world?.id ?? "world"));
+}
+
 export function currentWriterSetting(): string {
   try {
     return String(game.settings.get(MODULE_ID, SETTING_WRITER) ?? "");
@@ -55,7 +60,7 @@ export async function exportEvents(rt: SpikeRuntime): Promise<void> {
   await rt.writer?.flush("manual");
   const result = exportJsonl(await rt.store.getAll());
   rt.lastExport = { at: new Date().toISOString(), unique: result.unique, duplicates: result.duplicates, invalid: result.invalid };
-  const world = fnv1a32(String(game.world?.id ?? "world"));
+  const world = worldNamespace();
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
   download(`s03-events-${world}-${stamp}.jsonl`, result.jsonl, "application/x-ndjson");
 }

@@ -91,6 +91,22 @@ export class BufferedWriter {
     return this.chain;
   }
 
+  /**
+   * Spike reset helper: wait for any in-flight flush to settle, then drop whatever is still buffered (including batches
+   * a failed flush re-queued) and cancel the timer. Returns the number of discarded events. After this resolves no
+   * write issued before the call can reach the sink.
+   */
+  async discardPending(): Promise<number> {
+    await this.chain;
+    if (this.timer !== null) {
+      this.timers.clearTimeout(this.timer);
+      this.timer = null;
+    }
+    const dropped = this.buffer.length;
+    this.buffer = [];
+    return dropped;
+  }
+
   /** Resolves when already-queued flushes have settled, without triggering a new one. */
   idle(): Promise<void> {
     return this.chain;

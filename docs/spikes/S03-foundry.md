@@ -33,9 +33,9 @@ record them as `UNRESOLVED`; do not extend silently.
 | Entry | `src/main.ts` | `init`: world setting `designatedWriter`, settings menu (restricted, GM). `ready`: open IndexedDB, run recovery, register probes, expose `game.modules.get("sargas-recap-spike").api` |
 | GM panel | `src/foundry/panel.ts` | Plain `ApplicationV2` (no Handlebars). Versions, capture status, buffered/flushed/persisted counts, designated-writer select, **Mark**, **Flush now**, **Export events (JSONL)**, loss table, hook fire counts, **Import test journal…** |
 | Hook probe | `src/foundry/probe.ts`, `src/core/hook-catalog.ts` | Candidate hooks per category; stores anonymized summaries (ids hashed, free text replaced by `<str len=N>`, enum slugs + numbers kept, changed key paths, update option keys) |
-| Store | `src/core/store.ts` | IndexedDB `sargas-recap-spike`, store `events` keyed by `recordId`, `add` only (append-only), `durability: "strict"` |
+| Store | `src/core/store.ts` | IndexedDB `sargas-recap-spike:<world hash>` (one database per world), store `events` keyed by `recordId`, `add` only (append-only), `durability: "strict"` |
 | Flush policy | `src/core/flush-policy.ts` | see §6 |
-| Loss ledger | `src/core/durability.ts` | synchronous `localStorage` "issued" counter per page load vs. records persisted |
+| Loss ledger | `src/core/durability.ts` | synchronous `localStorage` "issued" counter per page load vs. records persisted; one key per page load (`sargas-recap-spike:issued:<world hash>:<session>`), so concurrent tabs never overwrite each other |
 | Event ids / export | `src/core/ids.ts`, `src/core/export.ts` | `sargas-recap-spike/v1:<kind>:<source>:<discriminator>`; export deduplicates by `eventId` |
 | Journal import | `src/core/journal.ts`, `src/foundry/actions.ts` | local JSON file → validated plain text → `JournalEntry` + text pages, ownership `{default: NONE, <gm>: OWNER}` on entry and every page; re-reads created docs and reports violations |
 | Fixtures | `spikes/s03-foundry/fixtures/` | `test-journal.sample.json` (canary text), `test-journal.injection.json` (must be rejected), `payload-samples.PLACEHOLDER.jsonl` (synthetic placeholder only) |
@@ -88,14 +88,20 @@ manifest install is part of the question).
 
 1. GM opens *Game Settings → Configure Settings → Sargas Recap S03 Spike → Open S03 spike panel* (or console:
    `game.modules.get("sargas-recap-spike").api.open()`).
-2. Before measuring, reset: `await game.modules.get("sargas-recap-spike").api.clearStore()` (GM console).
+2. Before measuring, reset: `await game.modules.get("sargas-recap-spike").api.clearStore()` (GM console). The reset
+   applies to the current world only: it pauses capture, discards still-buffered writes, deletes this world's records
+   and loss-ledger entries, and restarts the counters. Close other tabs of the same world first (their counters are
+   per tab and would reappear as false losses).
 3. Set the designated writer to the GM user. Run the hook categories (§5), then durability (§6), the designated-writer
    check (§7) and the import check (§8).
 4. Export events (JSONL) from each client that wrote. Anonymize-check them (§9) before committing anything.
 
 ## 5. Hook categories
 
-For each row trigger the action in the game, then check the panel's "Hook probe" fire counts and the exported JSONL.
+For each row trigger the action in the game, then check the panel's "Hook probe" counts and the exported JSONL.
+"Invocations" counts each hook call once, before filtering; "Events emitted" counts captured events (a filtered call
+emits 0, an item update that is both a condition and a quantity change emits 2). Invocations > 0 with 0 emitted means
+the hook fires but the payload did not match the probe's filter.
 Status: `supported` (fires on the writer client, payload sufficient, stable over ≥ 3 repetitions), `partial` (fires but
 payload missing a needed field, or only on the initiating client), `unsupported` (does not fire / unusable).
 
@@ -115,7 +121,9 @@ Hooks that do not exist on v14 or fire with different arguments: list them here 
 | | | |
 
 Discriminator check: for update-based events the harness uses `_stats.modifiedTime` as a cross-client discriminator
-(`localDiscriminator: false`). Record whether two clients' exports produce identical `eventId`s for the same change
+(`localDiscriminator: false`). `combatRound`/`combatTurn` use `<round>.<turn>@<combat _stats.modifiedTime>` so going back
+a turn and forward again yields distinct events (round/turn alone would collide and be deduplicated away); include a
+"previous turn, next turn" step and check that both forward transitions survive export. Record whether two clients' exports produce identical `eventId`s for the same change
 (merge them with `mergeJsonl` or compare by eye): | Same eventId across clients? | |
 
 ## 6. Refresh / tab-kill durability

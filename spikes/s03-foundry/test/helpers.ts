@@ -26,6 +26,15 @@ export class MemoryKV implements KeyValue {
   setItem(k: string, v: string): void {
     this.map.set(k, v);
   }
+  removeItem(k: string): void {
+    this.map.delete(k);
+  }
+  get length(): number {
+    return this.map.size;
+  }
+  key(i: number): string | null {
+    return [...this.map.keys()][i] ?? null;
+  }
 }
 
 let dbCounter = 0;

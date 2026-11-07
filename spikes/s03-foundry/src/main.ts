@@ -7,8 +7,9 @@ import { CaptureController } from "./core/capture.js";
 import { IssueLedger, recover } from "./core/durability.js";
 import { BufferedWriter, DEFAULT_FLUSH_POLICY } from "./core/flush-policy.js";
 import { MODULE_ID, newSessionId } from "./core/ids.js";
-import { openEventStore } from "./core/store.js";
-import { exportEvents, SETTING_WRITER, thisClientWrites } from "./foundry/actions.js";
+import { resetMeasurement } from "./core/reset.js";
+import { openEventStore, worldDbName } from "./core/store.js";
+import { exportEvents, SETTING_WRITER, thisClientWrites, worldNamespace } from "./foundry/actions.js";
 import { createPanelClass } from "./foundry/panel.js";
 import { registerProbes } from "./foundry/probe.js";
 import type { SpikeRuntime } from "./foundry/runtime.js";
@@ -60,8 +61,10 @@ Hooks.once("init", () => {
 
 Hooks.once("ready", async () => {
   try {
-    const store = await openEventStore();
-    const ledger = new IssueLedger(window.localStorage, rt.sessionId);
+    // Both storage mechanisms are namespaced per world: Foundry serves every world from the same origin.
+    const worldNs = worldNamespace();
+    const store = await openEventStore({ dbName: worldDbName(worldNs) });
+    const ledger = new IssueLedger(window.localStorage, rt.sessionId, worldNs);
     // Recovery first: measure what earlier page loads lost before this one starts issuing.
     rt.recovery = await recover(store, ledger.snapshot(), rt.sessionId);
     const writer = new BufferedWriter((batch) => store.append(batch), DEFAULT_FLUSH_POLICY);
@@ -88,12 +91,22 @@ Hooks.once("ready", async () => {
         writer: rt.writer?.stats ?? null,
         recovery: rt.recovery,
         fires: rt.capture?.fires ?? {},
+        emitted: rt.capture?.emitted ?? {},
+        pausedDrops: rt.capture?.pausedDrops ?? 0,
         probeErrors: rt.probe?.errors ?? {},
       }),
-      /** Spike-only reset between measurement runs (GM console). */
+      /**
+       * Spike-only reset between measurement runs (GM console), for the current world only: pauses capture, discards
+       * pending writes, clears records and this world's ledger, restarts the counters. Close other tabs first.
+       */
       clearStore: async () => {
         if (!game.user?.isGM) throw new Error("GM only");
-        await rt.store?.clear();
+        if (!rt.capture || !rt.writer || !rt.store || !rt.ledger) throw new Error("spike not ready");
+        const result = await resetMeasurement({ capture: rt.capture, writer: rt.writer, store: rt.store, ledger: rt.ledger });
+        rt.marks = 0;
+        rt.recovery = { persistedTotal: 0, priorSessions: [] };
+        rt.lastExport = null;
+        return result;
       },
     };
   }

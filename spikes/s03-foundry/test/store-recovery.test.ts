@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { describe, expect, it } from "vitest";
 import { CaptureController } from "../src/core/capture.js";
-import { IssueLedger, LEDGER_KEY, recover } from "../src/core/durability.js";
+import { IssueLedger, ledgerPrefix, recover } from "../src/core/durability.js";
 import { BufferedWriter } from "../src/core/flush-policy.js";
 import { openEventStore } from "../src/core/store.js";
 import { ev, MemoryKV, uniqueDbName } from "./helpers.js";
@@ -35,7 +35,7 @@ describe("reload recovery and loss measurement", () => {
 
     // --- page load 1 --------------------------------------------------------------------------------------------
     const store1 = await openEventStore({ dbName });
-    const ledger1 = new IssueLedger(kv, "load-1");
+    const ledger1 = new IssueLedger(kv, "load-1", "W");
     const writer1 = new BufferedWriter((b) => store1.append(b), { maxBatch: 5, maxDelayMs: 60_000 });
     const cap1 = new CaptureController("load-1", writer1, ledger1, () => true);
     const mark = (n: number) =>
@@ -52,7 +52,7 @@ describe("reload recovery and loss measurement", () => {
 
     // --- page load 2 --------------------------------------------------------------------------------------------
     const store2 = await openEventStore({ dbName });
-    const ledger2 = new IssueLedger(kv, "load-2");
+    const ledger2 = new IssueLedger(kv, "load-2", "W");
     const report = await recover(store2, ledger2.snapshot(), "load-2");
     expect(report.persistedTotal).toBe(10);
     expect(report.priorSessions).toEqual([
@@ -68,7 +68,7 @@ describe("reload recovery and loss measurement", () => {
     const dbName = uniqueDbName();
     const kv = new MemoryKV();
     const store1 = await openEventStore({ dbName });
-    const ledger1 = new IssueLedger(kv, "L1");
+    const ledger1 = new IssueLedger(kv, "L1", "W");
     const writer1 = new BufferedWriter((b) => store1.append(b), { maxBatch: 50, maxDelayMs: 60_000 });
     const cap1 = new CaptureController("L1", writer1, ledger1, () => true);
     for (let i = 0; i < 7; i++) {
@@ -78,7 +78,7 @@ describe("reload recovery and loss measurement", () => {
     store1.close();
 
     const store2 = await openEventStore({ dbName });
-    const report = await recover(store2, new IssueLedger(kv, "L2").snapshot(), "L2");
+    const report = await recover(store2, new IssueLedger(kv, "L2", "W").snapshot(), "L2");
     expect(report.priorSessions[0]).toMatchObject({ issued: 7, persisted: 7, lost: 0 });
     store2.close();
   });
@@ -87,19 +87,22 @@ describe("reload recovery and loss measurement", () => {
     const store = await openEventStore({ dbName: uniqueDbName() });
     const kv = new MemoryKV();
     const writer = new BufferedWriter((b) => store.append(b));
-    const cap = new CaptureController("X", writer, new IssueLedger(kv, "X"), () => false);
+    const cap = new CaptureController("X", writer, new IssueLedger(kv, "X", "W"), () => false);
     expect(cap.capture({ category: "rolls", hook: "createChatMessage", kind: "chat", source: "m", discriminator: "create", initiatorHash: null, summary: {} })).toBeNull();
     expect(cap.ignored).toBe(1);
-    expect(cap.fires["createChatMessage"]).toBe(1);
+    expect(cap.emitted["createChatMessage"]).toBe(1);
     expect(cap.issued).toBe(0);
     store.close();
   });
 
   it("tolerates a corrupt ledger", () => {
     const kv = new MemoryKV();
-    kv.setItem(LEDGER_KEY, "{not json");
-    expect(IssueLedger.read(kv)).toEqual({});
-    kv.setItem(LEDGER_KEY, JSON.stringify({ a: { issued: "x" }, b: { issued: 3, startedAt: "t" } }));
-    expect(IssueLedger.read(kv)).toEqual({ b: { issued: 3, startedAt: "t" } });
+    const p = ledgerPrefix("W");
+    kv.setItem(`${p}a`, "{not json");
+    expect(IssueLedger.read(kv, "W")).toEqual({});
+    kv.setItem(`${p}b`, JSON.stringify({ issued: "x" }));
+    kv.setItem(`${p}c`, JSON.stringify({ issued: 3, startedAt: "t" }));
+    kv.setItem(`${p}d`, "null");
+    expect(IssueLedger.read(kv, "W")).toEqual({ c: { issued: 3, startedAt: "t" } });
   });
 });

@@ -114,8 +114,9 @@ function renderBody(rt: SpikeRuntime, ctx: { users: UserLike[]; writerSetting: s
     .map((u) => `<option value="${h(u.id)}" ${u.id === ctx.writerSetting ? "selected" : ""}>${h(u.name ?? u.id)}${u.isGM ? " (GM)" : ""}</option>`)
     .join("");
   const fires = rt.capture?.fires ?? {};
+  const emitted = rt.capture?.emitted ?? {};
   const hookRows = HOOK_CANDIDATES.map(
-    (c) => `<tr><td>${h(c.category)}</td><td><code>${h(c.hook)}</code></td><td>${fires[c.hook] ?? 0}</td><td>${rt.probe?.errors[c.hook] ?? 0}</td></tr>`,
+    (c) => `<tr><td>${h(c.category)}</td><td><code>${h(c.hook)}</code></td><td>${fires[c.hook] ?? 0}</td><td>${emitted[c.hook] ?? 0}</td><td>${rt.probe?.errors[c.hook] ?? 0}</td></tr>`,
   ).join("");
   const lossRows = (rt.recovery?.priorSessions ?? [])
     .slice(-8)
@@ -142,7 +143,7 @@ function renderBody(rt: SpikeRuntime, ctx: { users: UserLike[]; writerSetting: s
     designated writer: ${h(writerName)} (${h(writer.status)})</p>
     <p>Issued ${rt.capture?.issued ?? 0} · ignored (not writer) ${rt.capture?.ignored ?? 0} · buffered ${stats?.buffered ?? 0} ·
     flushed ${stats?.flushedEvents ?? 0} in ${stats?.flushes ?? 0} flush(es) · failures ${stats?.failures ?? 0} ·
-    last flush ${h(String(stats?.lastFlushReason ?? "-"))} · persisted in IndexedDB (all sessions) ${ctx.persisted ?? "?"} · marks ${rt.marks}</p>
+    last flush ${h(String(stats?.lastFlushReason ?? "-"))} · persisted in IndexedDB (this world, all sessions) ${ctx.persisted ?? "?"} · marks ${rt.marks}</p>
     ${stats?.lastError ? `<p style="color:red">Last store error: ${h(stats.lastError)}</p>` : ""}
     <p><select name="writer"><option value="">(nobody)</option>${options}</select>
     <button type="button" data-action="saveWriter">Set designated writer</button></p>
@@ -157,7 +158,7 @@ function renderBody(rt: SpikeRuntime, ctx: { users: UserLike[]; writerSetting: s
   </section>
   <section>
     <h3>Hook probe (candidates, verify on v14/PF2e)</h3>
-    <table><thead><tr><th>Category</th><th>Hook</th><th>Fires (this client)</th><th>Errors</th></tr></thead><tbody>${hookRows}</tbody></table>
+    <table><thead><tr><th>Category</th><th>Hook</th><th>Invocations (this client)</th><th>Events emitted</th><th>Errors</th></tr></thead><tbody>${hookRows}</tbody></table>
     ${rt.probe?.lastError ? `<p>Last probe error: ${h(rt.probe.lastError)}</p>` : ""}
   </section>
   <section>

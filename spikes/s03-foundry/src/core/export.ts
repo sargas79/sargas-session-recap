@@ -51,18 +51,38 @@ export function exportJsonl(events: readonly CapturedEvent[]): ExportResult {
   return { jsonl, total: events.length, unique: unique.length, duplicates, invalid };
 }
 
-/** Merge several JSONL exports (e.g. from two clients) and dedupe again. Malformed lines are counted as invalid. */
+/**
+ * Structural check for a parsed JSONL line. JSON.parse happily returns null, numbers, strings or arrays; those (and
+ * objects missing the fields dedupe/sort rely on) are not events and must be counted as invalid, not enqueued.
+ */
+export function isCapturedEventShape(v: unknown): v is CapturedEvent {
+  if (v === null || typeof v !== "object" || Array.isArray(v)) return false;
+  const e = v as Record<string, unknown>;
+  return (
+    typeof e.eventId === "string" &&
+    typeof e.recordId === "string" &&
+    typeof e.sessionId === "string" &&
+    typeof e.capturedAt === "string" &&
+    Number.isSafeInteger(e.seq)
+  );
+}
+
+/** Merge several JSONL exports (e.g. from two clients) and dedupe again. Malformed or non-event lines are counted as invalid. */
 export function mergeJsonl(...files: string[]): ExportResult {
   const events: CapturedEvent[] = [];
   let malformed = 0;
   for (const file of files) {
     for (const line of file.split(/\r?\n/)) {
       if (line.trim() === "") continue;
+      let parsed: unknown;
       try {
-        events.push(JSON.parse(line) as CapturedEvent);
+        parsed = JSON.parse(line);
       } catch {
         malformed++;
+        continue;
       }
+      if (isCapturedEventShape(parsed)) events.push(parsed);
+      else malformed++;
     }
   }
   const result = exportJsonl(events);

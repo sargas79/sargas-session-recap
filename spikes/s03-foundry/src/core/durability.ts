@@ -14,6 +14,9 @@ import type { EventStore } from "./store.js";
 export interface KeyValue {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+  readonly length: number;
+  key(index: number): string | null;
 }
 
 export interface LedgerEntry {
@@ -21,70 +24,130 @@ export interface LedgerEntry {
   startedAt: string;
 }
 
-export const LEDGER_KEY = "sargas-recap-spike:issued-ledger";
+/** Base prefix; the full per-world prefix is `<LEDGER_PREFIX>:<worldNs>:` (see ledgerPrefix). */
+export const LEDGER_PREFIX = "sargas-recap-spike:issued";
 const MAX_SESSIONS = 50;
 
+/**
+ * Key prefix for one world. Every page load owns exactly one key, `<prefix><sessionId>`, and only ever writes that key,
+ * so concurrent tabs cannot overwrite each other's counters (no read-modify-write of a shared snapshot).
+ */
+export function ledgerPrefix(worldNs: string): string {
+  return `${LEDGER_PREFIX}:${encodeURIComponent(worldNs)}:`;
+}
+
+function parseEntry(raw: string | null): LedgerEntry | null {
+  if (!raw) return null;
+  try {
+    const e = JSON.parse(raw) as Partial<LedgerEntry> | null;
+    if (e && typeof e === "object" && Number.isSafeInteger(e.issued) && typeof e.startedAt === "string") {
+      return { issued: e.issued as number, startedAt: e.startedAt };
+    }
+  } catch {
+    // corrupt entry: ignored
+  }
+  return null;
+}
+
+function keysWithPrefix(kv: KeyValue, prefix: string): string[] {
+  const out: string[] = [];
+  try {
+    for (let i = 0; i < kv.length; i++) {
+      const k = kv.key(i);
+      if (k !== null && k.startsWith(prefix)) out.push(k);
+    }
+  } catch {
+    // storage unavailable
+  }
+  return out;
+}
+
 export class IssueLedger {
-  private entries: Record<string, LedgerEntry>;
+  private entry: LedgerEntry;
+  private readonly prefix: string;
 
   constructor(
     private readonly kv: KeyValue,
     readonly sessionId: string,
-    now: () => Date = () => new Date(),
+    readonly worldNs: string,
+    private readonly now: () => Date = () => new Date(),
   ) {
-    this.entries = IssueLedger.read(kv);
-    this.entries[sessionId] = { issued: 0, startedAt: now().toISOString() };
-    this.trim();
+    this.prefix = ledgerPrefix(worldNs);
+    this.entry = { issued: 0, startedAt: now().toISOString() };
     this.write();
+    this.trim();
   }
 
-  static read(kv: KeyValue): Record<string, LedgerEntry> {
-    try {
-      const raw = kv.getItem(LEDGER_KEY);
-      if (!raw) return {};
-      const parsed: unknown = JSON.parse(raw);
-      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return {};
-      const out: Record<string, LedgerEntry> = {};
-      for (const [k, v] of Object.entries(parsed as Record<string, unknown>)) {
-        const e = v as Partial<LedgerEntry> | null;
-        if (e && Number.isSafeInteger(e.issued) && typeof e.startedAt === "string") {
-          out[k] = { issued: e.issued as number, startedAt: e.startedAt };
-        }
+  /** Fresh read of every session entry of one world, straight from storage (never a cached snapshot). */
+  static read(kv: KeyValue, worldNs: string): Record<string, LedgerEntry> {
+    const prefix = ledgerPrefix(worldNs);
+    const out: Record<string, LedgerEntry> = {};
+    for (const k of keysWithPrefix(kv, prefix)) {
+      let raw: string | null = null;
+      try {
+        raw = kv.getItem(k);
+      } catch {
+        continue;
       }
-      return out;
-    } catch {
-      return {};
+      const e = parseEntry(raw);
+      if (e) out[decodeURIComponent(k.slice(prefix.length))] = e;
     }
+    return out;
   }
 
   recordIssued(seq: number): void {
-    const current = this.entries[this.sessionId];
-    if (!current) return;
-    if (seq > current.issued) current.issued = seq;
+    if (seq > this.entry.issued) this.entry.issued = seq;
     this.write();
   }
 
   get issued(): number {
-    return this.entries[this.sessionId]?.issued ?? 0;
+    return this.entry.issued;
   }
 
+  /** All sessions of this world as currently stored (includes concurrent tabs' latest counters). */
   snapshot(): Record<string, LedgerEntry> {
-    return structuredClone(this.entries);
+    return IssueLedger.read(this.kv, this.worldNs);
   }
 
+  /**
+   * Spike reset: remove every ledger entry of this world (records are being deleted too, so their counters must go,
+   * otherwise the next recovery reports them as losses) and restart this page load's counter at 0.
+   */
+  reset(): void {
+    for (const k of keysWithPrefix(this.kv, this.prefix)) {
+      try {
+        this.kv.removeItem(k);
+      } catch {
+        // ignore
+      }
+    }
+    this.entry = { issued: 0, startedAt: this.now().toISOString() };
+    this.write();
+  }
+
+  private key(sessionId: string): string {
+    return `${this.prefix}${encodeURIComponent(sessionId)}`;
+  }
+
+  /** Drop the oldest sessions beyond MAX_SESSIONS (never this one). Only removes keys, never rewrites others. */
   private trim(): void {
-    const keys = Object.keys(this.entries).sort((a, b) =>
-      (this.entries[a]?.startedAt ?? "").localeCompare(this.entries[b]?.startedAt ?? ""),
-    );
-    while (keys.length > MAX_SESSIONS) {
-      const k = keys.shift();
-      if (k !== undefined && k !== this.sessionId) delete this.entries[k];
+    const all = Object.entries(IssueLedger.read(this.kv, this.worldNs))
+      .filter(([id]) => id !== this.sessionId)
+      .sort((a, b) => a[1].startedAt.localeCompare(b[1].startedAt));
+    while (all.length > MAX_SESSIONS - 1) {
+      const oldest = all.shift();
+      if (!oldest) break;
+      try {
+        this.kv.removeItem(this.key(oldest[0]));
+      } catch {
+        // ignore
+      }
     }
   }
 
   private write(): void {
     try {
-      this.kv.setItem(LEDGER_KEY, JSON.stringify(this.entries));
+      this.kv.setItem(this.key(this.sessionId), JSON.stringify(this.entry));
     } catch {
       // Quota or private-mode failure: measurement degrades, capture continues.
     }

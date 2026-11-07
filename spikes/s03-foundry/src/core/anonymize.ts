@@ -3,12 +3,15 @@ import { fnv1a32 } from "./ids.js";
 /**
  * Payload anonymization for probe summaries. Goal: keep the *shape* and enum-like values a later normalizer (T17)
  * needs, never names or free text.
- * - Foundry-id-looking strings (16 alphanumerics) and id-looking object keys are replaced by `id:<fnv1a32>`.
+ * - Foundry-id-looking tokens (16 alphanumerics delimited by non-alphanumerics) are replaced by `id:<fnv1a32>`
+ *   wherever they appear: whole strings, object keys, and components of compound strings such as
+ *   `Actor.AbCdEfGhIjKlMnOp` or `origin:item:AbCdEfGhIjKlMnOp` (the hashing runs before the slug allowlist check).
  * - Strings are kept only under allowlisted enum keys and only if they look like slugs; otherwise `<str len=N>`.
  * - Numbers/booleans/null are kept. Arrays are truncated, depth is bounded.
  */
 
-const FOUNDRY_ID_RE = /^[A-Za-z0-9]{16}$/;
+/** A 16-alphanumeric token not adjacent to another alphanumeric (so 17+ char words are not split). */
+const FOUNDRY_ID_TOKEN_RE = /(?<![A-Za-z0-9])[A-Za-z0-9]{16}(?![A-Za-z0-9])/g;
 const SLUG_RE = /^[A-Za-z0-9][A-Za-z0-9\-_.:]{0,63}$/;
 
 export const ENUM_KEYS: ReadonlySet<string> = new Set([
@@ -39,16 +42,22 @@ export function hashId(id: string): string {
   return `id:${fnv1a32(id)}`;
 }
 
+/** Replace every Foundry-id-looking token inside `s` by its hash, keeping the surrounding structure. */
+export function hashIdTokens(s: string): string {
+  return s.replace(FOUNDRY_ID_TOKEN_RE, (id) => hashId(id));
+}
+
 function anonymizeKey(key: string): string {
-  return FOUNDRY_ID_RE.test(key) ? hashId(key) : key;
+  return hashIdTokens(key);
 }
 
 export function anonymize(value: unknown, parentKey = "", depth = 0): unknown {
   if (value === null || typeof value === "number" || typeof value === "boolean") return value;
   if (value === undefined) return null;
   if (typeof value === "string") {
-    if (FOUNDRY_ID_RE.test(value)) return hashId(value);
-    if (ENUM_KEYS.has(parentKey) && SLUG_RE.test(value)) return value;
+    const hashed = hashIdTokens(value);
+    if (hashed !== value && /^id:[0-9a-f]{8}$/.test(hashed)) return hashed;
+    if (ENUM_KEYS.has(parentKey) && SLUG_RE.test(hashed)) return hashed;
     return `<str len=${value.length}>`;
   }
   if (typeof value !== "object") return `<${typeof value}>`;

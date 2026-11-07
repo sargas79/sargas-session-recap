@@ -11,6 +11,14 @@ import type { CapturedEvent } from "./types.js";
  */
 
 export const DEFAULT_DB_NAME = "sargas-recap-spike";
+
+/**
+ * Per-world database name. Foundry serves every world from the same origin, so a fixed name would mix worlds: recovery,
+ * export and clear() would all span every world ever opened in this browser. `worldNs` is a hash of the world id.
+ */
+export function worldDbName(worldNs: string): string {
+  return `${DEFAULT_DB_NAME}:${worldNs}`;
+}
 const DB_VERSION = 1;
 const EVENTS = "events";
 

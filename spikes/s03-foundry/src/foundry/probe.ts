@@ -25,6 +25,28 @@ function updateDiscriminator(doc: Doc): { discriminator: string | number; localD
   return { discriminator: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`, localDiscriminator: true };
 }
 
+/**
+ * Discriminator for combatRound/combatTurn. round.turn alone names a combat *state*, not a transition: going back a
+ * turn and forward again would reuse the same eventId and export dedup would drop a real transition. The combat's
+ * `_stats.modifiedTime` (candidate) changes with every Combat update and is the same document state on every client,
+ * so `<round>.<turn>@<modifiedTime>` distinguishes repeated visits to the same state while still deduplicating the same
+ * transition seen by two clients. Without modifiedTime, fall back to a local discriminator (flagged, never deduped
+ * across clients). Cross-client equality must be verified in the human run (S03-foundry.md §5 discriminator check).
+ */
+export function combatTransitionDiscriminator(
+  combat: Doc,
+  round: unknown,
+  turn: unknown,
+): { discriminator: string; localDiscriminator: boolean } {
+  const state = `${String(round)}.${String(turn)}`;
+  const mt = getPath(combat, "_stats.modifiedTime");
+  if (typeof mt === "number" && Number.isFinite(mt)) return { discriminator: `${state}@${mt}`, localDiscriminator: false };
+  return {
+    discriminator: `${state}@local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    localDiscriminator: true,
+  };
+}
+
 function src(doc: Doc): string {
   const uuid = typeof doc?.uuid === "string" ? doc.uuid : String(doc?.id ?? "unknown");
   return hashId(uuid);
@@ -63,6 +85,8 @@ export function registerProbes(capture: CaptureController, hooks: any): ProbeSta
 
   const on = (hook: string, fn: (...args: any[]) => void) => {
     const wrapped = (...args: any[]) => {
+      // One count per invocation, before any filtering/parsing (emitted events are counted separately by capture).
+      capture.recordFire(hook);
       try {
         fn(...args);
       } catch (err) {
@@ -188,10 +212,12 @@ export function registerProbes(capture: CaptureController, hooks: any): ProbeSta
         hook,
         kind: hook === "combatRound" ? "combat-round" : "combat-turn",
         source: src(combat),
-        discriminator: `${String(r)}.${String(t)}`,
+        ...combatTransitionDiscriminator(combat, r, t),
         initiatorHash: null,
         summary: {
           documentName: "Combat",
+          round: typeof r === "number" ? r : null,
+          turn: typeof t === "number" ? t : null,
           updateData: anonymize(updateData),
           direction: anonymize(getPath(updateOptions, "direction") ?? null),
           optionKeys: optionKeys(updateOptions),
