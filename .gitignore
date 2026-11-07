@@ -1,0 +1,42 @@
+# Dependencies and build output
+node_modules/
+dist/
+coverage/
+*.tsbuildinfo
+
+# Session data: never commit real recordings, transcripts or state.
+# The data root lives outside the repo by default (see T02/T25).
+sessions/
+
+# Audio
+*.wav
+*.flac
+*.ogg
+*.opus
+*.mp3
+*.m4a
+
+# Transcript outputs
+transcripts/
+*.transcript.json
+*.transcript.txt
+*.srt
+*.vtt
+
+# Local databases
+*.sqlite
+*.sqlite3
+*.sqlite-*
+*.sqlite3-*
+
+# Secrets and local environment
+.env
+.env.*
+
+# Logs and OS/editor noise
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,20 @@
+{
+  "id": "sargas-recap-spike",
+  "title": "Sargas Recap S03 Spike (throwaway)",
+  "description": "THROWAWAY S03 spike: GM-only hook probe, IndexedDB durability measurement and GM-only test journal import. Not for production worlds.",
+  "version": "0.0.1",
+  "authors": [{ "name": "sargas79" }],
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14"
+  },
+  "esmodules": ["scripts/main.js"],
+  "url": "https://github.com/sargas79/sargas-session-recap",
+  "manifest": "",
+  "download": "",
+  "flags": {
+    "sargas-recap-spike": {
+      "compatibilityNote": "UNVERIFIED: minimum/verified 14 are targets to verify on the host's Foundry v14 build; record the exact core build in docs/spikes/S03-foundry.md."
+    }
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "$schema": "./label.schema.json",
+  "schema_version": "s01-labels/0.1-spike",
+  "sample_id": "synthetic-s01-example-001",
+  "synthetic": true,
+  "session_ref": "synthetic-session-001",
+  "labeller_role": "synthetic",
+  "labelled_on": "2026-11-07",
+  "consent_ref": "outside-git:not-applicable-synthetic",
+  "transcript_ref": "synthetic-whisper-run-001",
+  "time_base": "session-ms",
+  "notes": "SYNTHETIC. Invented dialogue, invented NPCs, no real session content. Mirrors the worked examples in docs/evaluation/labelling-guide.md.",
+  "split": {
+    "tuning": [
+      { "start_ms": 0, "end_ms": 300000, "description": "Bloco A: chegada a Vila Corvo (roleplay) e início do combate" }
+    ],
+    "excluded": [
+      { "start_ms": 300000, "end_ms": 310000, "description": "Buffer na fronteira do split" }
+    ],
+    "held_out": [
+      { "start_ms": 310000, "end_ms": 600000, "description": "Bloco B: fim do combate, loot e mudança de cena" }
+    ],
+    "frozen_on": "2026-11-07",
+    "method": "Two contiguous blocks with a 10 s buffer, fixed before any model output was inspected."
+  },
+  "labels": [
+    {
+      "segment": { "speaker": "gm", "start_ms": 1000, "end_ms": 9500 },
+      "label": "narration",
+      "flags": ["scene_change"],
+      "recap_critical": [
+        { "type": "location", "summary": "O grupo chega a Vila Corvo ao entardecer." }
+      ],
+      "text": "Vocês chegam a Vila Corvo no fim da tarde. A praça está vazia e o sino da capela não para de tocar."
+    },
+    {
+      "segment": { "speaker": "p1", "start_ms": 10000, "end_ms": 14200 },
+      "label": "ic",
+      "text": "Kara: \"Alguém sabe por que esse sino está tocando sem ninguém na torre?\""
+    },
+    {
+      "segment": { "speaker": "gm", "start_ms": 14500, "end_ms": 22000 },
+      "label": "narration",
+      "recap_critical": [
+        { "type": "npc_name", "summary": "NPC Mestre Albérico, sacristão da capela." },
+        { "type": "clue", "summary": "Albérico diz que o sino toca sozinho desde que o poço secou." }
+      ],
+      "text": "Um velho sai da capela. \"Sou Albérico, o sacristão. O sino toca sozinho desde que o poço secou, três noites atrás.\""
+    },
+    {
+      "segment": { "speaker": "p2", "start_ms": 22500, "end_ms": 26000 },
+      "label": "rules",
+      "text": "Posso fazer um Recall Knowledge de Religion sobre isso? Tenho trained."
+    },
+    {
+      "segment": { "speaker": "gm", "start_ms": 26200, "end_ms": 29000 },
+      "label": "rules",
+      "recap_critical": [
+        { "type": "outcome", "outcome_basis": "roll", "summary": "Recall Knowledge (Religion): success, sem narração ainda." }
+      ],
+      "text": "Rola aí. Dezoito? Success."
+    },
+    {
+      "segment": { "speaker": "p3", "start_ms": 28500, "end_ms": 31000 },
+      "label": "ooc",
+      "flags": ["overlapping_speech", "joke"],
+      "text": "Dezoito no d20, finalmente esse dado presta pra alguma coisa, hahaha."
+    },
+    {
+      "segment": { "speaker": "p1", "start_ms": 40000, "end_ms": 46000 },
+      "label": "ic",
+      "recap_critical": [
+        { "type": "action", "action_status": "proposed", "summary": "Kara propõe descer ao poço à noite." }
+      ],
+      "text": "Kara: \"E se a gente descer no poço hoje à noite e ver o que tem lá embaixo?\""
+    },
+    {
+      "segment": { "speaker": "p2", "start_ms": 46500, "end_ms": 53000 },
+      "label": "mixed",
+      "recap_critical": [
+        { "type": "decision", "summary": "O grupo decide investigar o poço antes de falar com o prefeito." }
+      ],
+      "notes": "Primeira metade IC (decisão do grupo); segunda metade OOC sobre pedir pizza. Incluir só a decisão.",
+      "text": "Tobias: \"Fechado, primeiro o poço, o prefeito pode esperar.\" ... gente, alguém vai pedir pizza?"
+    },
+    {
+      "segment": { "speaker": "gm", "start_ms": 120000, "end_ms": 128000 },
+      "label": "rules",
+      "flags": ["scene_change"],
+      "text": "Ok, rolem initiative. Perception para todo mundo, menos a Kara que está em Stealth."
+    },
+    {
+      "segment": { "speaker": "p3", "start_ms": 150000, "end_ms": 156000 },
+      "label": "uncertain",
+      "flags": ["asr_error_suspected", "overlapping_speech"],
+      "notes": "Transcrição truncada por crosstalk; não dá para saber se é fala do personagem ou comentário OOC.",
+      "text": "...eu vou... não, espera, o... [inaudível]"
+    },
+    {
+      "segment": { "speaker": "gm", "start_ms": 320000, "end_ms": 331000 },
+      "label": "narration",
+      "recap_critical": [
+        { "type": "outcome", "outcome_basis": "roll_and_narrative", "summary": "Critical hit de Tobias; o Well Wight se desfaz em lodo." }
+      ],
+      "text": "Critical hit! O golpe do Tobias atravessa a criatura, e o Well Wight se desfaz em lodo escuro no fundo do poço."
+    },
+    {
+      "segment": { "speaker": "gm", "start_ms": 340000, "end_ms": 349000 },
+      "label": "narration",
+      "recap_critical": [
+        { "type": "loot", "summary": "No fundo do poço: uma Wand of Heal (1st rank) e 12 gp." },
+        { "type": "clue", "summary": "Um símbolo de corvo riscado na pedra do poço." }
+      ],
+      "text": "No lodo vocês acham uma wand of heal de primeiro rank, doze peças de ouro e, riscado na pedra, um símbolo de corvo."
+    },
+    {
+      "segment": { "speaker": "p1", "start_ms": 350000, "end_ms": 354000 },
+      "label": "ic",
+      "recap_critical": [
+        { "type": "action", "action_status": "completed", "summary": "Kara guarda a wand." }
+      ],
+      "text": "Kara: \"A wand fica comigo.\" Pego e guardo na mochila."
+    },
+    {
+      "segment": { "speaker": "p2", "start_ms": 355000, "end_ms": 359000 },
+      "label": "ic",
+      "recap_critical": [
+        { "type": "action", "action_status": "abandoned", "summary": "Tobias pensa em copiar o símbolo, mas desiste." }
+      ],
+      "text": "Tobias: \"Eu ia desenhar esse símbolo... deixa, depois eu volto.\""
+    },
+    {
+      "segment": { "speaker": "gm", "start_ms": 420000, "end_ms": 428000 },
+      "label": "narration",
+      "flags": ["scene_change"],
+      "recap_critical": [
+        { "type": "location", "summary": "Corte para a manhã seguinte, na casa do prefeito." }
+      ],
+      "text": "Corta para a manhã seguinte. Vocês estão na porta da casa do prefeito, encharcados de lodo."
+    },
+    {
+      "segment": { "speaker": "p3", "start_ms": 430000, "end_ms": 434000 },
+      "label": "ooc",
+      "text": "Pausa de cinco minutos? Vou pegar água."
+    }
+  ]
+}
