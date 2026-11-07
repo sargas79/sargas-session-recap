@@ -1,0 +1,15 @@
+node_modules/
+dist/
+coverage/
+package-lock.json
+
+# Throwaway spike harnesses and research artifacts are not product code and
+# must not gate CI.
+spikes/
+docs/spikes/
+docs/evaluation/
+docs/decisions/
+fixtures/
+
+# Owner-maintained planning doc, kept byte-identical to its source.
+docs/implementation-plan.md
