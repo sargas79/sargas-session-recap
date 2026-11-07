@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "transcription_run_id": "01JBX7Q8M2N4P6R8S0T2V4W6XY",
+  "segment_id": "01JBX7Q8M2N4P6R8S0T2V4W6XY:40:0",
+  "chunk_index": 40,
+  "seq": 0,
+  "speaker_id": "player-ana",
+  "language": "pt",
+  "text_original": "Sim.",
+  "text_hash": "sha256:7f2a19457f621864b50a0ff09763841541b3b21259f24fb0b1e1e621d8601e80",
+  "start_offset_ms": 5402900,
+  "end_offset_ms": 5403500,
+  "timing_uncertainty_ms": 250,
+  "chunk_start_ms": 900,
+  "chunk_end_ms": 1500,
+  "source_spans": [
+    {
+      "fragment_id": "player-ana:0",
+      "start_sample": 259324800,
+      "end_sample": 259339200
+    },
+    {
+      "fragment_id": "player-ana:1",
+      "start_sample": 0,
+      "end_sample": 14400
+    }
+  ],
+  "confidence_permille": 410,
+  "flags": [
+    "short",
+    "low_confidence"
+  ]
+}

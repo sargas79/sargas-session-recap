@@ -1,0 +1,395 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sargas-recap:schema:manifest:v1",
+  "title": "Session package manifest",
+  "$comment": "Generated from packages/contracts/src by npm run schemas. Do not edit. Stored as: manifest.json.",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "lifecycle": {
+            "enum": [
+              "sealed",
+              "processing",
+              "retained",
+              "audio-purged"
+            ]
+          }
+        },
+        "required": [
+          "lifecycle"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "required": [
+          "seal"
+        ]
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "lifecycle": {
+            "enum": [
+              "audio-purged"
+            ]
+          }
+        },
+        "required": [
+          "lifecycle"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "required": [
+          "purge"
+        ]
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "lifecycle": {
+            "enum": [
+              "capturing"
+            ]
+          }
+        },
+        "required": [
+          "lifecycle"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "seal": false
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "lifecycle": {
+            "enum": [
+              "capturing",
+              "sealed",
+              "processing",
+              "retained"
+            ]
+          }
+        },
+        "required": [
+          "lifecycle"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "purge": false
+        }
+      }
+    }
+  ],
+  "type": "object",
+  "required": [
+    "schema_version",
+    "campaign_id",
+    "session_id",
+    "package_id",
+    "created_at",
+    "lifecycle",
+    "source",
+    "timeline",
+    "consent"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Per-record schema version (ADR-002).",
+      "const": 1,
+      "type": "number"
+    },
+    "campaign_id": {
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+      "description": "Campaign identifier (config, T04).",
+      "type": "string"
+    },
+    "session_id": {
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+      "description": "Session identifier within a campaign.",
+      "type": "string"
+    },
+    "package_id": {
+      "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$",
+      "description": "Identity of this package (ADR-004).",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "maxLength": 40,
+      "type": "string"
+    },
+    "lifecycle": {
+      "description": "Authoritative package lifecycle (ADR-006). Job state lives in SQLite.",
+      "type": "string",
+      "enum": [
+        "capturing",
+        "sealed",
+        "processing",
+        "retained",
+        "audio-purged"
+      ]
+    },
+    "source": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "kind",
+        "tool_version"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "multitrack-import",
+            "discord-bot"
+          ]
+        },
+        "tool_version": {
+          "minLength": 1,
+          "maxLength": 64,
+          "type": "string"
+        }
+      }
+    },
+    "timeline": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "origin",
+        "origin_uncertainty_ms",
+        "discontinuities"
+      ],
+      "properties": {
+        "origin": {
+          "description": "How session offset zero was established (ADR-003). `provisional`: no marker at capture.",
+          "type": "string",
+          "enum": [
+            "sync-marker",
+            "provisional"
+          ]
+        },
+        "origin_wall_clock_unix_ms": {
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "type": "integer"
+        },
+        "origin_uncertainty_ms": {
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "type": "integer"
+        },
+        "discontinuities": {
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+              "kind",
+              "at_offset_ms",
+              "timing_uncertainty_ms"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "reconnect",
+                  "gap",
+                  "clock-reset"
+                ]
+              },
+              "speaker_id": {
+                "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+                "description": "Speaker identifier from campaign config.",
+                "type": "string"
+              },
+              "at_offset_ms": {
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991,
+                "type": "integer"
+              },
+              "missing_ms": {
+                "minimum": 0,
+                "maximum": 9007199254740991,
+                "type": "integer"
+              },
+              "timing_uncertainty_ms": {
+                "minimum": 0,
+                "maximum": 9007199254740991,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
+    "consent": {
+      "minItems": 1,
+      "description": "Consent provenance snapshot at capture (ADR-001).",
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "speaker_id",
+          "scopes",
+          "policy_hash",
+          "recorded_at"
+        ],
+        "properties": {
+          "speaker_id": {
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+            "description": "Speaker identifier from campaign config.",
+            "type": "string"
+          },
+          "scopes": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "recording",
+                "asr",
+                "classification",
+                "recap"
+              ]
+            }
+          },
+          "policy_hash": {
+            "pattern": "^sha256:[0-9a-f]{64}$",
+            "description": "Hash of the consent policy/config applied at capture (T04).",
+            "type": "string"
+          },
+          "recorded_at": {
+            "format": "date-time",
+            "maxLength": 40,
+            "type": "string"
+          }
+        }
+      }
+    },
+    "seal": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "sealed_at",
+        "artifacts"
+      ],
+      "properties": {
+        "sealed_at": {
+          "format": "date-time",
+          "maxLength": 40,
+          "type": "string"
+        },
+        "artifacts": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+              "path",
+              "kind",
+              "hash",
+              "bytes"
+            ],
+            "properties": {
+              "path": {
+                "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(?:/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$",
+                "maxLength": 240,
+                "description": "Package-relative path of a source artifact.",
+                "type": "string"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "audio-fragment",
+                  "fragments-index",
+                  "foundry-events"
+                ]
+              },
+              "hash": {
+                "pattern": "^sha256:[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "bytes": {
+                "minimum": 0,
+                "maximum": 9007199254740991,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    },
+    "purge": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "purged_at",
+        "purged_by",
+        "reason",
+        "purged_artifacts"
+      ],
+      "properties": {
+        "purged_at": {
+          "format": "date-time",
+          "maxLength": 40,
+          "type": "string"
+        },
+        "purged_by": {
+          "minLength": 1,
+          "maxLength": 64,
+          "description": "Operator label.",
+          "type": "string"
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "retention-policy",
+            "operator-request",
+            "consent-withdrawn"
+          ]
+        },
+        "purged_artifacts": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+              "path",
+              "hash"
+            ],
+            "properties": {
+              "path": {
+                "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(?:/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$",
+                "maxLength": 240,
+                "type": "string"
+              },
+              "hash": {
+                "pattern": "^sha256:[0-9a-f]{64}$",
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

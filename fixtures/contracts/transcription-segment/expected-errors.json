@@ -1,0 +1,38 @@
+{
+  "invalid-float-ms.json": [
+    {
+      "path": "/start_offset_ms",
+      "keyword": "type"
+    }
+  ],
+  "invalid-float-confidence.json": [
+    {
+      "path": "/confidence_permille",
+      "keyword": "type"
+    }
+  ],
+  "invalid-missing-run-id.json": [
+    {
+      "path": "/transcription_run_id",
+      "keyword": "required"
+    }
+  ],
+  "invalid-unscoped-segment-id.json": [
+    {
+      "path": "/segment_id",
+      "keyword": "pattern"
+    }
+  ],
+  "invalid-label-in-segment.json": [
+    {
+      "path": "/label",
+      "keyword": "additionalProperties"
+    }
+  ],
+  "invalid-no-source-span.json": [
+    {
+      "path": "/source_spans",
+      "keyword": "minItems"
+    }
+  ]
+}

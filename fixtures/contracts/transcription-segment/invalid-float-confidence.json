@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "transcription_run_id": "01JBX7Q8M2N4P6R8S0T2V4W6XY",
+  "segment_id": "01JBX7Q8M2N4P6R8S0T2V4W6XY:12:3",
+  "chunk_index": 12,
+  "seq": 3,
+  "speaker_id": "gm",
+  "language": "pt",
+  "text_original": "Vocês chegam à ponte de pedra coberta de musgo.",
+  "text_hash": "sha256:74240b094faafbe4663a8538e4dabe1778b65bb29f6a3bb60b14023e64d98e13",
+  "start_offset_ms": 1201340,
+  "end_offset_ms": 1204980,
+  "timing_uncertainty_ms": 40,
+  "chunk_start_ms": 11340,
+  "chunk_end_ms": 14980,
+  "source_spans": [
+    {
+      "fragment_id": "gm:0",
+      "start_sample": 57862720,
+      "end_sample": 58037440
+    }
+  ],
+  "confidence_permille": 0.912,
+  "flags": []
+}

@@ -1,0 +1,32 @@
+{
+  "invalid-failed-without-error.json": [
+    {
+      "path": "/error",
+      "keyword": "required"
+    }
+  ],
+  "invalid-unknown-status.json": [
+    {
+      "path": "/status",
+      "keyword": "enum"
+    }
+  ],
+  "invalid-float-cost.json": [
+    {
+      "path": "/usage/cost_micro_usd",
+      "keyword": "type"
+    }
+  ],
+  "invalid-editorial-state.json": [
+    {
+      "path": "/editorial_state",
+      "keyword": "additionalProperties"
+    }
+  ],
+  "invalid-running-without-start.json": [
+    {
+      "path": "/started_at",
+      "keyword": "required"
+    }
+  ]
+}

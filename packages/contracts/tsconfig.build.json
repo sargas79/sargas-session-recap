@@ -2,7 +2,9 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist"
+    "outDir": "dist",
+    // Browser-safe: no Node type definitions, so Node globals and built-ins fail to compile.
+    "types": []
   },
   "include": ["src"],
   "exclude": ["src/**/*.test.ts"]
