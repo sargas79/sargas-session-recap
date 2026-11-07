@@ -1,0 +1,12 @@
+* text=auto eol=lf
+
+# Binary assets: never normalize line endings
+*.png binary
+*.jpg binary
+*.wav binary
+*.flac binary
+*.ogg binary
+*.opus binary
+*.mp3 binary
+*.m4a binary
+*.zip binary
