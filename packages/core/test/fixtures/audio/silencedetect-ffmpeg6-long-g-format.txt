@@ -1,0 +1,21 @@
+Input #0, wav, from '/data/session/track-02.wav':
+  Duration: 03:02:10.00, bitrate: 256 kb/s
+  Stream #0:0: Audio: pcm_s16le ([1][0][0][0] / 0x0001), 16000 Hz, 1 channels, s16, 256 kb/s
+Stream mapping:
+  Stream #0:0 -> #0:0 (pcm_s16le (native) -> pcm_s16le (native))
+Output #0, null, to 'pipe:':
+  Metadata:
+    encoder         : Lavf60.16.100
+  Stream #0:0: Audio: pcm_s16le, 16000 Hz, mono, s16, 256 kb/s
+    Metadata:
+      encoder         : Lavc60.31.102 pcm_s16le
+[silencedetect @ 0x55d0b3f2e100] silence_start: -2.08333e-05
+[silencedetect @ 0x55d0b3f2e100] silence_end: 4.1205 | silence_duration: 4.12052
+[silencedetect @ 0x55d0b3f2e100] silence_start: 987.654
+[silencedetect @ 0x55d0b3f2e100] silence_end: 989.0005 | silence_duration: 1.3465
+[silencedetect @ 0x55d0b3f2e100] silence_start: 3725.51
+[silencedetect @ 0x55d0b3f2e100] silence_end: 3727.08 | silence_duration: 1.57
+[silencedetect @ 0x55d0b3f2e100] silence_start: 10921.3
+[silencedetect @ 0x55d0b3f2e100] silence_end: 10925 | silence_duration: 3.7
+[out#0/null @ 0x55d0b3f2c900] video:0kB audio:341313kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: unknown
+size=N/A time=03:02:10.00 bitrate=N/A speed= 950x

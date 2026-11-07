@@ -28,6 +28,30 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
+      # ffmpeg/ffprobe are an external prerequisite (T22). The audio integration
+      # tests fail instead of skipping in CI when they are missing.
+      - name: Install ffmpeg (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -version | sed -n 1p
+
+      - name: Install ffmpeg (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          choco install ffmpeg -y --no-progress
+          # Point recap at the real binaries rather than the Chocolatey shims; this
+          # also exercises the RECAP_FFMPEG / RECAP_FFPROBE lookup.
+          $lib = Join-Path $env:ChocolateyInstall 'lib\ffmpeg'
+          $ffmpeg = Get-ChildItem -Path $lib -Recurse -Filter ffmpeg.exe | Select-Object -First 1
+          $ffprobe = Get-ChildItem -Path $lib -Recurse -Filter ffprobe.exe | Select-Object -First 1
+          if (-not $ffmpeg -or -not $ffprobe) { throw "ffmpeg/ffprobe not found under $lib" }
+          "RECAP_FFMPEG=$($ffmpeg.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "RECAP_FFPROBE=$($ffprobe.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          & $ffmpeg.FullName -version | Select-Object -First 1
+
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
@@ -40,3 +64,4 @@ jobs:
         run: |
           npm exec --no -- recap --help
           npm exec --no -- recap doctor
+          npm exec --no -- recap doctor --strict
