@@ -23,6 +23,10 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Don't leave the write-scoped token in .git/config while npm ci runs
+          # third-party install scripts; gh uses GH_TOKEN in the upload step only.
+          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:
