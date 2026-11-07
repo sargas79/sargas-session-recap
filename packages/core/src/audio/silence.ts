@@ -79,8 +79,11 @@ export function silenceArgs(input: string, params: SilenceParams): string[] {
   ];
 }
 
-const START_RE = /\[silencedetect @ [^\]]*\]\s*silence_start:\s*(\S+)/;
-const END_RE = /\[silencedetect @ [^\]]*\]\s*silence_end:\s*(\S+)/;
+// The log prefix differs between ffmpeg releases (`[silencedetect @ 0x..]` in
+// 6.x, instance-named contexts in newer builds), so only the key is matched.
+// No other filter we run emits `silence_start:` / `silence_end:`.
+const START_RE = /(?:^|[\]\s])silence_start:\s*(\S+)/;
+const END_RE = /(?:^|[\]\s])silence_end:\s*([^\s|]+)/;
 
 function parseTime(text: string): number {
   const ms = secondsToMs(text);

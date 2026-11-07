@@ -239,6 +239,18 @@ describe('parseSilenceDetect', () => {
     }
   });
 
+  it('accepts the log prefixes used by newer ffmpeg builds', () => {
+    const stderr =
+      '[Parsed_silencedetect_0 @ 000001d2c3b4a5f0] silence_start: 1.5\r\n' +
+      '[af#0:0 @ 000001d2c3b4a5f0] silence_end: 2.25 | silence_duration: 0.75\r\n' +
+      'silence_start: 3\n' +
+      'silence_end: 4|silence_duration: 1\n';
+    expect(parseSilenceDetect(stderr, 10_000)).toEqual([
+      { startMs: 1500, endMs: 2250 },
+      { startMs: 3000, endMs: 4000 },
+    ]);
+  });
+
   it('rejects an unparseable timestamp with a typed error', () => {
     expect(() => parseSilenceDetect('[silencedetect @ 0x1] silence_start: garbage', 1000)).toThrow(
       expect.objectContaining({ code: 'AUDIO_PARSE_FAILED' }) as Error,
