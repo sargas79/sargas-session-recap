@@ -1,0 +1,23 @@
+{
+  "name": "@sargas-recap/foundry-module",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Foundry VTT v14 module (browser ESM bundle). Placeholder until T16.",
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0 <25"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "package": "node scripts/package.mjs",
+    "typecheck": "tsc -p tsconfig.json && tsc -p test/tsconfig.json"
+  },
+  "dependencies": {
+    "@sargas-recap/contracts": "0.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "fflate": "^0.8.3"
+  }
+}

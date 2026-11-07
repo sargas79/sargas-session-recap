@@ -1,0 +1,37 @@
+{
+  "systeminfo": "WHISPER : COREML = 0 | OPENVINO = 0 | CPU : SSE3 = 1 | AVX2 = 1 | (SYNTHETIC FIXTURE)",
+  "model": {
+    "type": "large",
+    "multilingual": true,
+    "vocab": 51866,
+    "audio": { "ctx": 1500, "state": 1280, "head": 20, "layer": 32 },
+    "text": { "ctx": 448, "state": 1280, "head": 20, "layer": 4 },
+    "mels": 128,
+    "ftype": 1
+  },
+  "params": {
+    "model": "models/ggml-large-v3-turbo.bin",
+    "language": "pt",
+    "translate": false
+  },
+  "result": {
+    "language": "pt"
+  },
+  "transcription": [
+    {
+      "timestamps": { "from": "00:00:00,000", "to": "00:00:03,480" },
+      "offsets": { "from": 0, "to": 3480 },
+      "text": " Ok, a Kyra rola Perception para procurar armadilhas."
+    },
+    {
+      "timestamps": { "from": "00:00:03,480", "to": "00:00:07,120" },
+      "offsets": { "from": 3480, "to": 7120 },
+      "text": " Deu vinte e dois, é um critical success."
+    },
+    {
+      "timestamps": { "from": "00:00:07,120", "to": "00:00:10,000" },
+      "offsets": { "from": 7120, "to": 10000 },
+      "text": " Ela encontra o goblin escondido atrás da porta."
+    }
+  ]
+}

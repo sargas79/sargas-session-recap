@@ -17,7 +17,10 @@ approval → GM-only Foundry VTT journal.
 packages/
   core/        CLI (`recap`) and stage modules: capture, package, jobs, transcribe, classify, recap, review
   contracts/   canonical schemas, types and validators (T02)
+  foundry-module/  Foundry VTT v14 browser module, placeholder until T16 (build/release: T24)
 ```
+
+Dependency rules between packages: [ADR-008](docs/adr/ADR-008-workspace-layout.md).
 
 ## Quick start
 
