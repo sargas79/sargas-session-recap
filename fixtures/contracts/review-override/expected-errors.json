@@ -1,0 +1,30 @@
+{
+  "invalid-missing-base-text-hash.json": [
+    {
+      "path": "/base_text_hash",
+      "keyword": "required"
+    }
+  ],
+  "invalid-timestamp-key.json": [
+    {
+      "path": "/segment_id",
+      "keyword": "required"
+    },
+    {
+      "path": "/start_offset_ms",
+      "keyword": "additionalProperties"
+    }
+  ],
+  "invalid-unknown-label.json": [
+    {
+      "path": "/label_override",
+      "keyword": "enum"
+    }
+  ],
+  "invalid-bad-hash.json": [
+    {
+      "path": "/base_text_hash",
+      "keyword": "pattern"
+    }
+  ]
+}

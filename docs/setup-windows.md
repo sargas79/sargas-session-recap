@@ -68,6 +68,10 @@ tasks add environment checks. It always exits 0 for now.
 | `npm run format`       | Prettier, write                               |
 | `npm run format:check` | Prettier, check only (CI)                     |
 
+After changing a contract in `packages/contracts/src`, regenerate the committed JSON Schemas with
+`npm run schemas -w @sargas-recap/contracts` (see `docs/adr/README.md`). `npm test` fails if they are
+stale.
+
 ## Foundry module package
 
 `npm run package:foundry` builds the Foundry module and writes `packages/foundry-module/dist/module.json`

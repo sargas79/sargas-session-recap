@@ -1,0 +1,19 @@
+{
+  "application_id": "000000000000000000",
+  "guild_id": "000000000000000000",
+  "gm_user_id": "000000000000000000",
+  "voice_channel_id": "000000000000000000",
+  "output_root": "C:/Users/<you>/AppData/Local/sargas-recap-spikes/s02",
+  "allowlist": [
+    { "user_id": "000000000000000001", "label": "p1" },
+    { "user_id": "000000000000000002", "label": "p2" },
+    { "user_id": "000000000000000003", "label": "p3" }
+  ],
+  "silence_close_ms": 1000,
+  "gap_fill_threshold_ms": 100,
+  "latency_compensation_ms": 0,
+  "max_fragment_ms": 30000,
+  "flush_interval_ms": 1000,
+  "mark_beep": true,
+  "dave_decryption_failure_tolerance": 24
+}

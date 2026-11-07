@@ -1,0 +1,242 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/sargas79/sargas-session-recap/fixtures/evaluation/label.schema.json",
+  "title": "S01 evaluation label set (SPIKE SCHEMA)",
+  "description": "Spike schema for S01 (#11) manual labels and the tuning/held-out split. NOT a canonical contract: it is to be superseded by, or aligned with, the canonical schemas owned by T02 (#18). Real labels are kept outside git; only synthetic fixtures (synthetic: true) are committed. Constraints JSON Schema cannot express (end_ms > start_ms, disjoint split ranges, unique segment refs, every segment inside exactly one split range) are enforced by spikes/s01-labels.",
+  "x-spike": {
+    "issue": 11,
+    "stable_id": "S01",
+    "status": "spike",
+    "superseded_by": "T02 (#18) canonical contracts"
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "sample_id",
+    "synthetic",
+    "labeller_role",
+    "labelled_on",
+    "consent_ref",
+    "split",
+    "labels"
+  ],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schema_version": {
+      "const": "s01-labels/0.1-spike",
+      "description": "Spike schema version. Bump on any breaking change."
+    },
+    "sample_id": {
+      "$ref": "#/$defs/opaqueId",
+      "description": "Opaque identifier for the labelled sample. Must not contain player names or dates that identify people."
+    },
+    "synthetic": {
+      "type": "boolean",
+      "description": "true for invented fixture data. Files committed to git must be synthetic."
+    },
+    "session_ref": {
+      "$ref": "#/$defs/opaqueId",
+      "description": "Opaque reference to the recorded session. The mapping to the real session lives outside git."
+    },
+    "labeller_role": {
+      "enum": ["gm", "co-gm", "synthetic"],
+      "description": "Role of the person who labelled. Never a real name."
+    },
+    "labelled_on": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+      "description": "Calendar date (YYYY-MM-DD) the labelling was done."
+    },
+    "consent_ref": {
+      "type": "string",
+      "pattern": "^outside-git:[A-Za-z0-9._-]{1,128}$",
+      "description": "Pointer to the consent provenance record kept OUTSIDE git (e.g. 'outside-git:consent-2026-11-s01'). The consent itself, signatures, names and messages are never stored here."
+    },
+    "transcript_ref": {
+      "$ref": "#/$defs/opaqueId",
+      "description": "Opaque reference to the whisper.cpp transcript run the segment refs were taken from (S04 setup)."
+    },
+    "time_base": {
+      "const": "session-ms",
+      "default": "session-ms",
+      "description": "All times are integer milliseconds on the shared session timeline (offset applied per track)."
+    },
+    "split": { "$ref": "#/$defs/splitManifest" },
+    "labels": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/labelRecord" }
+    },
+    "notes": { "type": "string", "maxLength": 4000 }
+  },
+  "$defs": {
+    "opaqueId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$"
+    },
+    "speakerId": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_-]{0,63}$",
+      "description": "Pseudonymous speaker/track id (e.g. 'gm', 'p1'). Never a real name."
+    },
+    "ms": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Integer milliseconds on the session timeline."
+    },
+    "label": {
+      "enum": ["ic", "narration", "rules", "ooc", "mixed", "uncertain"],
+      "description": "ic = in-character speech; narration = GM description/NPC framing of the fiction; rules = mechanics talk; ooc = out-of-character table talk; mixed = one segment combining recap-relevant and irrelevant content; uncertain = labeller cannot decide."
+    },
+    "segmentRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["speaker", "start_ms", "end_ms"],
+      "properties": {
+        "speaker": { "$ref": "#/$defs/speakerId" },
+        "start_ms": { "$ref": "#/$defs/ms" },
+        "end_ms": { "$ref": "#/$defs/ms" }
+      }
+    },
+    "flag": {
+      "enum": [
+        "overlapping_speech",
+        "joke",
+        "scene_change",
+        "asr_error_suspected",
+        "inaudible",
+        "spoiler_or_private"
+      ]
+    },
+    "criticalItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "enum": [
+            "decision",
+            "clue",
+            "npc_name",
+            "loot",
+            "action",
+            "outcome",
+            "location",
+            "other"
+          ]
+        },
+        "action_status": {
+          "enum": ["proposed", "completed", "abandoned", "unclear"],
+          "description": "Required when type = action."
+        },
+        "outcome_basis": {
+          "enum": ["roll", "narrative", "roll_and_narrative"],
+          "description": "Required when type = outcome. 'roll' = only the mechanical result was spoken; 'narrative' = the GM narrated what happened."
+        },
+        "summary": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Short neutral restatement of the critical item (what a recap must mention)."
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "action" } } },
+          "then": { "required": ["action_status"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "outcome" } } },
+          "then": { "required": ["outcome_basis"] }
+        },
+        {
+          "if": { "properties": { "type": { "const": "other" } } },
+          "then": { "required": ["summary"] }
+        }
+      ]
+    },
+    "labelRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["segment", "label"],
+      "properties": {
+        "segment": { "$ref": "#/$defs/segmentRef" },
+        "label": { "$ref": "#/$defs/label" },
+        "recap_critical": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/criticalItem" },
+          "default": [],
+          "description": "Empty or absent = not recap-critical."
+        },
+        "flags": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/flag" }
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 2000,
+          "description": "Optional transcript text. Only allowed in git for synthetic fixtures."
+        },
+        "notes": { "type": "string", "maxLength": 2000 }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "label": { "enum": ["mixed", "uncertain"] } }
+          },
+          "then": {
+            "required": ["notes"],
+            "properties": { "notes": { "minLength": 1 } }
+          }
+        }
+      ]
+    },
+    "timeRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start_ms", "end_ms"],
+      "properties": {
+        "start_ms": { "$ref": "#/$defs/ms" },
+        "end_ms": {
+          "$ref": "#/$defs/ms",
+          "description": "Exclusive end. Ranges are half-open [start_ms, end_ms)."
+        },
+        "description": { "type": "string", "maxLength": 300 }
+      }
+    },
+    "splitManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tuning", "held_out"],
+      "description": "Tuning/held-out split by session time ranges. Every labelled segment must fall inside exactly one range; tuning and held-out ranges must be disjoint (checked by the validator). Held-out segments must never be shown to a prompt-tuning loop.",
+      "properties": {
+        "tuning": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/timeRange" }
+        },
+        "held_out": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/timeRange" }
+        },
+        "excluded": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/timeRange" },
+          "description": "Optional ranges deliberately left out of both subsets (e.g. a buffer around the boundary)."
+        },
+        "frozen_on": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "description": "Date the split was fixed. It must not change after prompt tuning starts."
+        },
+        "method": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "How the split was chosen (e.g. 'contiguous blocks, chosen before looking at model output')."
+        }
+      }
+    }
+  }
+}

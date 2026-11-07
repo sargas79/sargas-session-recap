@@ -1,7 +1,19 @@
 /**
- * Canonical contracts (schemas, types, validators).
+ * Canonical contracts shared by core and the Foundry module: TypeBox schemas, their static types,
+ * JSON Schema 2020-12 emission and Ajv validators. See docs/adr/ for the decisions behind them.
  *
- * Placeholder: schemas and ADRs are defined in T02 (#18). Nothing here is
- * consumed yet.
+ * Browser-safe: no Node built-ins anywhere under src/ (checked by test/no-node-imports.test.ts).
  */
-export const CONTRACTS_PLACEHOLDER = true as const;
+export * from './common.ts';
+export * from './registry.ts';
+export * from './validate.ts';
+export * from './schemas/classification-result.ts';
+export * from './schemas/effective-transcript.ts';
+export * from './schemas/foundry-event.ts';
+export * from './schemas/fragment.ts';
+export * from './schemas/job-record.ts';
+export * from './schemas/manifest.ts';
+export * from './schemas/recap-package.ts';
+export * from './schemas/recap.ts';
+export * from './schemas/review-override.ts';
+export * from './schemas/transcription-segment.ts';

@@ -2,9 +2,10 @@
   "name": "@sargas-recap/contracts",
   "version": "0.0.0",
   "private": true,
-  "description": "Canonical schemas, types and validators shared by core and the Foundry module (populated in T02).",
+  "description": "Canonical schemas, types and validators shared by core and the Foundry module.",
   "license": "UNLICENSED",
   "type": "module",
+  "sideEffects": false,
   "engines": {
     "node": ">=24.0.0 <25"
   },
@@ -12,13 +13,21 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./schemas/*": "./schemas/*"
   },
   "files": [
-    "dist"
+    "dist",
+    "schemas"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "schemas": "node scripts/emit-schemas.ts"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "^0.34.52",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1"
   }
 }

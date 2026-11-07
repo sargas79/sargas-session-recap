@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "fragment_id": "gm:0",
+  "speaker_id": "gm",
+  "track_label": "Track 1 - GM",
+  "path": "audio/gm/0.flac",
+  "codec": "flac",
+  "sample_rate_hz": 48000,
+  "channels": 1,
+  "sample_count": 86400000,
+  "duration_ms": 1800000,
+  "fragment_start_offset_ms": -4200,
+  "timing_uncertainty_ms": 0,
+  "status": "complete"
+}

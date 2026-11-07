@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "campaign_id": "abomination-vaults",
+  "session_id": "s07",
+  "recap_revision": 1,
+  "transcription_run_id": "01JBX7Q8M2N4P6R8S0T2V4W6XY",
+  "classification_run_id": "01JBX7RA3C5E7G9J1K3M5N7P9Q",
+  "language": "pt",
+  "generated_at": "2026-11-02T21:00:00.000Z",
+  "title": "Sessão 7: A ponte de pedra",
+  "sentences": [
+    {
+      "sentence_id": "r1:s0",
+      "text": "O grupo chegou a uma ponte de pedra coberta de musgo.",
+      "assertion": "completed",
+      "citations": {
+        "segment_ids": [
+          "01JBX7Q8M2N4P6R8S0T2V4W6XY:12:3"
+        ],
+        "event_ids": []
+      }
+    },
+    {
+      "sentence_id": "r1:s1",
+      "text": "Bruno procurou armadilhas e notou a Vela escondida.",
+      "assertion": "completed",
+      "outcome_basis": "roll",
+      "citations": {
+        "segment_ids": [
+          "01JBX7Q8M2N4P6R8S0T2V4W6XY:13:0"
+        ],
+        "event_ids": [
+          "fvtt:01JBX7A0B1C2D3E4F5G6H7J8K9:42"
+        ]
+      }
+    }
+  ],
+  "gm_notes": [
+    {
+      "note_id": "r1:g0",
+      "reason": "unresolved",
+      "text": "Não ficou claro se o grupo atravessou a ponte.",
+      "citations": {
+        "segment_ids": [],
+        "event_ids": []
+      }
+    }
+  ],
+  "approved": true
+}

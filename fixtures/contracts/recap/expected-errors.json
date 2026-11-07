@@ -1,0 +1,38 @@
+{
+  "invalid-unscoped-sentence-id.json": [
+    {
+      "path": "/sentences/0/sentence_id",
+      "keyword": "pattern"
+    }
+  ],
+  "invalid-revision-zero.json": [
+    {
+      "path": "/recap_revision",
+      "keyword": "minimum"
+    }
+  ],
+  "invalid-missing-run-id.json": [
+    {
+      "path": "/transcription_run_id",
+      "keyword": "required"
+    }
+  ],
+  "invalid-editorial-state.json": [
+    {
+      "path": "/<key>",
+      "keyword": "additionalProperties"
+    }
+  ],
+  "invalid-unknown-assertion.json": [
+    {
+      "path": "/sentences/1/assertion",
+      "keyword": "enum"
+    }
+  ],
+  "invalid-local-timestamp.json": [
+    {
+      "path": "/generated_at",
+      "keyword": "format"
+    }
+  ]
+}

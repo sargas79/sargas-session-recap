@@ -1,0 +1,44 @@
+{
+  "invalid-sealed-without-seal.json": [
+    {
+      "path": "/seal",
+      "keyword": "required"
+    }
+  ],
+  "invalid-purged-without-provenance.json": [
+    {
+      "path": "/purge",
+      "keyword": "required"
+    }
+  ],
+  "invalid-unknown-lifecycle.json": [
+    {
+      "path": "/lifecycle",
+      "keyword": "enum"
+    }
+  ],
+  "invalid-path-traversal.json": [
+    {
+      "path": "/seal/artifacts/1/path",
+      "keyword": "pattern"
+    }
+  ],
+  "invalid-float-uncertainty.json": [
+    {
+      "path": "/timeline/origin_uncertainty_ms",
+      "keyword": "type"
+    }
+  ],
+  "invalid-extra-property.json": [
+    {
+      "path": "/status",
+      "keyword": "additionalProperties"
+    }
+  ],
+  "invalid-missing-package-id.json": [
+    {
+      "path": "/package_id",
+      "keyword": "required"
+    }
+  ]
+}

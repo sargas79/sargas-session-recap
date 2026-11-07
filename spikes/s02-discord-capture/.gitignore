@@ -1,0 +1,12 @@
+node_modules/
+# Real config holds Discord IDs of participants; only the example is committed.
+s02.config.json
+# Never commit captured audio or session output.
+recordings/
+*.wav
+*.part
+*.empty
+manifest.jsonl*
+recovery-*.json
+kill-record-*.json
+.env

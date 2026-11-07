@@ -51,7 +51,12 @@ describe('foundry-module build', () => {
     expect(bundle).toContain('sargas-session-recap');
     expect(bundle).toContain('Hooks.once("init"');
     expect(bundle).not.toMatch(/["']node:/);
-    expect(bundle).not.toMatch(/\brequire\s*\(/);
+    // esbuild emits a `__require` shim only for a require() it could not resolve; text such as
+    // Ajv's generated `require("ajv-formats/...")` string is not a module load.
+    expect(bundle).not.toMatch(/\b__require\b/);
+    expect(bundle).not.toMatch(
+      /(?<![\w."'`$])require\s*\(\s*["'](?:node:)?(?:fs|path|os|child_process|crypto)\b/,
+    );
     // Contracts are bundled in, not left as an external import.
     expect(bundle).not.toContain('@sargas-recap/contracts');
     expect(bundle).not.toMatch(/^\s*import\s/m);

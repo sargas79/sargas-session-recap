@@ -1,0 +1,41 @@
+{
+  "$schema": "../label.schema.json",
+  "schema_version": "s01-labels/0.1-spike",
+  "sample_id": "synthetic-invalid-speaker-not-pseudonymous",
+  "synthetic": true,
+  "labeller_role": "synthetic",
+  "labelled_on": "2026-11-07",
+  "consent_ref": "outside-git:not-applicable-synthetic",
+  "split": {
+    "tuning": [
+      {
+        "start_ms": 0,
+        "end_ms": 60000
+      }
+    ],
+    "held_out": [
+      {
+        "start_ms": 60000,
+        "end_ms": 120000
+      }
+    ]
+  },
+  "labels": [
+    {
+      "segment": {
+        "speaker": "Player One",
+        "start_ms": 1000,
+        "end_ms": 5000
+      },
+      "label": "narration"
+    },
+    {
+      "segment": {
+        "speaker": "p1",
+        "start_ms": 61000,
+        "end_ms": 64000
+      },
+      "label": "ic"
+    }
+  ]
+}
