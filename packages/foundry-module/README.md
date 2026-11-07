@@ -50,5 +50,6 @@ if the tag doesn't match `package.json`.
   records a PASS.
 - **Types are a stopgap.** `src/foundry.d.ts` declares only what this placeholder uses. T16 decides whether
   to adopt a real Foundry type package or keep hand-written declarations.
-- The entry imports the whole contracts namespace to prove the bundling path. T16 should switch to named
-  imports so unused contracts code is tree-shaken.
+- The entry uses one named import from contracts to prove the bundling path. Keep to named imports:
+  contracts is marked `"sideEffects": false`, so unused parts (e.g. the Ajv validators) are dropped. Once T16
+  validates in the browser, Ajv is bundled; consider precompiled validators to keep the size down.
