@@ -19,7 +19,7 @@
   ],
   "invalid-editorial-state.json": [
     {
-      "path": "/editorial_state",
+      "path": "/<key>",
       "keyword": "additionalProperties"
     }
   ],

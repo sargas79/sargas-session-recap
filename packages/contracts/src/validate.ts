@@ -41,8 +41,41 @@ export interface ContractTypes {
 }
 
 const MAX_ISSUES = 50;
-/** Path segments and property names are echoed only when they look like schema identifiers. */
-const SAFE_TOKEN = /^[A-Za-z0-9_$-]{1,64}$/;
+const ARRAY_INDEX = /^\d{1,9}$/;
+
+let vocabulary: Set<string> | undefined;
+
+/** Every property name declared anywhere in the contract schemas. */
+function schemaVocabulary(): Set<string> {
+  if (vocabulary === undefined) {
+    const names = new Set<string>();
+    const walk = (node: unknown): void => {
+      if (Array.isArray(node)) {
+        for (const item of node) walk(item);
+        return;
+      }
+      if (node === null || typeof node !== 'object') return;
+      const obj = node as Record<string, unknown>;
+      const props = obj['properties'];
+      if (props !== null && typeof props === 'object') {
+        for (const key of Object.keys(props)) names.add(key);
+      }
+      for (const value of Object.values(obj)) walk(value);
+    };
+    for (const name of CONTRACT_NAMES) walk(toJsonSchema(name));
+    vocabulary = names;
+  }
+  return vocabulary;
+}
+
+/**
+ * Path segments and property names are echoed only when they come from the schemas themselves
+ * (a declared property name) or are array indices. Anything else came from the input document and
+ * may be a player name or transcript fragment, so it is masked.
+ */
+function isSchemaToken(token: string): boolean {
+  return ARRAY_INDEX.test(token) || schemaVocabulary().has(token);
+}
 
 // ajv-formats is CommonJS; depending on the loader the default import is the plugin itself or a
 // namespace whose `default` is the plugin. Both shapes expose `.default`.
@@ -81,7 +114,7 @@ function safePath(pointer: string): string {
   return pointer
     .split('/')
     .slice(1)
-    .map((seg) => (SAFE_TOKEN.test(seg) ? seg : '<key>'))
+    .map((seg) => (isSchemaToken(seg) ? seg : '<key>'))
     .map((seg) => `/${seg}`)
     .join('');
 }
@@ -98,7 +131,7 @@ function toIssue(err: ErrorObject): ValidationIssue | undefined {
     }
     case 'additionalProperties': {
       const prop = String(params['additionalProperty']);
-      const shown = SAFE_TOKEN.test(prop) ? `/${prop}` : '/<key>';
+      const shown = isSchemaToken(prop) ? `/${prop}` : '/<key>';
       return {
         path: `${path}${shown}`,
         keyword: err.keyword,

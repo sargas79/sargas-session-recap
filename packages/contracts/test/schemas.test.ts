@@ -90,6 +90,26 @@ describe('validation errors', () => {
     );
   });
 
+  it('masks identifier-like keys that are not schema property names', () => {
+    const doc: Record<string, unknown> = {
+      ...(readJson(join(FIXTURES_DIR, 'transcription-segment', 'valid.json')) as Record<
+        string,
+        unknown
+      >),
+      Thorin: 1,
+      mariana_silva: 2,
+    };
+    const result = validateTranscriptionSegment(doc);
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    const dumped = JSON.stringify(result.errors);
+    expect(dumped).not.toContain('Thorin');
+    expect(dumped).not.toContain('mariana_silva');
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ path: '/<key>', keyword: 'additionalProperties' }),
+    );
+  });
+
   it('returns the typed value on success', () => {
     const result = validateTranscriptionSegment(
       readJson(join(FIXTURES_DIR, 'transcription-segment', 'valid.json')),
