@@ -1,0 +1,27 @@
+{
+  "name": "s01-labels-spike",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Throwaway S01 (#11) validator for evaluation label sets and tuning/held-out splits. Not imported by src/; superseded by T02 contracts.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "bin": {
+    "s01-labels": "./src/cli.ts"
+  },
+  "scripts": {
+    "validate": "node src/cli.ts",
+    "validate:fixtures": "node src/cli.ts ../../fixtures/evaluation/label-set.synthetic.valid.json",
+    "typecheck": "tsc --noEmit",
+    "test": "tsc --noEmit && vitest run"
+  },
+  "dependencies": {
+    "ajv": "8.17.1"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.1",
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}
