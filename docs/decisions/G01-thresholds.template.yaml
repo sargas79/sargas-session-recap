@@ -1,0 +1,135 @@
+# G01 (#17) product go/no-go: machine-readable thresholds.
+#
+# TEMPLATE. Every value marked null is a HUMAN (GM) decision. Agents must never
+# fill, guess or "suggest" values in this file. See docs/decisions/README.md.
+#
+# How to use:
+#   1. Once the GM has decided, copy this file to docs/decisions/G01-thresholds.yaml
+#      (drop ".template") and fill it with the same values recorded in
+#      docs/decisions/G01-go-no-go.md. The two files must agree.
+#   2. T20 (`recap eval`, #34) reads docs/decisions/G01-thresholds.yaml and reports
+#      PASS/FAIL per key under `thresholds`. T20 must refuse to report PASS/FAIL
+#      while `outcome` is PENDING or any required threshold is null.
+#   3. G02 (#38) compares the T20 report against these same keys.
+#
+# Key names below are a contract with T20. Renaming one is a schema change:
+# bump `schema_version` and update G01-go-no-go.md section 4.
+
+schema_version: 1
+gate: G01
+issue: 17
+
+# PENDING until the GM records a decision. Then PASS (decision GO or
+# GO-WITH-CHANGES) or FAIL (decision NO-GO), matching #17 acceptance criteria.
+outcome: PENDING
+decision: null        # GO | NO-GO | GO-WITH-CHANGES
+decided_by: null      # GM name
+decided_on: null      # YYYY-MM-DD
+decision_record: docs/decisions/G01-go-no-go.md
+
+# Thresholds are evaluated on the S01 held-out subset (never the tuning subset).
+evaluation_subset: held_out
+
+thresholds:
+  # Important IC content (recap-critical decisions/clues) labelled OOC and
+  # therefore lost from the recap. #17 states "decisions/clues lost = 0".
+  important_ic_labelled_ooc:
+    unit: count_per_session
+    comparison: max            # PASS when measured <= threshold
+    t20_metric: false_exclusions_ic_to_ooc
+    issue_target: 0            # as written in #17; GM confirms below
+    baseline_s01: null
+    threshold: null
+    rationale: null
+
+  # Share of GM-labelled OOC segments that the pipeline labelled IC (included).
+  ooc_labelled_ic_rate:
+    unit: ratio_0_to_1         # (OOC segments labelled IC) / (all GM-labelled OOC segments)
+    comparison: max
+    t20_metric: ooc_inclusion
+    issue_target: null
+    baseline_s01: null
+    threshold: null
+    rationale: null
+
+  # Recap sentences/claims not supported by their cited current-session evidence.
+  unsupported_draft_claims_per_recap:
+    unit: count_per_recap
+    comparison: max
+    t20_metric: unsupported_draft_claims
+    issue_target: null
+    baseline_s01: null
+    threshold: null
+    rationale: null
+
+  # Recap-critical items (per the labelling guide) absent from the draft recap.
+  # #17 states "critical omissions (0)".
+  critical_omissions:
+    unit: count_per_session
+    comparison: max
+    t20_metric: critical_omissions
+    issue_target: 0            # as written in #17; GM confirms below
+    baseline_s01: null
+    threshold: null
+    rationale: null
+
+  # GM time to review/edit the draft to approval, divided by the S01
+  # from-scratch recap writing time (baseline_from_scratch_minutes).
+  gm_review_time_ratio:
+    unit: ratio_review_over_from_scratch
+    comparison: max
+    t20_metric: editing_time
+    issue_target: null
+    baseline_from_scratch_minutes: null
+    baseline_s01: null         # S01 manual-pass editing minutes / from-scratch minutes
+    threshold: null
+    rationale: null
+
+  # End-to-end unattended wall-clock processing time (ASR + classification + recap),
+  # excluding GM review time.
+  processing_time_per_session:
+    unit: minutes_wall_clock_per_session
+    comparison: max
+    t20_metric: processing_time
+    reference_session_audio_minutes: null   # session length the threshold assumes
+    issue_target: null
+    baseline_s01: null
+    threshold: null
+    rationale: null
+
+  # LLM usage/cost per session. Which sub-field is binding depends on the chosen
+  # backend (subscription usage vs API billing); unused sub-fields stay null.
+  usage_cost_per_session:
+    unit: per_session
+    comparison: max
+    t20_metric: usage
+    issue_target: null
+    baseline_s01:
+      input_tokens: null
+      output_tokens: null
+      usd: null
+    threshold:
+      input_tokens: null
+      output_tokens: null
+      usd: null
+    rationale: null
+
+# Chosen ASR model and invocation. Must cite S04 (#14) evidence.
+whisper:
+  model: null                  # e.g. one of the models benchmarked in S04
+  model_sha256: null
+  whisper_cpp_version: null    # version/commit from S04
+  invocation: null             # exact command line / flags from S04
+  chunk_length_seconds: null
+  evidence: null               # link to docs/spikes/S04-whisper.md section + #14 outcome comment
+
+# Chosen LLM backend path. Must cite S05 (#15) evidence.
+llm_backend:
+  path: null                   # e.g. Claude Code CLI or Claude API, as validated in S05
+  model_id: null               # exact model ID verified in S05
+  evidence: null               # link to docs/spikes/S05-llm-backends.md section + #15 outcome comment
+
+# Informational only; do not gate G01.
+informational:
+  s02_discord_status: null     # S02 (#12) outcome / ADR ENABLED | DEFERRED
+  s03_foundry_status: null     # S03 (#13) outcome
