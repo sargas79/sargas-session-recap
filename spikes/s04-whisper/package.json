@@ -1,0 +1,24 @@
+{
+  "name": "@sargas/spike-s04-whisper",
+  "version": "0.0.0",
+  "private": true,
+  "description": "S04 spike harness: whisper.cpp (Vulkan, Windows) benchmark, JSON parser, WER/CER, timestamp drift and pause-split probes. Not production code.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "bench": "node src/cli/bench.ts",
+    "score": "node src/cli/score.ts",
+    "drift": "node src/cli/drift.ts",
+    "silence": "node src/cli/silence.ts",
+    "parse": "node src/cli/parse.ts"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "5.9.3",
+    "vitest": "4.1.12"
+  }
+}

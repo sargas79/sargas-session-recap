@@ -1,0 +1,13 @@
+node_modules/
+# Benchmark/probe outputs contain transcripts of real audio: never commit them.
+results/
+out/
+# Real audio and model binaries never belong in git.
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.m4a
+*.opus
+*.bin
+*.gguf
