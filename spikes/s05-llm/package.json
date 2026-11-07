@@ -1,0 +1,25 @@
+{
+  "name": "@sargas-recap/spike-s05-llm",
+  "version": "0.0.0",
+  "private": true,
+  "description": "S05 spike (throwaway): Claude Code CLI / Claude API harness, structured output validation, prompt-injection probes, secret redaction. Not imported by src/.",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "live-check": "tsx scripts/live-check.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.6.0",
+    "ajv": "8.20.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3",
+    "vitest": "5.1.0"
+  }
+}
