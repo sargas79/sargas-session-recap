@@ -1,0 +1,32 @@
+{
+  "name": "s02-discord-capture-spike",
+  "private": true,
+  "version": "0.0.0",
+  "description": "THROWAWAY S02 spike harness (issue #12). Not production code; must not be imported by src/ or packages/.",
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "register-commands": "tsx src/register-commands.ts",
+    "start": "tsx src/main.ts",
+    "kill-test": "tsx src/kill-test.ts",
+    "recover": "tsx src/cli.ts recover",
+    "analyze": "tsx src/cli.ts analyze"
+  },
+  "dependencies": {
+    "@discordjs/voice": "0.19.2",
+    "@snazzah/davey": "0.1.12",
+    "discord.js": "14.28.1",
+    "opusscript": "0.0.8",
+    "prism-media": "1.3.5",
+    "tsx": "4.23.15"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "5.9.3",
+    "vitest": "5.1.0"
+  }
+}
