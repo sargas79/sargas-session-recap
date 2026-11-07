@@ -68,6 +68,13 @@ tasks add environment checks. It always exits 0 for now.
 | `npm run format`       | Prettier, write                               |
 | `npm run format:check` | Prettier, check only (CI)                     |
 
+## Foundry module package
+
+`npm run package:foundry` builds the Foundry module and writes `packages/foundry-module/dist/module.json`
+and `packages/foundry-module/dist/sargas-session-recap.zip`. It needs no extra tools on Windows (the zip is
+written in JavaScript). Releases are cut by pushing a `foundry-v<version>` tag; see
+[`packages/foundry-module/README.md`](../packages/foundry-module/README.md).
+
 ## Data location
 
 Never put real session recordings or transcripts inside the repository. `sessions/`, audio files,

@@ -10,10 +10,12 @@
   },
   "workspaces": [
     "packages/contracts",
-    "packages/core"
+    "packages/core",
+    "packages/foundry-module"
   ],
   "scripts": {
     "build": "npm run build --workspaces",
+    "package:foundry": "npm run build -w @sargas-recap/foundry-module && npm run package -w @sargas-recap/foundry-module",
     "recap": "node packages/core/bin/recap.js",
     "typecheck": "tsc -p tsconfig.json && npm run typecheck --workspaces",
     "test": "vitest run",

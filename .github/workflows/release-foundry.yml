@@ -1,0 +1,64 @@
+name: Release Foundry module
+
+# Pushing a tag `foundry-v<version>` (matching packages/foundry-module/package.json)
+# builds, tests and packages the module, then attaches module.json and the zip to the
+# GitHub release for that tag. The manifest/download URLs inside module.json point at
+# that same release.
+on:
+  push:
+    tags:
+      - 'foundry-v*'
+
+permissions: {}
+
+concurrency:
+  group: release-foundry-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build, test and release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Check tag matches package.json version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="$(node -p "require('./packages/foundry-module/package.json').version")"
+          if [ "$TAG" != "foundry-v$version" ]; then
+            echo "::error::Tag $TAG does not match packages/foundry-module/package.json version $version (expected foundry-v$version)"
+            exit 1
+          fi
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test
+
+      - name: Package module
+        env:
+          TAG: ${{ github.ref_name }}
+        run: npm run package -w @sargas-recap/foundry-module -- --expect-tag "$TAG"
+
+      - name: Attach module.json and zip to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        working-directory: packages/foundry-module/dist
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" module.json sargas-session-recap.zip --clobber
+          else
+            gh release create "$TAG" module.json sargas-session-recap.zip \
+              --title "Foundry module $TAG" --notes "Foundry VTT module build for $TAG." --verify-tag
+          fi
