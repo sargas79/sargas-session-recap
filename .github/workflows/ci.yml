@@ -51,8 +51,6 @@ jobs:
           "RECAP_FFMPEG=$($ffmpeg.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "RECAP_FFPROBE=$($ffprobe.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           & $ffmpeg.FullName -version | Select-Object -First 1
-          # TEMP diagnostic (#57): show silencedetect log lines from this ffmpeg build.
-          & $ffmpeg.FullName -hide_banner -nostdin -nostats -v info -f lavfi -i "sine=f=440:d=1,apad=pad_dur=2" -af "silencedetect=noise=-50dB:duration=0.5" -f null - 2>&1 | Select-String silence
 
       - run: npm ci
       - run: npm run lint
