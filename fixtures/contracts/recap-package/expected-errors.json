@@ -1,0 +1,38 @@
+{
+  "invalid-gm-notes-exported.json": [
+    {
+      "path": "/content/gm_notes",
+      "keyword": "additionalProperties"
+    }
+  ],
+  "invalid-missing-approval.json": [
+    {
+      "path": "/approval",
+      "keyword": "required"
+    }
+  ],
+  "invalid-wrong-kind.json": [
+    {
+      "path": "/package_kind",
+      "keyword": "const"
+    }
+  ],
+  "invalid-float-offset.json": [
+    {
+      "path": "/content/footnotes/0/evidence/0/session_offset_ms",
+      "keyword": "type"
+    }
+  ],
+  "invalid-script-in-id.json": [
+    {
+      "path": "/content/sentences/0/footnote_ids/0",
+      "keyword": "pattern"
+    }
+  ],
+  "invalid-evidence-kind-mismatch.json": [
+    {
+      "path": "/content/footnotes/1/evidence/1/ref",
+      "keyword": "pattern"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "invalid-float-time.json": [
+    {
+      "path": "/observed_at_unix_ms",
+      "keyword": "type"
+    }
+  ],
+  "invalid-unnamespaced-id.json": [
+    {
+      "path": "/event_id",
+      "keyword": "pattern"
+    }
+  ],
+  "invalid-missing-capture-id.json": [
+    {
+      "path": "/capture_id",
+      "keyword": "required"
+    }
+  ],
+  "invalid-session-offset-in-envelope.json": [
+    {
+      "path": "/session_offset_ms",
+      "keyword": "additionalProperties"
+    }
+  ]
+}

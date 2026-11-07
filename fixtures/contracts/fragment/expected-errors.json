@@ -1,0 +1,26 @@
+{
+  "invalid-float-offset.json": [
+    {
+      "path": "/fragment_start_offset_ms",
+      "keyword": "type"
+    }
+  ],
+  "invalid-absolute-path.json": [
+    {
+      "path": "/path",
+      "keyword": "pattern"
+    }
+  ],
+  "invalid-bad-fragment-id.json": [
+    {
+      "path": "/fragment_id",
+      "keyword": "pattern"
+    }
+  ],
+  "invalid-extra-property.json": [
+    {
+      "path": "/hash",
+      "keyword": "additionalProperties"
+    }
+  ]
+}

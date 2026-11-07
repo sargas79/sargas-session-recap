@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "campaign_id": "abomination-vaults",
+  "session_id": "s07",
+  "transcription_run_id": "01JBX7Q8M2N4P6R8S0T2V4W6XY",
+  "classification_run_id": "01JBX7RA3C5E7G9J1K3M5N7P9Q",
+  "generated_at": "2026-11-02T20:06:00.000Z",
+  "segments": [
+    {
+      "segment_id": "01JBX7Q8M2N4P6R8S0T2V4W6XY:12:3",
+      "speaker_id": "gm",
+      "start_offset_ms": 1201340,
+      "end_offset_ms": 1204980,
+      "timing_uncertainty_ms": 40,
+      "text": "Vocês chegam à ponte de pedra coberta de musgo.",
+      "text_source": "original",
+      "label": "narration",
+      "label_source": "classification",
+      "recap_inclusion": "include",
+      "exclusion_reasons": [],
+      "review_required": false,
+      "review_status": "pending",
+      "text_original": "Vocês chegam à ponte de pedra coberta de musgo."
+    },
+    {
+      "segment_id": "01JBX7Q8M2N4P6R8S0T2V4W6XY:13:0",
+      "speaker_id": "player-bruno",
+      "start_offset_ms": 1205100,
+      "end_offset_ms": 1209000,
+      "timing_uncertainty_ms": 40,
+      "text": "Rolo Percepção para a Vela.",
+      "text_source": "override",
+      "label": "ic",
+      "label_source": "override",
+      "recap_inclusion": "include",
+      "exclusion_reasons": [],
+      "review_required": true,
+      "review_status": "reviewed"
+    }
+  ],
+  "needs_reconciliation": []
+}

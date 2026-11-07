@@ -1,0 +1,26 @@
+{
+  "invalid-unknown-label.json": [
+    {
+      "path": "/label",
+      "keyword": "enum"
+    }
+  ],
+  "invalid-uncertain-without-review.json": [
+    {
+      "path": "/review_required",
+      "keyword": "const"
+    }
+  ],
+  "invalid-missing-run-id.json": [
+    {
+      "path": "/classification_run_id",
+      "keyword": "required"
+    }
+  ],
+  "invalid-rewrites-original.json": [
+    {
+      "path": "/text_original",
+      "keyword": "additionalProperties"
+    }
+  ]
+}

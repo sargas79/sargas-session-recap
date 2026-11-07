@@ -1,0 +1,26 @@
+{
+  "invalid-unknown-label.json": [
+    {
+      "path": "/segments/0/label",
+      "keyword": "enum"
+    }
+  ],
+  "invalid-float-ms.json": [
+    {
+      "path": "/segments/1/end_offset_ms",
+      "keyword": "type"
+    }
+  ],
+  "invalid-missing-run-id.json": [
+    {
+      "path": "/transcription_run_id",
+      "keyword": "required"
+    }
+  ],
+  "invalid-extra-property.json": [
+    {
+      "path": "/segments/0/text_original",
+      "keyword": "additionalProperties"
+    }
+  ]
+}

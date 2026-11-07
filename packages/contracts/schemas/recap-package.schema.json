@@ -1,0 +1,261 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sargas-recap:schema:recap-package:v1",
+  "title": "Exported recap package",
+  "$comment": "Generated from packages/contracts/src by npm run schemas. Do not edit. Stored as: export file imported by the Foundry module (T15/T19).",
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "schema_version",
+    "package_kind",
+    "campaign_id",
+    "session_id",
+    "recap_revision",
+    "content_hash",
+    "approval",
+    "exported_at",
+    "generator",
+    "content"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Per-record schema version (ADR-002).",
+      "const": 1,
+      "type": "number"
+    },
+    "package_kind": {
+      "const": "sargas-recap",
+      "type": "string"
+    },
+    "campaign_id": {
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+      "description": "Campaign identifier (config, T04).",
+      "type": "string"
+    },
+    "session_id": {
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+      "description": "Session identifier within a campaign.",
+      "type": "string"
+    },
+    "recap_revision": {
+      "minimum": 1,
+      "maximum": 9007199254740991,
+      "description": "Monotonic per session (ADR-004).",
+      "type": "integer"
+    },
+    "content_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Hash of `content` (ADR-007; canonical form ADR-010).",
+      "type": "string"
+    },
+    "approval": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "approved_content_hash",
+        "approved_at"
+      ],
+      "properties": {
+        "approved_content_hash": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "description": "Must equal content_hash (ADR-007).",
+          "type": "string"
+        },
+        "approved_at": {
+          "format": "date-time",
+          "maxLength": 40,
+          "type": "string"
+        }
+      }
+    },
+    "exported_at": {
+      "format": "date-time",
+      "maxLength": 40,
+      "type": "string"
+    },
+    "generator": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "name",
+        "version"
+      ],
+      "properties": {
+        "name": {
+          "const": "sargas-recap",
+          "type": "string"
+        },
+        "version": {
+          "minLength": 1,
+          "maxLength": 32,
+          "type": "string"
+        }
+      }
+    },
+    "content": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "language",
+        "title",
+        "sentences",
+        "footnotes"
+      ],
+      "properties": {
+        "language": {
+          "pattern": "^[a-z]{2,3}(?:-[A-Z]{2})?$",
+          "type": "string"
+        },
+        "title": {
+          "minLength": 1,
+          "maxLength": 200,
+          "type": "string"
+        },
+        "sentences": {
+          "minItems": 1,
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+              "sentence_id",
+              "text",
+              "footnote_ids"
+            ],
+            "properties": {
+              "sentence_id": {
+                "pattern": "^r[1-9][0-9]{0,15}:s(?:0|[1-9][0-9]{0,15})$",
+                "description": "r<recap_revision>:s<n> (ADR-004).",
+                "type": "string"
+              },
+              "text": {
+                "minLength": 1,
+                "maxLength": 2000,
+                "type": "string"
+              },
+              "footnote_ids": {
+                "uniqueItems": true,
+                "type": "array",
+                "items": {
+                  "pattern": "^r[1-9][0-9]{0,15}:f(?:0|[1-9][0-9]{0,15})$",
+                  "description": "r<recap_revision>:f<n> (ADR-004).",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "footnotes": {
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+              "footnote_id",
+              "evidence"
+            ],
+            "properties": {
+              "footnote_id": {
+                "pattern": "^r[1-9][0-9]{0,15}:f(?:0|[1-9][0-9]{0,15})$",
+                "description": "r<recap_revision>:f<n> (ADR-004).",
+                "type": "string"
+              },
+              "evidence": {
+                "minItems": 1,
+                "type": "array",
+                "items": {
+                  "additionalProperties": false,
+                  "allOf": [
+                    {
+                      "if": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "enum": [
+                              "segment"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "kind"
+                        ]
+                      },
+                      "then": {
+                        "type": "object",
+                        "properties": {
+                          "ref": {
+                            "type": "string",
+                            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}:(?:0|[1-9][0-9]{0,15}):(?:0|[1-9][0-9]{0,15})$"
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "if": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "enum": [
+                              "event"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "kind"
+                        ]
+                      },
+                      "then": {
+                        "type": "object",
+                        "properties": {
+                          "ref": {
+                            "type": "string",
+                            "pattern": "^fvtt:[0-7][0-9A-HJKMNP-TV-Z]{25}:(?:0|[1-9][0-9]{0,15})$"
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "type": "object",
+                  "required": [
+                    "kind",
+                    "ref"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "segment",
+                        "event"
+                      ]
+                    },
+                    "ref": {
+                      "maxLength": 80,
+                      "description": "segment_id or event_id, per `kind`.",
+                      "type": "string"
+                    },
+                    "session_offset_ms": {
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991,
+                      "type": "integer"
+                    },
+                    "speaker_label": {
+                      "minLength": 1,
+                      "maxLength": 64,
+                      "type": "string"
+                    },
+                    "excerpt": {
+                      "minLength": 1,
+                      "maxLength": 500,
+                      "description": "Effective text, GM-only journal.",
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
