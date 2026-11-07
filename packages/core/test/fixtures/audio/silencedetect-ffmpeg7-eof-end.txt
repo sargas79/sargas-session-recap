@@ -1,0 +1,19 @@
+Input #0, wav, from 'C:\Users\gm\AppData\Local\Temp\recap-audio-x\ação teste\áudio.wav':
+  Duration: 00:00:04.50, bitrate: 1536 kb/s
+  Stream #0:0: Audio: pcm_s16le ([1][0][0][0] / 0x0001), 48000 Hz, 2 channels, s16, 1536 kb/s
+Stream mapping:
+  Stream #0:0 -> #0:0 (pcm_s16le (native) -> pcm_s16le (native))
+Output #0, null, to 'pipe:':
+  Metadata:
+    encoder         : Lavf61.7.100
+  Stream #0:0: Audio: pcm_s16le, 48000 Hz, stereo, s16, 1536 kb/s
+      Metadata:
+        encoder         : Lavc61.19.101 pcm_s16le
+[silencedetect @ 000001d2c3a4b5c0] silence_start: 0.000000
+[silencedetect @ 000001d2c3a4b5c0] silence_end: 0.500021 | silence_duration: 0.500021
+[silencedetect @ 000001d2c3a4b5c0] silence_start: 1.000021
+[silencedetect @ 000001d2c3a4b5c0] silence_end: 2.000000 | silence_duration: 0.999979
+[silencedetect @ 000001d2c3a4b5c0] silence_start: 3.000021
+[out#0/null @ 000001d2c3a49a40] video:0KiB audio:844KiB subtitle:0KiB other streams:0KiB global headers:0KiB muxing overhead: unknown
+[silencedetect @ 000001d2c3a4b5c0] silence_end: 4.500000 | silence_duration: 1.499979
+size=N/A time=00:00:04.50 bitrate=N/A speed=1.02e+03x

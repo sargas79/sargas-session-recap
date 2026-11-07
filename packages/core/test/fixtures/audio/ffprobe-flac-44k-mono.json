@@ -1,0 +1,20 @@
+{
+    "programs": [
+
+    ],
+    "streams": [
+        {
+            "index": 0,
+            "codec_name": "flac",
+            "codec_type": "audio",
+            "sample_rate": "44100",
+            "channels": 1,
+            "time_base": "1/44100",
+            "duration_ts": 2646001,
+            "duration": "60.000023"
+        }
+    ],
+    "format": {
+        "duration": "60.000023"
+    }
+}

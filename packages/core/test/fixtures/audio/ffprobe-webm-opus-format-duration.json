@@ -1,0 +1,18 @@
+{
+    "programs": [
+
+    ],
+    "streams": [
+        {
+            "index": 0,
+            "codec_name": "opus",
+            "codec_type": "audio",
+            "sample_rate": "48000",
+            "channels": 2,
+            "time_base": "1/1000"
+        }
+    ],
+    "format": {
+        "duration": "7322.481000"
+    }
+}

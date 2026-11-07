@@ -11,10 +11,11 @@ const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url),
 };
 
 /** Runs the CLI in a child process, exactly as a user would. */
-function runCli(entry: string, args: readonly string[]) {
+function runCli(entry: string, args: readonly string[], env: NodeJS.ProcessEnv = process.env) {
   const result = spawnSync(process.execPath, [entry, ...args], {
     encoding: 'utf8',
     timeout: 30_000,
+    env,
   });
   return { status: result.status, stdout: result.stdout, stderr: result.stderr };
 }
@@ -40,12 +41,28 @@ describe.each(entries)('recap CLI (%s)', (_label, entry) => {
     expect(stdout.trim()).toBe(pkg.version);
   });
 
-  it('runs doctor and exits 0', () => {
+  it('runs doctor and exits 0 whether or not ffmpeg is installed', () => {
     const { status, stdout } = runCli(entry, ['doctor']);
     expect(status).toBe(0);
     expect(stdout).toContain(`node:     ${process.version}`);
     expect(stdout).toContain(`platform: ${process.platform}`);
-    expect(stdout).toContain('no checks configured yet');
+    expect(stdout).toMatch(/^ {2}ffmpeg: +(ok|MISSING|UNUSABLE)/m);
+    expect(stdout).toMatch(/^ {2}ffprobe: +(ok|MISSING|UNUSABLE)/m);
+  });
+
+  it('doctor --strict exits 1 with a fix hint when ffmpeg is missing', () => {
+    const missing = fileURLToPath(new URL('./no-such-dir/ffmpeg.exe', import.meta.url));
+    const env = { ...process.env, RECAP_FFMPEG: missing, RECAP_FFPROBE: missing };
+    const plain = runCli(entry, ['doctor'], env);
+    expect(plain.status).toBe(0);
+    expect(plain.stdout).toContain('ffmpeg:   MISSING');
+    expect(plain.stdout).toContain('fix: ');
+    expect(plain.stdout).toContain('winget install Gyan.FFmpeg');
+    expect(plain.stdout).not.toMatch(/\n\s+at /); // no stack trace
+
+    const strict = runCli(entry, ['doctor', '--strict'], env);
+    expect(strict.status).toBe(1);
+    expect(strict.stdout).toContain('fix: ');
   });
 
   it('fails on an unknown command', () => {

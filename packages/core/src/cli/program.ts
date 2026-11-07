@@ -1,5 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { Command } from 'commander';
+import {
+  checkAudioToolchain,
+  formatAudioToolCheck,
+  type AudioToolCheck,
+  type AudioToolchainOptions,
+} from '../audio/index.ts';
 
 /** Output channel, injectable so the program can be tested in-process. */
 export interface CliIo {
@@ -34,14 +40,28 @@ export function readVersion(): string {
   return '0.0.0';
 }
 
-/** Lines printed by `recap doctor`. Environment checks are added by later tasks (e.g. T22 ffmpeg). */
-export function doctorReport(): string[] {
-  return [
+export interface DoctorResult {
+  readonly lines: string[];
+  /** True when every required external tool is present and supported. */
+  readonly ok: boolean;
+  readonly checks: readonly AudioToolCheck[];
+}
+
+/**
+ * Runs the `recap doctor` checks (Node, platform, ffmpeg, ffprobe). Never
+ * throws for a missing or broken tool: problems become report lines with a fix.
+ */
+export async function doctorReport(options: AudioToolchainOptions = {}): Promise<DoctorResult> {
+  const checks = await checkAudioToolchain(options);
+  const ok = checks.every((check) => check.ok);
+  const lines = [
     'recap doctor',
     `  node:     ${process.version}`,
     `  platform: ${process.platform} ${process.arch}`,
-    '  checks:   no checks configured yet',
+    ...checks.flatMap(formatAudioToolCheck),
+    ok ? '  result:   ok' : '  result:   problems found (`recap doctor --strict` exits non-zero)',
   ];
+  return { lines, ok, checks };
 }
 
 export function buildProgram(io: CliIo = defaultIo): Command {
@@ -61,9 +81,16 @@ export function buildProgram(io: CliIo = defaultIo): Command {
 
   program
     .command('doctor')
-    .description('check the local environment (no checks are configured yet)')
-    .action(() => {
-      io.out(`${doctorReport().join('\n')}\n`);
+    .description('check the local environment (Node, ffmpeg, ffprobe)')
+    .option('--strict', 'exit with code 1 when a check fails')
+    .action(async (options: { strict?: boolean }) => {
+      const report = await doctorReport();
+      io.out(`${report.lines.join('\n')}\n`);
+      // Plain `doctor` stays informational (exit 0) so it can run anywhere;
+      // `--strict` turns problems into a failing exit code for scripts.
+      if (!report.ok && options.strict === true) {
+        process.exitCode = 1;
+      }
     });
 
   return program;

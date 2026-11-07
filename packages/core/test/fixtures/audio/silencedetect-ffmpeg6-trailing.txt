@@ -1,0 +1,16 @@
+Input #0, wav, from '/tmp/recap-audio-x/sine-silence.wav':
+  Duration: 00:00:04.50, bitrate: 1536 kb/s
+  Stream #0:0: Audio: pcm_s16le ([1][0][0][0] / 0x0001), 48000 Hz, 2 channels, s16, 1536 kb/s
+Stream mapping:
+  Stream #0:0 -> #0:0 (pcm_s16le (native) -> pcm_s16le (native))
+Output #0, null, to 'pipe:':
+  Metadata:
+    encoder         : Lavf60.16.100
+  Stream #0:0: Audio: pcm_s16le, 48000 Hz, stereo, s16, 1536 kb/s
+    Metadata:
+      encoder         : Lavc60.31.102 pcm_s16le
+[silencedetect @ 0x5581c4f0a2c0] silence_start: 1.00002
+[silencedetect @ 0x5581c4f0a2c0] silence_end: 2 | silence_duration: 0.999979
+[silencedetect @ 0x5581c4f0a2c0] silence_start: 3.00002
+[out#0/null @ 0x5581c4f08a40] video:0kB audio:844kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: unknown
+size=N/A time=00:00:04.50 bitrate=N/A speed= 812x

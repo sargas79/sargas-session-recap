@@ -1,0 +1,20 @@
+{
+    "programs": [
+
+    ],
+    "streams": [
+        {
+            "index": 0,
+            "codec_name": "mp3",
+            "codec_type": "audio",
+            "sample_rate": "44100",
+            "channels": 2,
+            "time_base": "1/14112000",
+            "duration_ts": 63504000,
+            "duration": "4.500000"
+        }
+    ],
+    "format": {
+        "duration": "4.500000"
+    }
+}
