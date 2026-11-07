@@ -1,8 +1,9 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 import { loadValidator, overlaps, semanticIssues, type IssueCode } from "../src/validate.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -144,5 +145,52 @@ describe("cli", () => {
 
   it("exits 2 with no input", () => {
     expect(run().status).toBe(2);
+  });
+
+  // Privacy: diagnostics must never echo input-derived text (#50 review).
+  const SENTINEL = "zzPrivateTranscriptSentinel";
+  const tmp = mkdtempSync(join(tmpdir(), "s01-labels-"));
+  afterAll(() => rmSync(tmp, { recursive: true, force: true }));
+  const writeTmp = (name: string, content: string) => {
+    const p = join(tmp, name);
+    writeFileSync(p, content, "utf8");
+    return p;
+  };
+
+  it("exits 2 on malformed JSON without echoing the input", () => {
+    // JSON.parse quotes only a short excerpt around the error, so keep the leaked token short.
+    const secret = "zzQx7";
+    const file = writeTmp("malformed.json", `{"t": ${secret}}`);
+    const r = run(file);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain("cannot read/parse JSON");
+    expect(r.stdout + r.stderr).not.toContain(secret);
+  });
+
+  it("exits 1 on an unexpected property without echoing the property name", () => {
+    const doc = readJson(validFixture) as Record<string, unknown>;
+    const file = writeTmp("extra-key.json", JSON.stringify({ ...doc, [SENTINEL]: true }));
+    const r = run(file);
+    expect(r.status).toBe(1);
+    expect(r.stdout).toContain("[schema]");
+    expect(r.stdout + r.stderr).not.toContain(SENTINEL);
+  });
+
+  it("exits 2 when --schema points to a missing file", () => {
+    const r = run("--schema", join(tmp, "does-not-exist.schema.json"), validFixture);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain("cannot read, parse or compile schema");
+  });
+
+  it("exits 2 when --schema is malformed, without echoing its content", () => {
+    const schema = writeTmp("bad.schema.json", `{"type": ${SENTINEL}}`);
+    const r = run("--schema", schema, validFixture);
+    expect(r.status).toBe(2);
+    expect(r.stdout + r.stderr).not.toContain(SENTINEL);
+  });
+
+  it("exits 2 when --schema is valid JSON but does not compile", () => {
+    const schema = writeTmp("uncompilable.schema.json", JSON.stringify({ type: "no-such-type" }));
+    expect(run("--schema", schema, validFixture).status).toBe(2);
   });
 });

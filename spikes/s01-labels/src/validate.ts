@@ -60,8 +60,24 @@ export function loadValidator(schemaPath: string = DEFAULT_SCHEMA_PATH): Validat
   };
 }
 
+// Ajv error params that only ever carry schema-derived values. Anything else (notably
+// `additionalProperty` and `propertyName`) can echo input-derived text and is dropped.
+const SAFE_PARAMS = new Set([
+  "missingProperty",
+  "allowedValue",
+  "allowedValues",
+  "type",
+  "limit",
+  "comparison",
+  "pattern",
+  "format",
+  "multipleOf",
+  "failingKeyword",
+]);
+
 function schemaIssue(e: ErrorObject): Issue {
-  const detail = e.params && Object.keys(e.params).length ? ` ${JSON.stringify(e.params)}` : "";
+  const safe = Object.fromEntries(Object.entries(e.params ?? {}).filter(([k]) => SAFE_PARAMS.has(k)));
+  const detail = Object.keys(safe).length ? ` ${JSON.stringify(safe)}` : "";
   return { code: "schema", path: e.instancePath || "/", message: `${e.message ?? "invalid"}${detail}` };
 }
 

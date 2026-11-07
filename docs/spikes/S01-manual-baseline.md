@@ -18,15 +18,17 @@ editing time?
 
 1. One real PF2e session, recorded multitrack (one file per speaker) with the table's consent.
 2. Local transcription with whisper.cpp, using the S04 (#14) setup and model.
-3. A **manual** Claude Project pass: paste the transcript, ask for segment classification (six labels from the
-   [labelling guide](../evaluation/labelling-guide.md)) and a Portuguese player-facing recap. No pipeline code,
-   no prompt engineering beyond one reasonable prompt (out of scope for S01).
-4. The GM edits the draft into a recap they would actually publish, **timing the edit**.
-5. The GM estimates (or, better, separately measures on a comparable session) the time to write the recap from scratch.
-6. The GM compares the draft against the final recap and the labelled sample to count omissions, unsupported claims
+3. **Before any model output exists for the session**, the GM picks ~30 min to label, freezes a tuning/held-out
+   split by segment time ranges, and labels the sample (schema:
+   [`fixtures/evaluation/label.schema.json`](../../fixtures/evaluation/label.schema.json)), following the
+   [labelling guide](../evaluation/labelling-guide.md) sections 2 (rule 7), 5 and 8.
+4. A **manual** Claude Project pass: paste the transcript, ask for segment classification (six labels from the
+   labelling guide) and a Portuguese player-facing recap. No pipeline code, no prompt engineering beyond one
+   reasonable prompt (out of scope for S01).
+5. The GM edits the draft into a recap they would actually publish, **timing the edit**.
+6. The GM estimates (or, better, separately measures on a comparable session) the time to write the recap from scratch.
+7. The GM compares the draft against the final recap and the labelled sample to count omissions, unsupported claims
    and proposed-vs-completed confusions, each with a cause.
-7. The GM labels ~30 min of the session (schema: [`fixtures/evaluation/label.schema.json`](../../fixtures/evaluation/label.schema.json))
-   and freezes a tuning/held-out split by segment time ranges.
 
 Private material (audio, transcript, Claude outputs, labels, consent) stays **outside git**, e.g.
 `%USERPROFILE%\sargas-recap-private\s01\`. This file records only numbers, causes and pseudonymous references.
@@ -53,33 +55,35 @@ Private material (audio, transcript, Claude outputs, labels, consent) stays **ou
 - [ ] Record: whisper.cpp version/commit, model name + file hash, GPU/backend, wall-clock processing time, audio duration.
 - [ ] Merge per-track segments onto the shared session timeline (apply track offsets) into one transcript.
 
-### 3.4 Manual Claude Project pass
+### 3.4 Labelling and split freeze (~30 min of audio, one evening)
 
+- [ ] Do this **before running the Claude pass (3.5)**, so neither the sample choice nor the split nor any label is
+      influenced by model output ([guide section 5](../evaluation/labelling-guide.md#5-tuning-vs-held-out-split)).
+- [ ] Pick ~30 min that include roleplay, combat, at least one joke, overlapping speech and a scene change.
+- [ ] Fix the tuning/held-out split by time ranges first and set `split.frozen_on`.
+- [ ] Then label every segment following the [labelling guide](../evaluation/labelling-guide.md), in a private copy.
+- [ ] Validate: `cd spikes\s01-labels; npm install; node src\cli.ts <private-path>\labels.json` (must print `OK`).
+- [ ] Record the time spent labelling.
+
+### 3.5 Manual Claude Project pass
+
+- [ ] Only start once 3.4 is done and the label file validates.
 - [ ] Create a Claude Project (or reuse one) with the glossary seed as project knowledge.
 - [ ] Paste the merged transcript. Use one classification + recap prompt; save the exact prompt text privately.
-- [ ] **Do not** paste the held-out part into any conversation used to iterate on the prompt (see 3.7). For the
-      baseline you may run the whole session once, but keep that conversation separate from any prompt tuning.
+- [ ] **Do not** paste the held-out part into any conversation used to iterate on the prompt (split frozen in 3.4).
+      For the baseline you may run the whole session once, but keep that conversation separate from any prompt tuning.
 - [ ] Record: model shown in the UI, number of messages, any truncation/context errors, wall-clock time, plan/usage
       indicators shown (do not assume billing details you cannot see).
 
-### 3.5 Timing the edit
+### 3.6 Timing the edit
 
 - [ ] Start a timer when you open the draft; stop it when the recap is ready to publish. Pause it for breaks.
 - [ ] Record active editing minutes. Keep the draft and the final version privately for the comparison.
 
-### 3.6 From-scratch estimate
+### 3.7 From-scratch estimate
 
 - [ ] Record how long you normally take to write a recap of a session this long, and how you know
       (measured on session X / typical from memory). If possible, time a from-scratch recap of a comparable session.
-
-### 3.7 Labelling (~30 min of audio, one evening)
-
-- [ ] Pick ~30 min that include roleplay, combat, at least one joke, overlapping speech and a scene change.
-- [ ] **Before looking at the Claude classification for that excerpt**, fix the tuning/held-out split by time ranges
-      and set `split.frozen_on`.
-- [ ] Label every segment following the [labelling guide](../evaluation/labelling-guide.md), in a private copy.
-- [ ] Validate: `cd spikes\s01-labels; npm install; node src\cli.ts <private-path>\labels.json` (must print `OK`).
-- [ ] Record the time spent labelling.
 
 ### 3.8 Comparison
 

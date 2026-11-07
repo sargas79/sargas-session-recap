@@ -3,7 +3,7 @@
 // Exit codes: 0 all valid, 1 at least one invalid file, 2 usage/IO error.
 // Prints issue codes and JSON paths only, never segment text, so it is safe to run on real labels.
 import { readFileSync } from "node:fs";
-import { DEFAULT_SCHEMA_PATH, loadValidator, subsetCounts } from "./validate.ts";
+import { DEFAULT_SCHEMA_PATH, loadValidator, subsetCounts, type Validator } from "./validate.ts";
 
 function main(argv: string[]): number {
   let schemaPath = DEFAULT_SCHEMA_PATH;
@@ -22,14 +22,22 @@ function main(argv: string[]): number {
   }
   if (files.length === 0) return usage("no input files");
 
-  const validate = loadValidator(schemaPath);
+  let validate: Validator;
+  try {
+    validate = loadValidator(schemaPath);
+  } catch {
+    // Fixed message: the schema path is caller-supplied, but parse/compile errors may quote file content.
+    console.error(`ERROR ${schemaPath}: cannot read, parse or compile schema`);
+    return 2;
+  }
   let failed = 0;
   for (const file of files) {
     let data: unknown;
     try {
       data = JSON.parse(readFileSync(file, "utf8"));
-    } catch (err) {
-      console.error(`ERROR ${file}: cannot read/parse JSON (${(err as Error).message})`);
+    } catch {
+      // Fixed message: JSON.parse errors can quote the offending input, i.e. transcript text.
+      console.error(`ERROR ${file}: cannot read/parse JSON`);
       return 2;
     }
     const issues = validate(data);
