@@ -27,8 +27,17 @@ decided_by: null      # GM name
 decided_on: null      # YYYY-MM-DD
 decision_record: docs/decisions/G01-go-no-go.md
 
-# Thresholds are evaluated on the S01 held-out subset (never the tuning subset).
-evaluation_subset: held_out
+# Each threshold states its measurement basis in `measured_on`:
+#   held_out_subset         the GM-labelled S01 held-out subset (never the tuning
+#                           subset). Label-based quality metrics only; this subset
+#                           is part of the ~30 min labelled sample, not a whole
+#                           session, so it is never used for timing/usage/review time.
+#   full_reference_session  the complete reference session below, processed end to
+#                           end. Used for processing time, usage and GM review time.
+#                           The from-scratch baseline must cover this same session.
+reference_session:
+  id: null              # identifier of the complete session (the S01 recorded session unless the GM chooses another)
+  audio_minutes: null   # its audio length; processing time and usage thresholds assume this length
 
 thresholds:
   # Important IC content (recap-critical decisions/clues) labelled OOC and
@@ -36,6 +45,7 @@ thresholds:
   important_ic_labelled_ooc:
     unit: count_per_session
     comparison: max            # PASS when measured <= threshold
+    measured_on: held_out_subset
     t20_metric: false_exclusions_ic_to_ooc
     issue_target: 0            # as written in #17; GM confirms below
     baseline_s01: null
@@ -46,6 +56,7 @@ thresholds:
   ooc_labelled_ic_rate:
     unit: ratio_0_to_1         # (OOC segments labelled IC) / (all GM-labelled OOC segments)
     comparison: max
+    measured_on: held_out_subset
     t20_metric: ooc_inclusion
     issue_target: null
     baseline_s01: null
@@ -53,10 +64,16 @@ thresholds:
     rationale: null
 
   # Recap sentences/claims not supported by their cited current-session evidence.
+  # Counting rule: proposed-as-done errors (a merely proposed action stated as
+  # having happened) are unsupported claims and ARE INCLUDED in this total. T20
+  # may also report them as a separate sub-count, but never subtracts them; this
+  # threshold is checked against the total including them.
   unsupported_draft_claims_per_recap:
     unit: count_per_recap
     comparison: max
-    t20_metric: unsupported_draft_claims
+    measured_on: held_out_subset
+    t20_metric: unsupported_draft_claims   # total, including proposed-as-done errors
+    includes_proposed_as_done: true
     issue_target: null
     baseline_s01: null
     threshold: null
@@ -67,17 +84,20 @@ thresholds:
   critical_omissions:
     unit: count_per_session
     comparison: max
+    measured_on: held_out_subset
     t20_metric: critical_omissions
     issue_target: 0            # as written in #17; GM confirms below
     baseline_s01: null
     threshold: null
     rationale: null
 
-  # GM time to review/edit the draft to approval, divided by the S01
-  # from-scratch recap writing time (baseline_from_scratch_minutes).
+  # GM time to review/edit the reference session's draft to approval, divided by
+  # the GM time to write a recap of that same complete session from scratch
+  # (baseline_from_scratch_minutes, from S01). Both sides cover the same workload.
   gm_review_time_ratio:
     unit: ratio_review_over_from_scratch
     comparison: max
+    measured_on: full_reference_session
     t20_metric: editing_time
     issue_target: null
     baseline_from_scratch_minutes: null
@@ -86,12 +106,12 @@ thresholds:
     rationale: null
 
   # End-to-end unattended wall-clock processing time (ASR + classification + recap),
-  # excluding GM review time.
+  # excluding GM review time, for the complete reference session.
   processing_time_per_session:
     unit: minutes_wall_clock_per_session
     comparison: max
+    measured_on: full_reference_session
     t20_metric: processing_time
-    reference_session_audio_minutes: null   # session length the threshold assumes
     issue_target: null
     baseline_s01: null
     threshold: null
@@ -99,9 +119,11 @@ thresholds:
 
   # LLM usage/cost per session. Which sub-field is binding depends on the chosen
   # backend (subscription usage vs API billing); unused sub-fields stay null.
+  # Measured on the complete reference session.
   usage_cost_per_session:
     unit: per_session
     comparison: max
+    measured_on: full_reference_session
     t20_metric: usage
     issue_target: null
     baseline_s01:
