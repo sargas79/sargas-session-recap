@@ -77,9 +77,11 @@ function isSchemaToken(token: string): boolean {
   return ARRAY_INDEX.test(token) || schemaVocabulary().has(token);
 }
 
-// ajv-formats is CommonJS; depending on the loader the default import is the plugin itself or a
-// namespace whose `default` is the plugin. Both shapes expose `.default`.
-const addFormats = addFormatsModule.default;
+// ajv-formats is CommonJS; depending on the loader (Node, Vitest, esbuild) and the TypeScript module
+// resolution, the default import is the plugin itself or a namespace whose `default` is the plugin.
+type AddFormats = (instance: Ajv2020, formats: string[]) => unknown;
+const formatsModule = addFormatsModule as unknown as AddFormats & { default?: AddFormats };
+const addFormats: AddFormats = formatsModule.default ?? formatsModule;
 
 let ajv: Ajv2020 | undefined;
 const compiled = new Map<ContractName, ValidateFunction>();

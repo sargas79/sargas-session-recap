@@ -33,12 +33,12 @@ export default tseslint.config(
     },
   },
   {
-    files: ['**/*.js'],
+    files: ['**/*.{js,mjs}'],
     ...tseslint.configs.disableTypeChecked,
   },
   {
     // Plain JS runs on Node; TS files get globals from @types/node instead.
-    files: ['**/*.js'],
+    files: ['**/*.{js,mjs}'],
     languageOptions: {
       globals: { process: 'readonly', URL: 'readonly', console: 'readonly' },
     },

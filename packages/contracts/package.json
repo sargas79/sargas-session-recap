@@ -5,6 +5,7 @@
   "description": "Canonical schemas, types and validators shared by core and the Foundry module.",
   "license": "UNLICENSED",
   "type": "module",
+  "sideEffects": false,
   "engines": {
     "node": ">=24.0.0 <25"
   },

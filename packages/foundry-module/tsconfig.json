@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // Browser bundle: DOM lib and no Node types. esbuild does the emit.
+    "lib": ["es2024", "dom", "dom.iterable"],
+    "types": [],
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    // Resolve contracts from source, so typecheck and bundling don't need a prior
+    // contracts build. esbuild honours the same mapping.
+    "paths": {
+      "@sargas-recap/contracts": ["../contracts/src/index.ts"]
+    }
+  },
+  "include": ["src"]
+}

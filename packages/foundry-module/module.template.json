@@ -1,0 +1,12 @@
+{
+  "id": "sargas-session-recap",
+  "title": "Sargas Session Recap",
+  "description": "Captures Foundry events for the Sargas Session Recap tool. Placeholder build with no capture behavior yet (T16).",
+  "authors": [{ "name": "Diego Vescovini" }],
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14"
+  },
+  "esmodules": ["scripts/module.js"],
+  "url": "https://github.com/sargas79/sargas-session-recap"
+}
