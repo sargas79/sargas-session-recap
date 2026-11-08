@@ -143,6 +143,10 @@ After changing a contract in `packages/contracts/src`, regenerate the committed 
 `npm run schemas -w @sargas-recap/contracts` (see `docs/adr/README.md`). `npm test` fails if they are
 stale.
 
+Prompt files (`packages/core/prompts/`) are hashed with line endings normalized, so a CRLF checkout
+or an editor that saves CRLF does not count as a change. Any other edit to a committed prompt needs a
+new version file; `npm test` fails otherwise (see `AGENTS.md`, section 4, "Prompts").
+
 ## Session package integrity
 
 ```powershell

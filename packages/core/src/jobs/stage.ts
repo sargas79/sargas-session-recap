@@ -189,6 +189,13 @@ export function configInput(config: RunConfig, dependency: DependencyStage): Job
   };
 }
 
+/**
+ * Stages that call an LLM with a versioned prompt (T26). Each of their jobs must declare at least one
+ * `prompt` dependency input (`promptJobInput` from the prompt registry), so every classification and
+ * recap run record names the prompt id, version and hash it used.
+ */
+export const PROMPT_JOB_STAGES: readonly JobStage[] = ['classify', 'recap'];
+
 /** A prompt as a job input (T26 registry): `<id>@v<version>` with its normalized content hash. */
 export function promptInput(id: string, version: number, hash: string): JobInput {
   return { kind: 'prompt', ref: `${id}@v${String(version)}`, hash };

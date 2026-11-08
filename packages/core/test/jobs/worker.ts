@@ -60,6 +60,7 @@ const stages = defineStages([
   {
     name: 'classify',
     upstream: ['transcribe'],
+    inputs: () => [{ kind: 'prompt', ref: 'classification.window@v1', hash: sha('prompt') }],
     run: () => {
       called('classify');
       return { outputs: [{ path: 'classify/results.jsonl', hash: sha('results') }] };

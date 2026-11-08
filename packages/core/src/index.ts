@@ -5,6 +5,7 @@ export * from './package/index.ts';
 export * from './paths/index.ts';
 export * from './db/index.ts';
 export * from './jobs/index.ts';
+export * from './prompts/index.ts';
 export {
   buildProgram,
   doctorReport,
