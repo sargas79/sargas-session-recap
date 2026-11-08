@@ -14,6 +14,7 @@ export * from './schemas/effective-transcript.ts';
 export * from './schemas/foundry-event.ts';
 export * from './schemas/fragment.ts';
 export * from './schemas/glossary.ts';
+export * from './schemas/import-mapping.ts';
 export * from './schemas/job-record.ts';
 export * from './schemas/manifest.ts';
 export * from './schemas/recap-approval.ts';

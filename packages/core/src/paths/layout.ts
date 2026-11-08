@@ -4,11 +4,15 @@ import { assertSlug } from './slug.ts';
 /** File name of the app-state database under `<root>/state/`. */
 export const DB_FILE_NAME = 'recap.sqlite';
 
+/** File name of a campaign's config under `<root>/campaigns/<campaign_id>/` (T04). */
+export const CAMPAIGN_CONFIG_FILE_NAME = 'campaign.yaml';
+
 /**
  * The ADR-009 data root layout. Every module builds data paths through this
  * object; no module joins data-root segments by hand.
  *
  * ```text
+ * <root>/campaigns/<campaign_id>/campaign.yaml            campaign config (T04)
  * <root>/campaigns/<campaign_id>/sessions/<session_id>/   session package (ADR-006)
  * <root>/state/recap.sqlite                               app state (ADR-001)
  * <root>/state/backups/                                   pre-migration DB backups
@@ -27,6 +31,8 @@ export interface DataPaths {
   readonly logsDir: string;
   /** `<root>/campaigns/<campaign_id>`; throws `PATHS_INVALID_ID` for a non-slug. */
   campaignDir(campaignId: string): string;
+  /** `<root>/campaigns/<campaign_id>/campaign.yaml`: the campaign config (T04). */
+  campaignConfigFile(campaignId: string): string;
   /** `<root>/campaigns/<campaign_id>/sessions`. */
   sessionsDir(campaignId: string): string;
   /** Session package directory `<root>/campaigns/<campaign_id>/sessions/<session_id>`. */
@@ -53,6 +59,8 @@ export function createDataPaths(root: string): DataPaths {
     toolsDir: path.join(base, 'tools'),
     logsDir: path.join(base, 'logs'),
     campaignDir,
+    campaignConfigFile: (campaignId: string): string =>
+      path.join(campaignDir(campaignId), CAMPAIGN_CONFIG_FILE_NAME),
     sessionsDir,
     sessionDir: (campaignId: string, sessionId: string): string =>
       path.join(sessionsDir(campaignId), assertSlug('session_id', sessionId)),

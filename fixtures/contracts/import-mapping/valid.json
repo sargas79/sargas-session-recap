@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "recorder": "craig",
+  "origin_uncertainty_ms": 20,
+  "default_timing_uncertainty_ms": 10,
+  "tracks": [
+    {
+      "file": "1-gm.flac",
+      "speaker_id": "gm"
+    },
+    {
+      "file": "2-player-ana.flac",
+      "speaker_id": "player-ana",
+      "start_offset_ms": -1500,
+      "timing_uncertainty_ms": 40,
+      "label": "Track 2 (synthetic)"
+    },
+    {
+      "file": "2-player-ana-reconnect.flac",
+      "speaker_id": "player-ana",
+      "start_offset_ms": 600000
+    }
+  ]
+}

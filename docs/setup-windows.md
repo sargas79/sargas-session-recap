@@ -253,3 +253,68 @@ BOM) and CRLF line endings are fine.
 - Changing a stage's provider in `campaign.yaml` needs new consent records for that provider. Until they
   exist, processing refuses to run and names the speakers whose consent is missing.
 - Invalid files are reported as `<file>:<line>:<col>: <path>: <problem>`. Values are never printed.
+
+## Importing a recording
+
+`recap import` turns a multitrack recording (one audio file per speaker, for example a Craig export)
+into a sealed session package under the data root. It needs no Discord bot, no Foundry, no network
+and no database. 16-bit PCM WAV tracks are read without ffmpeg; FLAC and Ogg/Opus tracks need
+`ffprobe` (see section 3).
+
+1. Put the tracks in one folder (no sub-folders) and keep `campaign.yaml` at its default place,
+   `<data root>\campaigns\<campaign id>\campaign.yaml` (or pass `--config <file>`).
+2. Next to the tracks, create `recap-tracks.yaml` (or `.yml` / `.json`, or pass `--mapping <file>`):
+
+   ```yaml
+   schema_version: 1
+   # recorder: craig                   # optional; must equal provider.recording in campaign.yaml
+   # origin_uncertainty_ms: 0          # optional; how sure you are about session zero
+   default_timing_uncertainty_ms: 0 # optional; for tracks that do not set their own
+   tracks:
+     - file: 1-gm.flac # file name in the folder, no sub-folders
+       speaker_id: gm # a speaker_id from campaign.yaml
+     - file: 2-player-ana.flac
+       speaker_id: player-ana
+       start_offset_ms: -1500 # optional, signed integer ms; default 0
+       timing_uncertainty_ms: 40 # optional
+       label: Ana's mic # optional; default: the file name
+     - file: 2-player-ana-after-reconnect.flac # several files per speaker are fine
+       speaker_id: player-ana
+       start_offset_ms: 3600000
+   ```
+
+3. Run it (quote paths with spaces):
+
+   ```powershell
+   npm run recap -- import "D:\Recordings\2026-11-08 craig" --campaign my-campaign --session s07
+   ```
+
+What it does and what to expect:
+
+- **Timeline.** There is no sync marker in an import, so session zero is provisional (ADR-003): it is
+  wherever `start_offset_ms: 0` is. Each track's `start_offset_ms` is the session time of its first
+  sample (negative means it started before zero) and is stored as `fragment_start_offset_ms` in
+  `fragments.jsonl`. Craig tracks all start together, so offsets are usually 0.
+- **Unmapped files.** Audio files in the folder that the mapping does not list are not imported and are
+  listed as `not in the track mapping`. A mapped file that does not exist stops the import.
+- **Consent.** The recording consent check (`assertConsent`, stage `recording`, the recorder's
+  provider) runs for every mapped speaker. Speakers it refuses (no record, withdrawn, not in
+  `campaign.yaml`) are left out and listed with the reason; the rest are imported. With
+  `recap config consent off` (implied mode) every speaker listed in `campaign.yaml` is accepted, and
+  unlisted speakers are still refused. The manifest records, per imported speaker, the consent mode,
+  provider and policy hash that applied.
+- **Originals are never modified.** Each track is hashed, copied byte for byte to
+  `audio\<speaker_id>\<n>.<ext>` (numbered from 1 per speaker, in start-offset order), the copy is
+  hashed, and the original is hashed again at the end. Any difference stops the import (for example a
+  recorder or a sync tool still writing). Keep the originals until you no longer need them; recap
+  never deletes them.
+- **Supported tracks:** 16-bit PCM WAV, FLAC and Opus (8-192 kHz, 1-8 channels). Convert anything else
+  losslessly first, e.g. `ffmpeg -i track.mp3 -c:a flac track.flac`.
+- **The package is sealed and validated** with the same checks as `recap package validate`. It is built
+  in a temp folder and only renamed into place when complete, so a failed import leaves nothing.
+- **Re-import.** Importing into a session that already has a package is refused. `--replace` replaces
+  it after asking (add `--yes` in scripts), but only if it was not processed yet: a package with
+  transcripts, classifications or recaps, or with purged audio, is never replaced. Use a new
+  `--session` id instead.
+- Errors name the mapping entry (`recap-tracks.yaml /tracks/1/file`) and the fix. Logs carry only IDs,
+  counts and error codes, never file names or audio.

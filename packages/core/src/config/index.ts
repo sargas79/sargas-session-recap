@@ -33,8 +33,10 @@ export {
   DEFAULT_MAX_CONFIG_BYTES,
   loadCampaignConfig,
   loadGlossary,
+  loadImportMapping,
   parseCampaignConfig,
   parseGlossary,
+  parseImportMapping,
   type LoadedConfig,
   type LoadOptions,
 } from './load.ts';

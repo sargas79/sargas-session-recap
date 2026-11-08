@@ -1,0 +1,32 @@
+{
+  "invalid-path-in-file.json": [
+    {
+      "path": "/tracks/0/file",
+      "keyword": "pattern"
+    }
+  ],
+  "invalid-float-offset.json": [
+    {
+      "path": "/tracks/0/start_offset_ms",
+      "keyword": "type"
+    }
+  ],
+  "invalid-no-tracks.json": [
+    {
+      "path": "/tracks",
+      "keyword": "minItems"
+    }
+  ],
+  "invalid-extra-property.json": [
+    {
+      "path": "/tracks/0/<key>",
+      "keyword": "additionalProperties"
+    }
+  ],
+  "invalid-dot-dot.json": [
+    {
+      "path": "/tracks/0/file",
+      "keyword": "pattern"
+    }
+  ]
+}
