@@ -6,7 +6,7 @@
   until then.
 - Blocks: #17 `G01`, #26 `T08`, #47 `T23`
 
-**Outcome: PENDING (human run required)**
+**Outcome: PASS (GM decision, 2026-11-08; provisional on `large-v3-turbo`, see section 7)**
 
 ## 1. Question
 
@@ -471,11 +471,18 @@ Of whisper.cpp / the setup (GM to fill in):
 
 ## 7. Recommendation (GM to fill in)
 
-- Model: 
-- Invocation (exact flags): 
-- Prompt: with / without glossary, and the size limit: 
-- Chunking: 
-- Confidence: 
-- Pinned versions for `tools.lock.json` (#47 `T23`): binary source + sha256, model sha256, VAD model sha256: 
+Decided by the GM on 2026-11-08 from the evidence in sections 5.0, 5.2 and 5.8. Portuguese table audio has not been tested; recheck on
+the first recorded session.
 
-**Outcome: PENDING (human run required)**
+- Model: `large-v3-turbo`, provisional.
+- Invocation (exact flags): `whisper-cli -m <model> -f <16 kHz mono wav> -l pt -ojf`, on the Vulkan build.
+- Prompt: not decided. No glossary prompt has been tested.
+- Chunking: not decided. Segment length varied from about 1 s to 30 s by reader (section 5.8). T08 must not assume a typical length.
+- Confidence: not validated against a hand-check. Token probabilities are present in `-ojf` output.
+- Repetition loops: `large-v3` looped in one chapter (section 5.8). T09 needs loop detection whichever model is used.
+- Pinned versions for `tools.lock.json` (#47 `T23`): whisper.cpp v1.9.5 commit `d1be6fde11ac6e0407606b4e42fe72d34add8037`, built locally with
+  `-DGGML_VULKAN=ON`; `whisper-cli.exe` sha256 `8fa49e66747a619990debc91de01b9f1319af63dbbbe7c4a131a0714a84ab868` (local builds are not
+  byte-reproducible, re-hash after a rebuild); `ggml-large-v3-turbo.bin` sha256
+  `1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69`; VAD model: none tested.
+
+**Outcome: PASS (GM decision, 2026-11-08; provisional on `large-v3-turbo`, see section 7)**
