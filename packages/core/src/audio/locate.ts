@@ -86,7 +86,7 @@ async function isFile(candidate: string): Promise<boolean> {
  * The current directory is never searched implicitly.
  */
 export async function findOnPath(
-  name: AudioToolName,
+  name: string,
   env: Readonly<Record<string, string | undefined>>,
   platform: NodeJS.Platform,
 ): Promise<string | undefined> {

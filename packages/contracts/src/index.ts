@@ -24,5 +24,6 @@ export * from './schemas/recap-package.ts';
 export * from './schemas/recap-sentence-edit.ts';
 export * from './schemas/recap.ts';
 export * from './schemas/review-override.ts';
+export * from './schemas/tools-lock.ts';
 export * from './schemas/transcription-segment.ts';
 export * from './sha256.ts';

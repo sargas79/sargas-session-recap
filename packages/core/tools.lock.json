@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "whisper": {
+    "version": "v1.9.5",
+    "commit": "d1be6fde11ac6e0407606b4e42fe72d34add8037",
+    "binary": {
+      "source": "local-build",
+      "platform": "win32-x64",
+      "install_dir": "v1.9.5-vulkan",
+      "executable": "whisper-cli.exe",
+      "files": [
+        {
+          "path": "whisper-cli.exe",
+          "sha256": "sha256:8fa49e66747a619990debc91de01b9f1319af63dbbbe7c4a131a0714a84ab868"
+        },
+        {
+          "path": "whisper.dll",
+          "sha256": "sha256:6108064aaa3397e0fb95586c2a882ac0b66456d55731c329b76ab23bb4a124e6"
+        },
+        {
+          "path": "ggml.dll",
+          "sha256": "sha256:eebf9ce8961f1640a0e6da44ef9dd4984ecf2d2a54b8c65b350985b1c8f77e24"
+        },
+        {
+          "path": "ggml-base.dll",
+          "sha256": "sha256:38936668b2601476f5350b6b908c96b9c9fe86ae90a46aca3aaff5f972a1d7f0"
+        },
+        {
+          "path": "ggml-cpu.dll",
+          "sha256": "sha256:02a604272589c15953f15491b14add13377cec7cbe9c795b81170cd7444782a1"
+        },
+        {
+          "path": "ggml-vulkan.dll",
+          "sha256": "sha256:d7a0c30e7c57edbd41f19df7359734fb6a9427635aefc3541562714b475f9b1e"
+        }
+      ],
+      "build": {
+        "repository": "https://github.com/ggml-org/whisper.cpp",
+        "flags": ["-DGGML_VULKAN=ON"]
+      }
+    },
+    "active_model": "large-v3-turbo",
+    "models": [
+      {
+        "id": "large-v3-turbo",
+        "file": "ggml-large-v3-turbo.bin",
+        "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-large-v3-turbo.bin",
+        "sha256": "sha256:1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69",
+        "bytes": 1624555275
+      },
+      {
+        "id": "large-v3",
+        "file": "ggml-large-v3.bin",
+        "url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-large-v3.bin",
+        "sha256": "sha256:64d182b440b98d5203c4f9bd541544d84c605196c4f7b845dfa11fb23594d1e2",
+        "bytes": 3095033483
+      }
+    ]
+  }
+}
