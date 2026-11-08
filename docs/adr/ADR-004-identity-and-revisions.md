@@ -52,7 +52,7 @@ reruns are not diffable, tests are not stable, and a reference such as "segment 
 - Transcription: a new run per retranscription. The previous run stays readable until purged by
   an explicit command.
 - Classification: a new run per reclassification, bound to one transcription run.
-- Recap: a new revision per generation. Edits to a revision are SQLite state (ADR-010, reserved);
+- Recap: a new revision per generation. Edits to a revision are SQLite state (ADR-010);
   approval binds to a revision and its content hash (ADR-007).
 - Which run is active for a session is SQLite state (ADR-001), never inferred from directory order.
 

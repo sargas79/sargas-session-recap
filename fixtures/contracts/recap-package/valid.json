@@ -4,9 +4,9 @@
   "campaign_id": "abomination-vaults",
   "session_id": "s07",
   "recap_revision": 2,
-  "content_hash": "sha256:fa200f60e7004fd1c1dd633c6b86a3f0b2da2a5a56186fe4275c8cc55d488fe1",
+  "content_hash": "sha256:e560d03af4d61e67452491c4756ab3a4e2171c1c520d706b16147ef69987849b",
   "approval": {
-    "approved_content_hash": "sha256:fa200f60e7004fd1c1dd633c6b86a3f0b2da2a5a56186fe4275c8cc55d488fe1",
+    "approved_content_hash": "sha256:e560d03af4d61e67452491c4756ab3a4e2171c1c520d706b16147ef69987849b",
     "approved_at": "2026-11-03T18:00:00.000Z"
   },
   "exported_at": "2026-11-03T18:01:00.000Z",

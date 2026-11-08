@@ -1,0 +1,20 @@
+{
+  "invalid-file-path.json": [
+    {
+      "path": "/<key>",
+      "keyword": "additionalProperties"
+    }
+  ],
+  "invalid-missing-approval.json": [
+    {
+      "path": "/approval_id",
+      "keyword": "required"
+    }
+  ],
+  "invalid-package-version.json": [
+    {
+      "path": "/package_schema_version",
+      "keyword": "const"
+    }
+  ]
+}
