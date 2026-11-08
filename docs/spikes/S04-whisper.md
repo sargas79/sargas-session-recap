@@ -230,19 +230,41 @@ Observations:
   on CPU. The Vulkan build is what makes large-v3 practical, so step 2 is still required for the S04 decision.
 - RTF here is measured on an 11 s clip, which overstates model-load overhead; use the long-file numbers (§5.3).
 
+**Vulkan build, same clip (agent run, 2026-11-08).** whisper.cpp v1.9.5 (commit `d1be6fd`) built locally with
+`-DGGML_VULKAN=ON` (CMake 4.4.4, MSVC Build Tools 17.14.44, Vulkan SDK 1.4.363.0), installed at
+`%LOCALAPPDATA%\sargas-recap\tools\whisper\v1.9.5-vulkan\`. Warm runs (the first run per model compiles shaders and
+takes a few seconds longer):
+
+| Model | Device | whisper `total time` | of which load | Encode | RTF (total) | Transcript correct? |
+|---|---|---|---|---|---|---|
+| large-v3-turbo | Vulkan, RX 9070 XT | 1.37 s | 1.12 s | 91 ms | 0.12 | yes |
+| large-v3 | Vulkan, RX 9070 XT | 2.69 s | 2.05 s | 97 ms | 0.24 | yes |
+
+On the CPU the encode step took 4.33 s (turbo) and 4.99 s (large-v3), so Vulkan encodes about 50× faster. Total time on
+this clip is dominated by model load, which is paid once per process; the long-file run (§5.3) gives the real RTF.
+
+**Portuguese samples (2026-11-08).** No session has been recorded yet; recording sessions is what this project
+enables. The Portuguese accuracy, drift and long-file steps (5–10) therefore wait for the first recorded session
+(per-speaker tracks, e.g. Craig). Until then, a GM-recorded Portuguese reading of 10–20 min with PF2e terms can stand
+in for the speed and reliability checks only; accuracy and the S04 decision need real table audio.
+
+Build note: the Vulkan shader-generator sub-build exceeds the Windows 260-character path limit when the build directory
+is under `%LOCALAPPDATA%\sargas-recap\tools\...`. Build in a short directory (e.g. `cmake -S <src> -B D:\wvk`) and copy
+`bin\Release\*.exe, *.dll` afterwards, or enable Windows long paths.
+
 ### 5.1 Environment and provenance
 
 | Item | Value |
 |---|---|
-| Date of runs | 2026-11-08 (agent CPU smoke test only; see §5.0) |
+| Date of runs | 2026-11-08 (agent CPU and Vulkan smoke tests only; see §5.0) |
 | Windows version / build | Windows 11 Pro 10.0.26300 |
 | GPU | AMD Radeon RX 9070 XT (CPU: AMD Ryzen 7 9800X3D, AVX-512) |
 | AMD Adrenalin version | |
 | Windows `DriverVersion` | 32.0.32015.7029 |
 | Vulkan `apiVersion` / `driverVersion` (vulkaninfo) | 1.4.359 / 2.0.416 |
 | whisper.cpp tag and commit | v1.9.5, release build `b5454` (2026-10-06) |
-| Binary source (built: CMake / MSVC / Vulkan SDK versions; or prebuilt: URL + archive sha256) | Prebuilt **CPU-only** `whisper-bin-x64.zip` from https://github.com/ggml-org/whisper.cpp/releases/download/b5454/whisper-bin-x64.zip, sha256 `6ba69e3482d7826214f90a6a9c84ca07782aec1e1d0c6a7c30c994fd5d816ccb`. No prebuilt Windows Vulkan build exists in recent releases (CPU, BLAS and CUDA only); a Vulkan build must be compiled (step 2). |
-| `whisper-cli.exe` sha256 | `331dba46d6427105d2b802cdbc7eae916ea1c5abf9b0d3b5cfe460d8db8e4366` (CPU build) |
+| Binary source (built: CMake / MSVC / Vulkan SDK versions; or prebuilt: URL + archive sha256) | Prebuilt **CPU-only** `whisper-bin-x64.zip` from https://github.com/ggml-org/whisper.cpp/releases/download/b5454/whisper-bin-x64.zip, sha256 `6ba69e3482d7826214f90a6a9c84ca07782aec1e1d0c6a7c30c994fd5d816ccb`. No prebuilt Windows Vulkan build exists in recent releases (CPU, BLAS and CUDA only); a Vulkan build must be compiled (step 2). **Vulkan build:** compiled locally from tag v1.9.5 (commit `d1be6fde11ac6e0407606b4e42fe72d34add8037`), CMake 4.4.4, Visual Studio Build Tools 2022 17.14.44 (MSVC), Vulkan SDK 1.4.363.0, `-DGGML_VULKAN=ON`. |
+| `whisper-cli.exe` sha256 | `331dba46d6427105d2b802cdbc7eae916ea1c5abf9b0d3b5cfe460d8db8e4366` (CPU build); `8fa49e66747a619990debc91de01b9f1319af63dbbbe7c4a131a0714a84ab868` (Vulkan build; local builds are not byte-reproducible, re-hash after a rebuild) |
 | ffmpeg version and source | 9.0.2 full build, winget `Gyan.FFmpeg` |
 | `ggml-large-v3-turbo.bin` sha256 / size | `1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69` / 1,624,555,275 bytes (matches Hugging Face LFS oid) |
 | `ggml-large-v3.bin` sha256 / size | `64d182b440b98d5203c4f9bd541544d84c605196c4f7b845dfa11fb23594d1e2` / 3,095,033,483 bytes (matches Hugging Face LFS oid) |
@@ -255,11 +277,11 @@ Observations:
 
 | Check | Result |
 |---|---|
-| Vulkan device detected (log line) | |
-| GPU vs CPU encode time on jfk.wav | |
-| Crashes / hangs / driver resets across all runs | |
+| Vulkan device detected (log line) | `ggml_vulkan: 0 = AMD Radeon RX 9070 XT (AMD proprietary driver) \| uma: 0 \| fp16: 1 \| bf16: 1 \| ... \| matrix cores: KHR_coopmat`; `gpu_device = 0` (2 Vulkan devices found; device 0 is the RX 9070 XT) |
+| GPU vs CPU encode time on jfk.wav | turbo 91 ms vs 4,331 ms; large-v3 97 ms vs 4,985 ms |
+| Crashes / hangs / driver resets across all runs | none in 8 short-clip runs (agent smoke test); long-file runs still to do |
 | Long file (≥ 20 min) completes on GPU | |
-| Output identical across repeats (compare `jsonSha256` of r1 vs r2) | |
+| Output identical across repeats (compare `jsonSha256` of r1 vs r2) | yes on jfk.wav for both models (JSON identical apart from `systeminfo`); recheck on the long file |
 | VRAM use, peak (Task Manager / Adrenalin) turbo / large | |
 
 ### 5.3 Speed (long file, GPU)
