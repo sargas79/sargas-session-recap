@@ -16,6 +16,7 @@ export const CAMPAIGN_CONFIG_FILE_NAME = 'campaign.yaml';
  * <root>/campaigns/<campaign_id>/sessions/<session_id>/   session package (ADR-006)
  * <root>/state/recap.sqlite                               app state (ADR-001)
  * <root>/state/backups/                                   pre-migration DB backups
+ * <root>/state/locks/<campaign_id>/<session_id>.lock      per-session job lock file (T07)
  * <root>/tools/                                           downloaded tools (T23)
  * <root>/logs/                                            structured logs
  * ```
@@ -27,6 +28,8 @@ export interface DataPaths {
   readonly stateDir: string;
   readonly dbFile: string;
   readonly backupsDir: string;
+  /** `<root>/state/locks`: per-session job lock files (T07). */
+  readonly locksDir: string;
   readonly toolsDir: string;
   readonly logsDir: string;
   /** `<root>/campaigns/<campaign_id>`; throws `PATHS_INVALID_ID` for a non-slug. */
@@ -37,6 +40,8 @@ export interface DataPaths {
   sessionsDir(campaignId: string): string;
   /** Session package directory `<root>/campaigns/<campaign_id>/sessions/<session_id>`. */
   sessionDir(campaignId: string, sessionId: string): string;
+  /** `<root>/state/locks/<campaign_id>/<session_id>.lock` (T07); throws for a non-slug. */
+  sessionLockFile(campaignId: string, sessionId: string): string;
 }
 
 /** Builds the layout for an absolute data root. Does not touch the filesystem. */
@@ -56,6 +61,7 @@ export function createDataPaths(root: string): DataPaths {
     stateDir,
     dbFile: path.join(stateDir, DB_FILE_NAME),
     backupsDir: path.join(stateDir, 'backups'),
+    locksDir: path.join(stateDir, 'locks'),
     toolsDir: path.join(base, 'tools'),
     logsDir: path.join(base, 'logs'),
     campaignDir,
@@ -64,5 +70,12 @@ export function createDataPaths(root: string): DataPaths {
     sessionsDir,
     sessionDir: (campaignId: string, sessionId: string): string =>
       path.join(sessionsDir(campaignId), assertSlug('session_id', sessionId)),
+    sessionLockFile: (campaignId: string, sessionId: string): string =>
+      path.join(
+        stateDir,
+        'locks',
+        assertSlug('campaign_id', campaignId),
+        `${assertSlug('session_id', sessionId)}.lock`,
+      ),
   });
 }

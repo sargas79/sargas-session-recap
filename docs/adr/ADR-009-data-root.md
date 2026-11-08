@@ -5,6 +5,7 @@
 - Issue: [#45](https://github.com/sargas79/sargas-session-recap/issues/45) (`T25`), gaps G-4 and G-5
 - Related: ADR-001 (ownership), ADR-004 (identity), ADR-006 (package layout), T04 (#20 config),
   T07 (#23 jobs), T12 (#30 overrides), T23 (#47 tools download)
+- Amended: T07 (#23) added `state/locks/` to the layout (`DataPaths.locksDir`, `sessionLockFile()`)
 
 ## Context
 
@@ -47,6 +48,7 @@ wide-character Windows APIs), and tests cover both.
   campaigns/<campaign_id>/sessions/<session_id>/   one session package (ADR-006 layout inside)
   state/recap.sqlite                               app state owned by SQLite (ADR-001), WAL mode
   state/backups/                                   pre-migration backups of recap.sqlite
+  state/locks/<campaign_id>/<session_id>.lock      per-session job lock mirror (T07; the row in SQLite is authoritative)
   tools/                                           downloaded tools such as whisper (T23)
   logs/                                            structured logs (allowlisted fields only)
 ```

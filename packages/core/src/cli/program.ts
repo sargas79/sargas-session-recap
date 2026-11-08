@@ -8,6 +8,7 @@ import {
 } from '../audio/index.ts';
 import { registerImportCommands } from '../capture/cli.ts';
 import { registerConfigCommands } from '../config/cli.ts';
+import { registerJobCommands } from '../jobs/cli.ts';
 import { registerPackageCommands } from '../package/cli.ts';
 import { checkDataRoot, type DataRootCheck, type DataRootCheckOptions } from '../paths/index.ts';
 
@@ -118,6 +119,7 @@ export function buildProgram(io: CliIo = defaultIo): Command {
   registerImportCommands(program, io, { toolVersion: readVersion() });
   registerPackageCommands(program, io);
   registerConfigCommands(program, io);
+  registerJobCommands(program, io);
 
   return program;
 }

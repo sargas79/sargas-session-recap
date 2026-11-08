@@ -1,6 +1,6 @@
 # G01: Product go/no-go and draft-quality/review-time thresholds
 
-**Outcome: PENDING (human decision)**
+**Outcome: PASS** (decision GO, recorded 2026-11-08; see §2 for what is still open)
 
 | Field | Value |
 |---|---|
@@ -10,8 +10,8 @@
 | Blocks | #26 `T08`, #27 `T10`, #38 `G02` (all require G01 **PASS**) |
 | Machine-readable companion | [`G01-thresholds.template.yaml`](G01-thresholds.template.yaml), copied to `G01-thresholds.yaml` once decided |
 
-> **This is a template prepared by an agent.** Every blank field (`____`) is a GM decision.
-> Agents must not fill in the decision, thresholds, chosen model/backend or outcome, and must not close #17.
+> The decision and backend below were given by the GM (Diego Vescovini) in chat on 2026-11-08 and
+> transcribed here by an agent. Fields still `____` are open GM decisions; agents must not fill them.
 > See [README](README.md).
 
 ---
@@ -22,24 +22,31 @@
 
 | Spike | Issue | Evidence doc | Outcome (PASS / FAIL / UNRESOLVED) | Outcome comment link | Key numbers used below |
 |---|---|---|---|---|---|
-| `S01` manual recap baseline | [#11](https://github.com/sargas79/sargas-session-recap/issues/11) | [`docs/spikes/S01-manual-baseline.md`](../spikes/S01-manual-baseline.md) | ____ | ____ | ____ |
-| `S04` whisper.cpp Vulkan benchmark | [#14](https://github.com/sargas79/sargas-session-recap/issues/14) | [`docs/spikes/S04-whisper.md`](../spikes/S04-whisper.md) | ____ | ____ | ____ |
-| `S05` Claude Code / API backends | [#15](https://github.com/sargas79/sargas-session-recap/issues/15) | [`docs/spikes/S05-llm-backends.md`](../spikes/S05-llm-backends.md) | ____ | ____ | ____ |
+| `S01` manual recap baseline | [#11](https://github.com/sargas79/sargas-session-recap/issues/11) | [`docs/spikes/S01-manual-baseline.md`](../spikes/S01-manual-baseline.md) | not yet run | — | — |
+| `S04` whisper.cpp Vulkan benchmark | [#14](https://github.com/sargas79/sargas-session-recap/issues/14) | [`docs/spikes/S04-whisper.md`](../spikes/S04-whisper.md) | not yet run | — | — |
+| `S05` Claude Code / API backends | [#15](https://github.com/sargas79/sargas-session-recap/issues/15) | [`docs/spikes/S05-llm-backends.md`](../spikes/S05-llm-backends.md) | not yet run | — | — |
 
-S01 recommendation (proceed / adjust / stop) and its proposed thresholds: ____
+S01 recommendation (proceed / adjust / stop) and its proposed thresholds: not available (S01 not yet run).
 
 ### 1.2 Informational spikes (do not gate G01)
 
 | Spike | Issue | Evidence doc | Status at decision time (PASS / FAIL / UNRESOLVED / not yet run) | Notes |
 |---|---|---|---|---|
-| `S02` Discord/DAVE capture | [#12](https://github.com/sargas79/sargas-session-recap/issues/12) | `docs/spikes/S02-discord-capture.md` | ____ | ____ |
-| `S03` Foundry v14/PF2e | [#13](https://github.com/sargas79/sargas-session-recap/issues/13) | `docs/spikes/S03-foundry.md` | ____ | ____ |
+| `S02` Discord/DAVE capture | [#12](https://github.com/sargas79/sargas-session-recap/issues/12) | `docs/spikes/S02-discord-capture.md` | not yet run | — |
+| `S03` Foundry v14/PF2e | [#13](https://github.com/sargas79/sargas-session-recap/issues/13) | `docs/spikes/S03-foundry.md` | not yet run | — |
 
 ## 2. Decision
 
-Decision (one of `GO` / `NO-GO` / `GO-WITH-CHANGES`): ____
+Decision (one of `GO` / `NO-GO` / `GO-WITH-CHANGES`): **GO**
 
-Reasoning (cite the evidence above): ____
+Reasoning (cite the evidence above): GM decision ahead of the spike evidence: the product is worth building
+and the LLM backend is Claude Code. S01, S04 and S05 had not been run when this was recorded, so:
+
+- **S04 and S05 still gate their own work.** T08 (#26) and T23 (#47) still need S04 (#14) to record PASS, and T10
+  (#27) still needs S05 (#15). The GM chose to run the spikes rather than waive them.
+- **The Whisper model (§5) and the Claude model ID (§6) are filled in from S04/S05 results** when those spikes close.
+- **The thresholds (§4) stay open.** They must be set (with S01 baselines where available) before G02 (#38);
+  until then T20 must not report PASS on any metric.
 
 ## 3. Changes required (only for GO-WITH-CHANGES)
 
@@ -117,7 +124,7 @@ Must cite S04 measurements (benchmark per model, real-time factor, name/term acc
 
 | Field | Value |
 |---|---|
-| Model | ____ |
+| Model | ____ (from S04; candidates `large-v3-turbo`, `large-v3`) |
 | Model SHA-256 | ____ |
 | whisper.cpp version/commit | ____ |
 | Invocation (exact flags) | ____ |
@@ -130,18 +137,18 @@ Must cite S05 evidence (verified, dated terms; model IDs actually available; too
 
 | Field | Value |
 |---|---|
-| Backend path | ____ |
-| Model ID (verified) | ____ |
-| Terms/usage check date | ____ |
-| Fallback path (if any) | ____ |
-| S05 evidence (doc section + #15 outcome comment) | ____ |
+| Backend path | **Claude Code CLI** (`claude -p`, non-interactive, tools disabled, JSON-schema output), GM decision 2026-11-08 |
+| Model ID (verified) | ____ (from S05 live-check) |
+| Terms/usage check date | ____ (from S05) |
+| Fallback path (if any) | Claude API via `@anthropic-ai/sdk` (T10 issue scope); confirmed or dropped by S05 |
+| S05 evidence (doc section + #15 outcome comment) | ____ (pending S05) |
 
 ## 7. Branch status (informational)
 
 | Branch | Source | Status | Consequence |
 |---|---|---|---|
-| Discord recorder (`T06`, #25) | S02 (#12) | ____ (ENABLED / DEFERRED / not yet known) | ____ |
-| Foundry delivery (`F06`, T16–T19) | S03 (#13) | ____ (PASS / FAIL / not yet known) | ____ |
+| Discord recorder (`T06`, #25) | S02 (#12) | not yet known | T06 stays blocked until S02 records PASS |
+| Foundry delivery (`F06`, T16–T19) | S03 (#13) | not yet known | T16–T19 stay blocked until S03 records PASS |
 
 Per roadmap #1: Discord failure defers the bot but does not block the import path; Foundry delivery need not block
 the imported-audio recap path.
@@ -150,9 +157,9 @@ the imported-audio recap path.
 
 | Field | Value |
 |---|---|
-| GM name | ____ |
-| Date (YYYY-MM-DD) | ____ |
-| `G01-thresholds.yaml` committed and matches this document | ____ (yes/no) |
+| GM name | Diego Vescovini |
+| Date (YYYY-MM-DD) | 2026-11-08 |
+| `G01-thresholds.yaml` committed and matches this document | yes (thresholds still null) |
 | #17 outcome comment link | ____ |
 
 Final outcome line (GM replaces the line at the top of this file):

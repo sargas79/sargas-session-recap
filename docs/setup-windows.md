@@ -113,7 +113,7 @@ recap doctor
   data:     C:\Users\you\AppData\Local\sargas-recap (from default)
             not created yet
   disk:     412.3 GiB free (at C:\Users\you\AppData\Local)
-  db:       not initialized (created at schema v1 on first use)
+  db:       not initialized (created at schema v2 on first use)
             path: C:\Users\you\AppData\Local\sargas-recap\state\recap.sqlite
   result:   ok
 ```
@@ -186,6 +186,7 @@ recap keeps session packages, the state database, downloaded tools and logs unde
 %LOCALAPPDATA%\sargas-recap\          e.g. C:\Users\you\AppData\Local\sargas-recap
   campaigns\<campaign_id>\sessions\<session_id>\
   state\recap.sqlite                  SQLite (WAL); state\backups\ holds pre-migration copies
+  state\locks\                        per-session lock files while `recap run` works on a session
   tools\
   logs\
 ```
@@ -213,7 +214,7 @@ schema version. It never creates anything. Before the first real command runs, t
   data:     C:\Users\you\AppData\Local\sargas-recap (from default)
             not created yet
   disk:     412.3 GiB free (at C:\Users\you\AppData\Local)
-  db:       not initialized (created at schema v1 on first use)
+  db:       not initialized (created at schema v2 on first use)
             path: C:\Users\you\AppData\Local\sargas-recap\state\recap.sqlite
 ```
 
@@ -226,6 +227,42 @@ SQLite comes from `better-sqlite3`. During `npm ci` it downloads a prebuilt Wind
 (cached under `%LOCALAPPDATA%\npm-cache\_prebuilds`), so you don't need Visual Studio Build Tools or
 Python. If the download is blocked (proxy, offline), it tries to compile and fails without Build Tools.
 Allow `github.com` or install the "Desktop development with C++" workload.
+
+## Running stages and job state
+
+`recap run <stage>` brings one stage of one session up to date, together with every stage it depends
+on. `recap status` shows what ran. Job state lives only in `state\recap.sqlite`
+([ADR-001](adr/ADR-001-artifact-ownership.md)), never in the repository or the session package.
+
+```powershell
+npm run recap -- run classify --campaign my-campaign --session s07 `
+  --config "D:\Recap Data\campaigns\my-campaign\campaign.yaml" `
+  --glossary "D:\Recap Data\campaigns\my-campaign\glossary.yaml"
+npm run recap -- status --campaign my-campaign --session s07     # --all for history, --json
+```
+
+The real stages arrive with the transcription, classification and recap tasks; until then
+`recap run` answers that no stages are registered.
+
+- **Only what changed runs again.** Each job records the hashes of its inputs: upstream outputs, the
+  config fields that stage actually uses, prompts and models. A stage reruns only when one of them
+  changed, and the stages after it rerun only if its output changed. Editing a display name, a consent
+  record or the recording provider reruns nothing.
+- **One run per session.** A second `recap run` on a session that is being processed stops at once and
+  names the process (pid) that holds it. Different sessions can run in parallel.
+- **Ctrl+C** marks the running job `cancelled` and exits with code 130. Run the same command again to
+  continue; finished stages are not redone.
+- **Crashes and closed windows.** If the process dies (crash, killed from Task Manager, PC turned off),
+  the next `recap run` on that session sees that the owner is gone (its pid no longer exists, or it
+  sent no heartbeat for 30 s), takes the lock over, marks the stuck job `failed` with code
+  `interrupted` (recoverable) and runs that stage again. Until then `recap status` shows the job with
+  `owner process is gone`. A leftover `state\locks\<campaign>\<session>.lock` file is informational
+  only and safe to delete.
+- **Retries.** Errors a stage marks as temporary (for example a provider timeout) are retried with
+  exponential backoff (1 s, 2 s, 4 s, ... capped at 30 s), 3 attempts by default; change it with
+  `--max-attempts <n>`. Other errors fail the job at once. Error messages never contain transcript or
+  prompt text.
+- Exit codes: `0` succeeded, `1` failed or refused, `2` bad arguments, `130` cancelled.
 
 ## Campaign config and consent
 
