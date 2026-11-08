@@ -1,6 +1,12 @@
 /**
- * Jobs: SQLite job runner, locking, cancellation, retry and crash recovery (T07).
- *
- * Placeholder created in T01 (#16). No behavior yet.
+ * Jobs (T07): SQLite job records, the stage runner, per-session locking, cancellation, bounded
+ * retry, crash recovery and selective invalidation. SQLite owns execution state (ADR-001).
  */
-export const MODULE_NAME = 'jobs';
+export * from './errors.ts';
+export * from './lock.ts';
+export * from './runner.ts';
+export * from './stage.ts';
+export * from './state.ts';
+export * from './store.ts';
+export * from './ulid.ts';
+export { registerJobCommands, type JobCliDeps, type JobCliIo } from './cli.ts';

@@ -7,6 +7,7 @@ import {
   type AudioToolchainOptions,
 } from '../audio/index.ts';
 import { registerConfigCommands } from '../config/cli.ts';
+import { registerJobCommands } from '../jobs/cli.ts';
 import { registerPackageCommands } from '../package/cli.ts';
 import { checkDataRoot, type DataRootCheck, type DataRootCheckOptions } from '../paths/index.ts';
 
@@ -116,6 +117,7 @@ export function buildProgram(io: CliIo = defaultIo): Command {
 
   registerPackageCommands(program, io);
   registerConfigCommands(program, io);
+  registerJobCommands(program, io);
 
   return program;
 }
