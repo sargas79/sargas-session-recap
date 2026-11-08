@@ -1,0 +1,20 @@
+{
+  "invalid-bad-hash.json": [
+    {
+      "path": "/content_hash",
+      "keyword": "pattern"
+    }
+  ],
+  "invalid-validity-flag.json": [
+    {
+      "path": "/<key>",
+      "keyword": "additionalProperties"
+    }
+  ],
+  "invalid-missing-reviewer.json": [
+    {
+      "path": "/reviewer_id",
+      "keyword": "required"
+    }
+  ]
+}

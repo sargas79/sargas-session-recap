@@ -126,6 +126,13 @@ export const Language = () => Type.String({ pattern: '^[a-z]{2,3}(?:-[A-Z]{2})?$
 export const Text = (options: SchemaOptions = {}) =>
   Type.String({ minLength: 1, maxLength: 20_000, ...options });
 
+/**
+ * Who performed an editorial action (edit, review, approval, export): an operator identity slug
+ * such as `gm`, never a real name or an email (ADR-010).
+ */
+export const ReviewerId = () =>
+  Slug({ description: 'Operator identity slug (ADR-010); not a real name or an email.' });
+
 /** Six classification labels (T11). */
 export const LABELS = ['ic', 'narration', 'rules', 'ooc', 'mixed', 'uncertain'] as const;
 export const Label = () => StringEnum(LABELS, { description: 'Classification label (T11).' });
