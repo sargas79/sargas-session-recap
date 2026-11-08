@@ -279,10 +279,22 @@ is under `%LOCALAPPDATA%\sargas-recap\tools\...`. Build in a short directory (e.
 |---|---|
 | Vulkan device detected (log line) | `ggml_vulkan: 0 = AMD Radeon RX 9070 XT (AMD proprietary driver) \| uma: 0 \| fp16: 1 \| bf16: 1 \| ... \| matrix cores: KHR_coopmat`; `gpu_device = 0` (2 Vulkan devices found; device 0 is the RX 9070 XT) |
 | GPU vs CPU encode time on jfk.wav | turbo 91 ms vs 4,331 ms; large-v3 97 ms vs 4,985 ms |
-| Crashes / hangs / driver resets across all runs | none in 8 short-clip runs (agent smoke test); long-file runs still to do |
-| Long file (≥ 20 min) completes on GPU | |
-| Output identical across repeats (compare `jsonSha256` of r1 vs r2) | yes on jfk.wav for both models (JSON identical apart from `systeminfo`); recheck on the long file |
+| Crashes / hangs / driver resets across all runs | none in 8 short-clip runs and 4 runs of the looped 20-min file (agent smoke test); real table audio still to do |
+| Long file (≥ 20 min) completes on GPU | yes on a synthetic file only (see below); exit 0 on all 4 runs |
+| Output identical across repeats (compare `jsonSha256` of r1 vs r2) | yes on jfk.wav and on the looped 20-min file, both models (JSON identical apart from `systeminfo`); recheck on real audio |
 | VRAM use, peak (Task Manager / Adrenalin) turbo / large | |
+
+**Synthetic long-file run (agent, 2026-11-08).** `jfk.wav` looped 110 times with ffmpeg (`-stream_loop 109 -c copy`) into
+1,210 s of English speech, sha256 `00d4230a7a08a215e459f345babc3fc35dfff9b9c0374779b759885221ff51bf`. Default flags, `-ojf`, two repeats per model:
+
+| Model | whisper `total time` r1 / r2 | RTF r1 / r2 | Segments | Last timestamp |
+|---|---|---|---|---|
+| large-v3-turbo | 17.08 s / 16.66 s | 0.014 / 0.014 | 103 | 00:20:10 |
+| large-v3 | 110.02 s / 103.39 s | 0.091 / 0.085 | 290 | 00:20:09 |
+
+This shows the build stays stable for 20 minutes of audio and repeats exactly. It does **not** fill §5.3: the audio is one
+sentence repeated, with no silence, overlap, Portuguese or real speakers, so these RTFs are a best case and say nothing
+about accuracy or drift. Decoding repeated text also behaves differently (turbo produced only 2 distinct segment texts).
 
 ### 5.3 Speed (long file, GPU)
 
