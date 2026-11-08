@@ -218,30 +218,33 @@ describe('chunk plan properties', () => {
       fc.property(inputs, (input) => {
         const plan = planChunks(input);
         const excluded = new Set(plan.excluded_fragments.map((e) => e.fragment_id));
+        const covered = new Map<string, Set<number>>();
+        let duplicated = 0;
+        for (const chunk of plan.chunks) {
+          for (const piece of chunk.pieces) {
+            const set = covered.get(piece.fragment_id) ?? new Set<number>();
+            covered.set(piece.fragment_id, set);
+            for (let d = 0; d < piece.duration_ms; d += 1) {
+              const ms = piece.fragment_start_ms + d;
+              if (set.has(ms)) duplicated += 1;
+              set.add(ms);
+            }
+          }
+        }
+        let lost = 0;
         for (const fragment of input.fragments) {
           if (excluded.has(fragment.fragment_id)) continue;
+          const set = covered.get(fragment.fragment_id);
           const removedPauses = plan.pauses.filter(
             (p) => p.fragment_id === fragment.fragment_id && p.disposition === 'removed',
           );
           for (let ms = 0; ms < fragment.duration_ms; ms += 1) {
-            const inRemoved = removedPauses.some((p) => ms >= p.start_ms && ms < p.end_ms);
-            const located = fragmentToChunk(plan, fragment.fragment_id, ms, 'start');
-            if (located === undefined) {
-              expect(inRemoved).toBe(true);
-            }
+            if (set?.has(ms) === true) continue;
+            if (!removedPauses.some((p) => ms >= p.start_ms && ms < p.end_ms)) lost += 1;
           }
         }
-        // No millisecond of a fragment is in two pieces.
-        const seen = new Set<string>();
-        for (const chunk of plan.chunks) {
-          for (const piece of chunk.pieces) {
-            for (let d = 0; d < piece.duration_ms; d += 1) {
-              const key = `${piece.fragment_id}@${String(piece.fragment_start_ms + d)}`;
-              expect(seen.has(key)).toBe(false);
-              seen.add(key);
-            }
-          }
-        }
+        // One assertion per plan: `expect` per millisecond took more than 30 s on CI runners.
+        expect({ duplicated, lost }).toEqual({ duplicated: 0, lost: 0 });
       }),
       RUNS,
     );
