@@ -2,11 +2,10 @@
 
 - Issue: #15 (`S05`, parent #2 `F00`, roadmap #1). Blocks #17 `G01` and #27 `T10`.
 - Harness: [`spikes/s05-llm/`](../../spikes/s05-llm/) (throwaway; never imported by `src/` / `packages/`).
-- Status of this document: **agent-prepared template**. The agent did not make any live call. It did not read
-  or use any credentials, did not run `claude -p` or `claude --version`, and did not check provider terms.
-  Every empty cell below has to be filled in by the GM from a real run, with a date.
+- Status of this document: **live CLI run recorded by an agent on the GM's PC, 2026-11-08** (sections 4 to 7). The API
+  fallback was not run (no key) and the terms and limits were not checked. Those cells are for the GM.
 
-**Outcome: PENDING (human run required)**
+**Outcome: PENDING (GM to check terms and decide; CLI run done, see sections 4 to 7)**
 
 ---
 
@@ -81,78 +80,90 @@ Extra manual checks worth recording:
 - Cancellation on Windows: after the cancellation probe, check in Task Manager or `tasklist` that no `claude`/`node` child
   processes are left.
 
-## 4. Environment and terms (GM fills in)
+## 4. Environment and terms
+
+Agent run on the GM's PC, 2026-11-08, at the GM's request. Rows marked "to verify by GM" were not checked.
 
 | Item | Value | Date checked | Evidence / link |
 |---|---|---|---|
-| OS / Node | | | |
-| Claude Code CLI version (`claude --version`) | | | |
-| Install type (native exe / npm .cmd) and command used | | | |
-| Auth mode (subscription-login / api-key-env) and plan | | | |
+| OS / Node | Windows 11 Pro 10.0.26300, x64 / Node v24.22.1 | 2026-11-08 | results JSON |
+| Claude Code CLI version (`claude --version`) | 2.1.317 (Claude Code) | 2026-11-08 | results JSON |
+| Install type (native exe / npm .cmd) and command used | Native `claude.exe` from `winget install --id Anthropic.ClaudeCode -e`; run through `S05_CLI_COMMAND` (full path) | 2026-11-08 | |
+| Auth mode (subscription-login / api-key-env) and plan | `subscription-login`, claude.ai login, Pro plan (`claude auth status`) | 2026-11-08 | |
 | Terms covering automated / non-interactive use of this auth mode | to verify by GM with date | | |
 | Usage limits / rate limits that apply | to verify by GM with date | | |
 | Data retention / training terms for the transcripts sent | to verify by GM with date | | |
 | API pricing for the chosen model (if API fallback) | to verify by GM with date | | |
 
-## 5. Flags verified against the installed CLI (GM fills in)
+## 5. Flags verified against the installed CLI
 
 | Flag (as used by the harness) | Exists in `--help`? | Behaviour observed | Notes |
 |---|---|---|---|
-| `-p` (print / non-interactive), prompt via stdin | | | |
-| `--output-format json` | | | |
-| `--json-schema <inline JSON>` | | | Inline string or file path? Is the output in `structured_output` or in `result`? |
-| `--model <id>` | | | |
-| `--system-prompt <text>` | | | |
-| `--tools ""` (disable all built-in tools) | | | |
-| `--disallowedTools <list>` | | | Separator format? |
-| `--strict-mcp-config --mcp-config '{"mcpServers":{}}'` | | | Do user/project MCP servers get loaded otherwise? |
-| Session persistence / max-turns / setting-sources flags (if any) | | | |
+| `-p` (print / non-interactive), prompt via stdin | yes (`-p, --print`) | Works; 7 structured probes returned exit 0 | |
+| `--output-format json` | yes | One JSON envelope on stdout | |
+| `--json-schema <inline JSON>` | yes | Inline JSON string accepted | Output is in `structured_output` (`outputSource: structured_output` on every successful probe). `num_turns` was 2 or 3 even for one question. |
+| `--model <id>` | yes | Honoured; `modelUsage` names the requested model | See section 6 |
+| `--system-prompt <text>` | yes | Accepted | |
+| `--tools ""` (disable all built-in tools) | yes | **Not enough on its own.** See section 7 | Argument passed correctly as an empty string on Windows |
+| `--disallowedTools <list>` | yes (also `--disallowed-tools`) | Accepted as one comma-separated value | Used in preset `belt` |
+| `--strict-mcp-config --mcp-config '{"mcpServers":{}}'` | yes | Accepted; inline JSON works | Without it the run carried far more context, consistent with the user's MCP servers and plugins being loaded (section 7) |
+| Session persistence / max-turns / setting-sources flags (if any) | `--no-session-persistence`, `--setting-sources`, `--max-budget-usd` exist; no `--max-turns` in the filtered help output | Not exercised | T10 should evaluate `--no-session-persistence` and `--setting-sources` |
 
-## 6. Models actually available (GM fills in)
+## 6. Models actually available
 
 | Model id | Via CLI (auth mode) | Via API | Date | Notes |
 |---|---|---|---|---|
-| `claude-sonnet-5-5` | | | | harness default |
-| | | | | |
-| `claude-s05-does-not-exist` (negative control) | | n/a | | failure mode / message |
+| `claude-sonnet-5-5` | yes (subscription-login) | not tested | 2026-11-08 | harness default |
+| `claude-opus-5-5` | yes (subscription-login) | not tested | 2026-11-08 | |
+| `claude-haiku-5-5` | yes (subscription-login) | not tested | 2026-11-08 | |
+| `claude-s05-does-not-exist` (negative control) | refused | n/a | 2026-11-08 | exit 1, `is_error: true`, `subtype: "success"`, stderr `[claude-code:unrecognized_model]` |
 
-## 7. Runtime behaviour (GM fills in from the results JSON)
+## 7. Runtime behaviour
+
+Results file: `spikes/s05-llm/results/s05-live-2026-11-08T14-54-58-725Z.json` (git-ignored; grep for key and token patterns found none).
 
 | Probe | Status | Duration | Observations |
 |---|---|---|---|
-| Classification + injection, preset `toolsEmpty` | | | Validated? injection lines flagged (n/7)? forged ids? |
-| Classification + injection, preset `belt` | | | |
-| Tool canary (tools disabled) | | | `cwdEntriesAfter`, `num_turns`, `permission_denials`, model's own answer |
-| Timeout (3 s) | | | Tree killed? leftover processes? |
-| Cancellation (abort after 2 s) | | | Tree killed? leftover processes? |
-| Invalid model | | | exit code / envelope subtype / message |
-| Schema-invalid output seen live? | | | Does `--json-schema` enforce the schema or only hint at it? |
+| Classification + injection, preset `toolsEmpty` | `ok` | 6.6 s | Schema valid. 7 of 7 injection lines flagged, 0 of 5 benign lines flagged. Cwd stayed empty. 35,363 cache-creation tokens. |
+| Classification + injection, preset `belt` | `ok` | 4.4 s | Schema valid. 7 of 7 injection lines flagged, 0 of 5 benign lines flagged. Cwd stayed empty. 2,859 cache-creation tokens. |
+| Tool canary, preset `toolsEmpty` | `ok` | 5.3 s | **Model reported `tools_were_available: true`**, `attempted_tool_call: false`. `cwdEntriesAfter: []`, `num_turns: 2`, no `permission_denials`. 81,259 cache-creation tokens. |
+| Tool canary, preset `belt` | `ok` | 4.0 s | Model reported `tools_were_available: false`, `attempted_tool_call: false`. `cwdEntriesAfter: []`, `num_turns: 2`, no `permission_denials`. 1,495 cache-creation tokens. |
+| Timeout (3 s) | `timeout` | 3.1 s | Killed; no `claude.exe` left after the full run. |
+| Cancellation (abort after 2 s) | `cancelled` | 2.1 s | Killed; no `claude.exe` left after the full run. |
+| Invalid model | `cli_error` | 3.6 s | Exit 1, `is_error: true`, `subtype: "success"`, stderr `[claude-code:unrecognized_model]`. |
+| Schema-invalid output seen live? | no | | Not observed in 7 successful structured runs, so this run does not show whether `--json-schema` enforces or only hints. Keep Ajv validation. |
+
+**Finding: use `belt`, never `toolsEmpty` alone.** `--tools ""` removes built-in tools only. The `toolsEmpty` runs carried 12 to 54 times more cached context than `belt`, and the model said tools were available. That is consistent with the user's MCP servers and plugins still being loaded, which would put tools such as mail or file connectors next to untrusted transcript text. The cause is inferred from the token counts and the model's self-report; the tool list itself was not captured. The harness default in `src/cli-harness.ts` is `toolsEmpty`; T10 must default to the `belt` flags.
+
+**Finding: `subtype` is not a success signal.** Failures came back with `subtype: "success"` and `is_error: true`. T10 must check `is_error` and the exit code.
 
 ### Usage / cost fields reported
 
-| Field | CLI envelope (present? example value) | API `usage` (present? example value) |
+| Field | CLI envelope (present? example value, `classification:belt`) | API `usage` (present? example value) |
 |---|---|---|
-| `input_tokens` | | |
-| `output_tokens` | | |
-| `cache_creation_input_tokens` | | |
-| `cache_read_input_tokens` | | |
-| `total_cost_usd` (CLI) | | n/a |
-| `duration_ms` / `duration_api_ms` | | n/a |
-| `num_turns` | | n/a |
-| `modelUsage` | | n/a |
-| other fields (list) | | |
+| `input_tokens` | yes, 2 | not tested |
+| `output_tokens` | yes, 376 | not tested |
+| `cache_creation_input_tokens` | yes, 2,859 | not tested |
+| `cache_read_input_tokens` | yes, 0 | not tested |
+| `total_cost_usd` (CLI) | yes, 0.0152 (reported by the CLI; what it means on a subscription is not established) | n/a |
+| `duration_ms` / `duration_api_ms` | yes, 3,286 / 3,039 | n/a |
+| `num_turns` | yes, 2 | n/a |
+| `modelUsage` | yes, per model: tokens, `costUSD`, `contextWindow` 1,000,000, `maxOutputTokens` 128,000 | n/a |
+| other fields (list) | `api_error_status, fast_mode_disabled_reason, fast_mode_state, first_content_frame_ms, permission_denials, queued_turn_count, result, result_index, safety_stops, session_id, stop_reason, structured_output, subagent_stats, subtype, terminal_reason, time_to_request_ms, ttft_ms, ttft_stream_ms, type, uuid` | |
+
+The probe used 12 short lines. Token use and latency for a real session window are not measured here.
 
 ### Failure modes observed
 
 | Failure | How it surfaces (exit code / envelope / stderr) | Harness status | Retry? |
 |---|---|---|---|
-| Not logged in / auth expired | | | |
-| Usage limit reached | | | |
-| Rate limited | | | |
-| Network down | | | |
-| Invalid model | | | |
-| Schema-invalid output | | `schema_invalid` | |
-| Timeout / cancel | | `timeout` / `cancelled` | |
+| Not logged in / auth expired | Exit 1, `is_error: true`, `subtype: "success"`, zero tokens, about 50 ms, empty stderr (seen in a first run before login; `claude auth status` showed `loggedIn: false`) | `cli_error` | no; needs the GM to log in |
+| Usage limit reached | not observed | | |
+| Rate limited | not observed | | |
+| Network down | not observed | | |
+| Invalid model | Exit 1, `is_error: true`, `subtype: "success"`, stderr `[claude-code:unrecognized_model]` | `cli_error` | no |
+| Schema-invalid output | not observed live | `schema_invalid` | |
+| Timeout / cancel | Process tree killed by the harness, exit 1, no envelope | `timeout` / `cancelled` | timeout yes (bounded); cancel no |
 
 ## 8. API fallback (GM fills in; design by agent)
 
@@ -195,11 +206,11 @@ mode the CLI child never sees API-key env vars.
 
 ## 10. Recommendation
 
-To be written by the GM after the live run. The decision points for G01 and T10:
+Agent observation from the CLI run: the CLI meets the technical points below when run with the `belt` flags, except that schema enforcement and the terms are unproven. The decision is the GM's. The decision points for G01 and T10:
 
 - CLI: are all required flags present, are tools verifiably disabled, does schema-validated output come back reliably, does
   cancellation clean up the process tree on Windows, and is automated use allowed under the terms (section 4)?
 - API: are the model ids available, does `output_config.format` work with the classification schema, is the cost per session acceptable?
 - Primary backend and fallback. Under roadmap rule 8, do not add another provider (that is D03).
 
-**Outcome: PENDING (human run required)**
+**Outcome: PENDING (GM to check terms and decide; CLI run done, see sections 4 to 7)**
