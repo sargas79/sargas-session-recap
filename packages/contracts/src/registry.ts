@@ -5,7 +5,11 @@ import { FoundryEventSchema } from './schemas/foundry-event.ts';
 import { FragmentSchema } from './schemas/fragment.ts';
 import { JobRecordSchema } from './schemas/job-record.ts';
 import { ManifestSchema } from './schemas/manifest.ts';
+import { RecapApprovalSchema } from './schemas/recap-approval.ts';
+import { RecapEditorialTransitionSchema } from './schemas/recap-editorial-transition.ts';
+import { RecapExportManifestSchema } from './schemas/recap-export-manifest.ts';
 import { RecapPackageSchema } from './schemas/recap-package.ts';
+import { RecapSentenceEditSchema } from './schemas/recap-sentence-edit.ts';
 import { RecapSchema } from './schemas/recap.ts';
 import { ReviewOverrideSchema } from './schemas/review-override.ts';
 import { TranscriptionSegmentSchema } from './schemas/transcription-segment.ts';
@@ -66,6 +70,26 @@ export const CONTRACTS = {
     schema: JobRecordSchema,
     title: 'Job record',
     where: 'SQLite jobs row (T07)',
+  },
+  'recap-sentence-edit': {
+    schema: RecapSentenceEditSchema,
+    title: 'Recap edit (title, sentence or GM note)',
+    where: 'SQLite recap_edits row (T15, ADR-010)',
+  },
+  'recap-editorial-transition': {
+    schema: RecapEditorialTransitionSchema,
+    title: 'Recap editorial state transition',
+    where: 'SQLite recap_editorial_transitions row (T15, ADR-010)',
+  },
+  'recap-approval': {
+    schema: RecapApprovalSchema,
+    title: 'Recap approval record',
+    where: 'SQLite recap_approvals row (T15, ADR-010)',
+  },
+  'recap-export-manifest': {
+    schema: RecapExportManifestSchema,
+    title: 'Recap export manifest',
+    where: 'SQLite recap_exports row (T15, ADR-010)',
   },
 } as const satisfies Record<string, { schema: TSchema; title: string; where: string }>;
 

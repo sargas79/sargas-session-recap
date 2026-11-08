@@ -44,7 +44,7 @@ const Evidence = Type.Object(
  * Exported recap package imported by the Foundry module (T15 export, T19 import; ADR-007).
  * A derived, hashed snapshot of an approved revision. Contains no GM notes.
  * Journal identity: (campaign_id, session_id). Version: (recap_revision, content_hash).
- * content_hash canonicalization is defined in ADR-010 (reserved, T27).
+ * content_hash is canonicalContentHash(recapContentFromPackage(content)) (ADR-010).
  */
 export const RecapPackageSchema = Type.Object(
   {

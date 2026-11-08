@@ -1,0 +1,360 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sargas-recap:schema:recap-editorial-transition:v1",
+  "title": "Recap editorial state transition",
+  "$comment": "Generated from packages/contracts/src by npm run schemas. Do not edit. Stored as: SQLite recap_editorial_transitions row (T15, ADR-010).",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "trigger": {
+            "enum": [
+              "review"
+            ]
+          }
+        },
+        "required": [
+          "trigger"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "from_state": {
+            "type": "string",
+            "enum": [
+              "draft"
+            ]
+          },
+          "to_state": {
+            "type": "string",
+            "enum": [
+              "reviewed"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "trigger": {
+            "enum": [
+              "approve"
+            ]
+          }
+        },
+        "required": [
+          "trigger"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "from_state": {
+            "type": "string",
+            "enum": [
+              "reviewed"
+            ]
+          },
+          "to_state": {
+            "type": "string",
+            "enum": [
+              "approved"
+            ]
+          }
+        },
+        "required": [
+          "approval_id"
+        ]
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "trigger": {
+            "enum": [
+              "export"
+            ]
+          }
+        },
+        "required": [
+          "trigger"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "from_state": {
+            "type": "string",
+            "enum": [
+              "approved",
+              "exported"
+            ]
+          },
+          "to_state": {
+            "type": "string",
+            "enum": [
+              "exported"
+            ]
+          }
+        },
+        "required": [
+          "approval_id",
+          "export_id"
+        ]
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "trigger": {
+            "enum": [
+              "content_edit"
+            ]
+          }
+        },
+        "required": [
+          "trigger"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "from_state": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "reviewed",
+              "approved"
+            ]
+          },
+          "to_state": {
+            "type": "string",
+            "enum": [
+              "draft"
+            ]
+          }
+        },
+        "required": [
+          "edit_id"
+        ]
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "trigger": {
+            "enum": [
+              "reopen"
+            ]
+          }
+        },
+        "required": [
+          "trigger"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "from_state": {
+            "type": "string",
+            "enum": [
+              "reviewed",
+              "approved"
+            ]
+          },
+          "to_state": {
+            "type": "string",
+            "enum": [
+              "draft"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "trigger": {
+            "enum": [
+              "review",
+              "approve",
+              "export",
+              "reopen"
+            ]
+          }
+        },
+        "required": [
+          "trigger"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "edit_id": false
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "trigger": {
+            "enum": [
+              "review",
+              "content_edit",
+              "reopen"
+            ]
+          }
+        },
+        "required": [
+          "trigger"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "approval_id": false
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "properties": {
+          "trigger": {
+            "enum": [
+              "review",
+              "approve",
+              "content_edit",
+              "reopen"
+            ]
+          }
+        },
+        "required": [
+          "trigger"
+        ]
+      },
+      "then": {
+        "type": "object",
+        "properties": {
+          "export_id": false
+        }
+      }
+    }
+  ],
+  "type": "object",
+  "required": [
+    "schema_version",
+    "transition_id",
+    "campaign_id",
+    "session_id",
+    "recap_revision",
+    "sequence",
+    "trigger",
+    "from_state",
+    "to_state",
+    "content_hash",
+    "reviewer_id",
+    "created_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Per-record schema version (ADR-002).",
+      "const": 1,
+      "type": "number"
+    },
+    "transition_id": {
+      "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$",
+      "type": "string"
+    },
+    "campaign_id": {
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+      "description": "Campaign identifier (config, T04).",
+      "type": "string"
+    },
+    "session_id": {
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+      "description": "Session identifier within a campaign.",
+      "type": "string"
+    },
+    "recap_revision": {
+      "minimum": 1,
+      "maximum": 9007199254740991,
+      "description": "Monotonic per session (ADR-004).",
+      "type": "integer"
+    },
+    "sequence": {
+      "minimum": 0,
+      "maximum": 9007199254740991,
+      "description": "Order of transitions within the revision (0, 1, ...).",
+      "type": "integer"
+    },
+    "trigger": {
+      "type": "string",
+      "enum": [
+        "review",
+        "approve",
+        "export",
+        "content_edit",
+        "reopen"
+      ]
+    },
+    "from_state": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "reviewed",
+        "approved",
+        "exported"
+      ]
+    },
+    "to_state": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "reviewed",
+        "approved",
+        "exported"
+      ]
+    },
+    "content_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "canonicalContentHash of the effective content after the transition (ADR-010).",
+      "type": "string"
+    },
+    "edit_id": {
+      "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$",
+      "description": "The edit that caused a content_edit.",
+      "type": "string"
+    },
+    "approval_id": {
+      "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$",
+      "description": "The approval record an approve created.",
+      "type": "string"
+    },
+    "export_id": {
+      "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$",
+      "description": "The export manifest an export created.",
+      "type": "string"
+    },
+    "reviewer_id": {
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+      "description": "Operator identity slug (ADR-010); not a real name or an email.",
+      "type": "string"
+    },
+    "created_at": {
+      "format": "date-time",
+      "maxLength": 40,
+      "type": "string"
+    }
+  }
+}

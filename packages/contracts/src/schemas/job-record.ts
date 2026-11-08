@@ -36,7 +36,7 @@ export const JOB_INPUT_KINDS = [
 
 /**
  * One row of SQLite `jobs` (T07), authoritative there only (ADR-001). Execution state only:
- * editorial state is separate (ADR-010, reserved). Inputs and outputs are recorded by hash.
+ * editorial state is separate (ADR-010). Inputs and outputs are recorded by hash.
  */
 export const JobRecordSchema = Type.Object(
   {
