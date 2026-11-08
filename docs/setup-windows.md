@@ -148,3 +148,17 @@ written in JavaScript). Releases are cut by pushing a `foundry-v<version>` tag; 
 Never put real session recordings or transcripts inside the repository. `sessions/`, audio files,
 transcripts, SQLite databases and `.env*` files are git-ignored as a safety net. The default data root
 outside the repo is defined in T25.
+
+## Campaign config and consent
+
+Each campaign has a `campaign.yaml` (speakers, per-stage provider, consent records) and a
+`glossary.yaml`. Keep both in the data root, never in the repository: they name real people and record
+their consent. Start from the synthetic examples in `fixtures/config/`. Notepad's UTF-8 (with or without
+BOM) and CRLF line endings are fine.
+
+- Consent is recorded per speaker, per purpose (`recording`, `asr`, `classification`, `recap`) and per
+  provider, with the date (`granted_on: 2026-01-10`, optional `withdrawn_on`). Keep signed forms or call
+  notes next to the config and point at them with `evidence_ref`; recap never opens or copies them.
+- Changing a stage's provider in `campaign.yaml` needs new consent records for that provider. Until they
+  exist, processing refuses to run and names the speakers whose consent is missing.
+- Invalid files are reported as `<file>:<line>:<col>: <path>: <problem>`. Values are never printed.

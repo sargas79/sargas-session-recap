@@ -27,6 +27,8 @@
     "recap": "node src/cli/main.ts"
   },
   "dependencies": {
-    "commander": "^15.1.0"
+    "@sargas-recap/contracts": "0.0.0",
+    "commander": "^15.1.0",
+    "yaml": "^2.9.1"
   }
 }

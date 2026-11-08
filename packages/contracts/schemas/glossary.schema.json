@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sargas-recap:schema:glossary:v1",
+  "title": "Campaign glossary",
+  "$comment": "Generated from packages/contracts/src by npm run schemas. Do not edit. Stored as: glossary.yaml in the data root, outside git (T04).",
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "schema_version",
+    "entries"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Per-record schema version (ADR-002).",
+      "const": 1,
+      "type": "number"
+    },
+    "entries": {
+      "maxItems": 2000,
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "spelling",
+          "type"
+        ],
+        "properties": {
+          "id": {
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+            "description": "Stable entry ID, unique within the glossary (checked by the loader).",
+            "type": "string"
+          },
+          "spelling": {
+            "minLength": 1,
+            "maxLength": 120,
+            "pattern": "^[^\\u0000-\\u001F\\u007F]+$",
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "pc",
+              "npc",
+              "creature",
+              "deity",
+              "place",
+              "faction",
+              "item",
+              "spell",
+              "rule",
+              "term"
+            ]
+          },
+          "description": {
+            "minLength": 1,
+            "maxLength": 2000,
+            "description": "Recap context only.",
+            "type": "string"
+          },
+          "mishearings": {
+            "uniqueItems": true,
+            "maxItems": 50,
+            "description": "Known ASR misrecognitions of the spelling (classification correction).",
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "maxLength": 120,
+              "pattern": "^[^\\u0000-\\u001F\\u007F]+$",
+              "type": "string"
+            }
+          },
+          "is_english_term": {
+            "description": "English term inside a non-English session. Default false.",
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

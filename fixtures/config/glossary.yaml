@@ -1,0 +1,20 @@
+# SYNTHETIC fixture (T04).
+schema_version: 1
+entries:
+  - id: kyra
+    spelling: Kyra
+    type: pc
+    description: SYNTHETIC. Human cleric of Sarenrae.
+  - id: sarenrae
+    spelling: Sarenrae
+    type: deity
+    mishearings: [Sara Ray, Saren rai]
+  - id: flat-footed
+    spelling: flat-footed
+    type: rule
+    mishearings: [flat footed]
+    is_english_term: true
+  - id: otari
+    spelling: Otari
+    type: place
+    description: SYNTHETIC. Small coastal town.

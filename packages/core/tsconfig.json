@@ -1,7 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "noEmit": true
+    "noEmit": true,
+    // Typecheck against contracts source, so `npm run typecheck` needs no prior build.
+    "paths": {
+      "@sargas-recap/contracts": ["../contracts/src/index.ts"]
+    }
   },
   "include": ["src", "test"]
 }

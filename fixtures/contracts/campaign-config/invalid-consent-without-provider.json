@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "campaign_id": "synthetic-vaults",
+  "system": "pf2e",
+  "language": "pt-BR",
+  "background": "SYNTHETIC. The party explores a ruined lighthouse above a sealed dungeon.",
+  "provider": {
+    "recording": "craig",
+    "asr": "whisper-local",
+    "classification": "claude-cli",
+    "recap": "claude-cli"
+  },
+  "speakers": [
+    {
+      "speaker_id": "gm",
+      "display_name": "GM (synthetic)",
+      "role": "gm",
+      "consent": [
+        {
+          "purpose": "recording",
+          "provider": "craig",
+          "granted_on": "2026-01-10"
+        },
+        {
+          "purpose": "asr",
+          "granted_on": "2026-01-10"
+        },
+        {
+          "purpose": "classification",
+          "provider": "claude-cli",
+          "granted_on": "2026-01-10"
+        },
+        {
+          "purpose": "recap",
+          "provider": "claude-cli",
+          "granted_on": "2026-01-10"
+        }
+      ]
+    },
+    {
+      "speaker_id": "player-ana",
+      "display_name": "Player A (synthetic)",
+      "role": "player",
+      "characters": [
+        "Kyra"
+      ],
+      "consent": [
+        {
+          "purpose": "recording",
+          "provider": "craig",
+          "granted_on": "2026-01-10",
+          "evidence_ref": "consent/player-ana-2026-01-10.md"
+        },
+        {
+          "purpose": "asr",
+          "provider": "whisper-local",
+          "granted_on": "2026-01-10",
+          "evidence_ref": "consent/player-ana-2026-01-10.md"
+        },
+        {
+          "purpose": "classification",
+          "provider": "claude-cli",
+          "granted_on": "2026-01-10"
+        },
+        {
+          "purpose": "recap",
+          "provider": "claude-cli",
+          "granted_on": "2026-01-10"
+        }
+      ]
+    }
+  ]
+}

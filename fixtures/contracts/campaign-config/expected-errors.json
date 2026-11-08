@@ -1,0 +1,38 @@
+{
+  "invalid-consent-without-provider.json": [
+    {
+      "path": "/speakers/0/consent/1/provider",
+      "keyword": "required"
+    }
+  ],
+  "invalid-unknown-purpose.json": [
+    {
+      "path": "/speakers/0/consent/0/purpose",
+      "keyword": "enum"
+    }
+  ],
+  "invalid-bad-date.json": [
+    {
+      "path": "/speakers/1/consent/0/granted_on",
+      "keyword": "format"
+    }
+  ],
+  "invalid-missing-stage-provider.json": [
+    {
+      "path": "/provider/recap",
+      "keyword": "required"
+    }
+  ],
+  "invalid-no-speakers.json": [
+    {
+      "path": "/speakers",
+      "keyword": "minItems"
+    }
+  ],
+  "invalid-extra-property.json": [
+    {
+      "path": "/speakers/1/<key>",
+      "keyword": "additionalProperties"
+    }
+  ]
+}

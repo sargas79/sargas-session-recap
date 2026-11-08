@@ -1,10 +1,12 @@
 import { Ajv2020, type ErrorObject, type ValidateFunction } from 'ajv/dist/2020.js';
 import addFormatsModule from 'ajv-formats';
+import type { CampaignConfig } from './schemas/campaign-config.ts';
 import { CONTRACT_NAMES, schemaId, toJsonSchema, type ContractName } from './registry.ts';
 import type { ClassificationResult } from './schemas/classification-result.ts';
 import type { EffectiveTranscript } from './schemas/effective-transcript.ts';
 import type { FoundryEvent } from './schemas/foundry-event.ts';
 import type { Fragment } from './schemas/fragment.ts';
+import type { Glossary } from './schemas/glossary.ts';
 import type { JobRecord } from './schemas/job-record.ts';
 import type { Manifest } from './schemas/manifest.ts';
 import type { RecapPackage } from './schemas/recap-package.ts';
@@ -38,6 +40,8 @@ export interface ContractTypes {
   recap: Recap;
   'recap-package': RecapPackage;
   'job-record': JobRecord;
+  'campaign-config': CampaignConfig;
+  glossary: Glossary;
 }
 
 const MAX_ISSUES = 50;
@@ -95,7 +99,7 @@ function getAjv(): Ajv2020 {
       strictRequired: false,
       verbose: false,
     });
-    addFormats(ajv, ['date-time']);
+    addFormats(ajv, ['date-time', 'date']);
     for (const name of CONTRACT_NAMES) ajv.addSchema(toJsonSchema(name));
   }
   return ajv;
@@ -197,3 +201,5 @@ export const validateEffectiveTranscript = (data: unknown) =>
 export const validateRecap = (data: unknown) => validateContract('recap', data);
 export const validateRecapPackage = (data: unknown) => validateContract('recap-package', data);
 export const validateJobRecord = (data: unknown) => validateContract('job-record', data);
+export const validateCampaignConfig = (data: unknown) => validateContract('campaign-config', data);
+export const validateGlossary = (data: unknown) => validateContract('glossary', data);

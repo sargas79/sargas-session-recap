@@ -39,6 +39,8 @@ step** (what, who, where, and what evidence to record). Do not simulate the resu
 Follow the recorded decisions. Do not silently add a facts service, distributed queue, automatic
 publishing to players, or an additional AI provider. Spike harnesses under `spikes/` are throwaway and must
 never be imported by `packages/*`.
+Every provider call (capture, ASR, classification, recap) must first pass `assertConsent()` from
+`packages/core/src/config/` (T04); never reimplement or bypass the consent check.
 
 ### Stack (decided in T01, see plan section 3)
 
