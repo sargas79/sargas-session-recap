@@ -18,6 +18,6 @@ export {
   type ImportResult,
   type TrackProbe,
 } from './import.ts';
-export { newUlid } from './ulid.ts';
+export { newUlid } from '../ids/ulid.ts';
 export { probeWavHeader } from './wav.ts';
 export { registerImportCommands, type ImportCliDeps, type ImportCliIo } from './cli.ts';

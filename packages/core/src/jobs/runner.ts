@@ -48,7 +48,7 @@ import {
   type JobInput,
 } from './store.ts';
 import type { SqliteDatabase } from '../db/index.ts';
-import { ulid } from './ulid.ts';
+import { ulid } from '../ids/ulid.ts';
 
 /** Error code recorded on a job whose owner died while it was running. */
 export const INTERRUPTED_CODE = 'interrupted';

@@ -8,5 +8,5 @@ export * from './runner.ts';
 export * from './stage.ts';
 export * from './state.ts';
 export * from './store.ts';
-export * from './ulid.ts';
+export { monotonicUlid, ulid, ULID_RE, type UlidFactory } from '../ids/ulid.ts';
 export { registerJobCommands, type JobCliDeps, type JobCliIo } from './cli.ts';

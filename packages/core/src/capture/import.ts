@@ -56,7 +56,7 @@ import {
 } from '../package/index.ts';
 import type { DataPaths } from '../paths/index.ts';
 import { ImportError } from './errors.ts';
-import { newUlid } from './ulid.ts';
+import { newUlid } from '../ids/ulid.ts';
 import { probeWavHeader } from './wav.ts';
 
 /** Mapping file names looked up in the import directory when `--mapping` is not given. */
