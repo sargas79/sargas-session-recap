@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-11-07
 - Task: T02 (#18)
-- Related: ADR-001, ADR-004, ADR-010 (reserved, #46), T15 (#35), T19 (#36)
+- Related: ADR-001, ADR-004, ADR-010, T15 (#35), T19 (#36)
 
 ## Context
 
@@ -18,7 +18,7 @@ runs in the browser, so every rule has to be checkable from the package file alo
 
 - Approval applies to one `(recap_revision, content_hash)`. `content_hash` is `sha256:<hex>` over a
   canonical form of the player-facing content (sentences and their citations, excluding GM notes and
-  timestamps). The exact canonicalization rule is ADR-010 (reserved, T27); the Foundry module
+  timestamps). The exact canonicalization rule is ADR-010; the Foundry module
   reimplements it from that ADR.
 - Any change to the content changes the hash and therefore invalidates the approval. Normal export
   requires an approval whose hash equals the hash of the content being exported (T15).
@@ -59,7 +59,7 @@ runs in the browser, so every rule has to be checkable from the package file alo
 - A `recap_revision` is exported with at most one `content_hash`. If content changes after a
   revision was exported, the next export must use a new, higher revision number, otherwise the
   importer rejects it as a conflict. How edited content gets its revision number is decided in
-  ADR-010 / T15.
+  ADR-010 (fork on the first content edit after export) and implemented in T15.
 
 ## Alternatives considered
 

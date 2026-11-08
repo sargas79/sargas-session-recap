@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sargas-recap:schema:recap-approval:v1",
+  "title": "Recap approval record",
+  "$comment": "Generated from packages/contracts/src by npm run schemas. Do not edit. Stored as: SQLite recap_approvals row (T15, ADR-010).",
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "schema_version",
+    "approval_id",
+    "campaign_id",
+    "session_id",
+    "recap_revision",
+    "content_hash",
+    "reviewer_id",
+    "approved_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Per-record schema version (ADR-002).",
+      "const": 1,
+      "type": "number"
+    },
+    "approval_id": {
+      "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$",
+      "type": "string"
+    },
+    "campaign_id": {
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+      "description": "Campaign identifier (config, T04).",
+      "type": "string"
+    },
+    "session_id": {
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+      "description": "Session identifier within a campaign.",
+      "type": "string"
+    },
+    "recap_revision": {
+      "minimum": 1,
+      "maximum": 9007199254740991,
+      "description": "Monotonic per session (ADR-004).",
+      "type": "integer"
+    },
+    "content_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "canonicalContentHash of the approved content (ADR-010).",
+      "type": "string"
+    },
+    "reviewer_id": {
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+      "description": "Operator identity slug (ADR-010); not a real name or an email.",
+      "type": "string"
+    },
+    "approved_at": {
+      "format": "date-time",
+      "maxLength": 40,
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "campaign_id": "abomination-vaults",
+  "session_id": "s07",
+  "recap_revision": 2,
+  "transition_id": "01JBYA2T0000000000000003T3",
+  "sequence": 3,
+  "trigger": "content_edit",
+  "from_state": "exported",
+  "to_state": "draft",
+  "content_hash": "sha256:3c47b731afa01c80b0653a45c01c39025a2466e1886a75892b4fdae0c09b460a",
+  "edit_id": "01JBYA1E0000000000000000E1",
+  "reviewer_id": "gm",
+  "created_at": "2026-11-03T18:05:00.000Z"
+}

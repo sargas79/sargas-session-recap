@@ -9,7 +9,11 @@ import type { Fragment } from './schemas/fragment.ts';
 import type { Glossary } from './schemas/glossary.ts';
 import type { JobRecord } from './schemas/job-record.ts';
 import type { Manifest } from './schemas/manifest.ts';
+import type { RecapApproval } from './schemas/recap-approval.ts';
+import type { RecapEditorialTransition } from './schemas/recap-editorial-transition.ts';
+import type { RecapExportManifest } from './schemas/recap-export-manifest.ts';
 import type { RecapPackage } from './schemas/recap-package.ts';
+import type { RecapSentenceEdit } from './schemas/recap-sentence-edit.ts';
 import type { Recap } from './schemas/recap.ts';
 import type { ReviewOverride } from './schemas/review-override.ts';
 import type { TranscriptionSegment } from './schemas/transcription-segment.ts';
@@ -42,6 +46,10 @@ export interface ContractTypes {
   'job-record': JobRecord;
   'campaign-config': CampaignConfig;
   glossary: Glossary;
+  'recap-sentence-edit': RecapSentenceEdit;
+  'recap-editorial-transition': RecapEditorialTransition;
+  'recap-approval': RecapApproval;
+  'recap-export-manifest': RecapExportManifest;
 }
 
 const MAX_ISSUES = 50;
@@ -203,3 +211,10 @@ export const validateRecapPackage = (data: unknown) => validateContract('recap-p
 export const validateJobRecord = (data: unknown) => validateContract('job-record', data);
 export const validateCampaignConfig = (data: unknown) => validateContract('campaign-config', data);
 export const validateGlossary = (data: unknown) => validateContract('glossary', data);
+export const validateRecapSentenceEdit = (data: unknown) =>
+  validateContract('recap-sentence-edit', data);
+export const validateRecapEditorialTransition = (data: unknown) =>
+  validateContract('recap-editorial-transition', data);
+export const validateRecapApproval = (data: unknown) => validateContract('recap-approval', data);
+export const validateRecapExportManifest = (data: unknown) =>
+  validateContract('recap-export-manifest', data);

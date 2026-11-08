@@ -1,0 +1,44 @@
+{
+  "invalid-replace-without-text.json": [
+    {
+      "path": "/text",
+      "keyword": "required"
+    }
+  ],
+  "invalid-sentence-replace-without-citations.json": [
+    {
+      "path": "/citations",
+      "keyword": "required"
+    }
+  ],
+  "invalid-gm-note-with-citations.json": [
+    {
+      "path": "/citations",
+      "keyword": "false schema"
+    }
+  ],
+  "invalid-remove-with-text.json": [
+    {
+      "path": "/text",
+      "keyword": "false schema"
+    }
+  ],
+  "invalid-title-remove.json": [
+    {
+      "path": "/action",
+      "keyword": "enum"
+    }
+  ],
+  "invalid-target-kind-mismatch.json": [
+    {
+      "path": "/target_id",
+      "keyword": "pattern"
+    }
+  ],
+  "invalid-reviewer-email.json": [
+    {
+      "path": "/reviewer_id",
+      "keyword": "pattern"
+    }
+  ]
+}

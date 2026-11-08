@@ -17,7 +17,7 @@ import {
 
 export const ASSERTIONS = ['completed', 'proposed', 'ongoing', 'background'] as const;
 
-const Citations = Type.Object(
+export const RecapCitationsSchema = Type.Object(
   {
     segment_ids: Type.Array(SegmentId(), { uniqueItems: true }),
     event_ids: Type.Array(EventId(), { uniqueItems: true }),
@@ -33,7 +33,7 @@ const Sentence = Type.Object(
       description: 'background never counts as evidence of what happened this session (T13).',
     }),
     outcome_basis: Type.Optional(StringEnum(['roll', 'narrative'] as const)),
-    citations: Citations,
+    citations: RecapCitationsSchema,
   },
   { additionalProperties: false },
 );
@@ -43,14 +43,14 @@ const GmNote = Type.Object(
     note_id: GmNoteId(),
     reason: StringEnum(['unresolved', 'unsupported', 'conflict', 'spoiler'] as const),
     text: Text({ maxLength: 2000 }),
-    citations: Citations,
+    citations: RecapCitationsSchema,
   },
   { additionalProperties: false },
 );
 
 /**
  * `recap/<revision>/recap.json`: the generated draft. Immutable once written (ADR-001, ADR-006).
- * Edits, editorial state and approvals live in SQLite (ADR-010, reserved for T27).
+ * Edits, editorial state and approvals live in SQLite (ADR-010).
  * Citation semantics (IDs exist, current session, eligible evidence) are validated in T13.
  */
 export const RecapSchema = Type.Object(
@@ -70,3 +70,4 @@ export const RecapSchema = Type.Object(
   { additionalProperties: false },
 );
 export type Recap = Static<typeof RecapSchema>;
+export type RecapCitations = Static<typeof RecapCitationsSchema>;
