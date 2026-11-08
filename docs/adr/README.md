@@ -44,6 +44,8 @@ the listed tasks.
 | `recap-editorial-transition` | `recap-editorial-transition.schema.json` | SQLite `recap_editorial_transitions` row           | SQLite                |
 | `recap-approval`             | `recap-approval.schema.json`             | SQLite `recap_approvals` row                       | SQLite                |
 | `recap-export-manifest`      | `recap-export-manifest.schema.json`      | SQLite `recap_exports` row                         | SQLite                |
+| `tools-lock`                 | `tools-lock.schema.json`                 | `packages/core/tools.lock.json`, in git            | git                   |
+| `whisper-overrides`          | `whisper-overrides.schema.json`          | `<data-root>/tools/whisper/overrides.yaml`         | operator              |
 
 ## Session package path layout
 

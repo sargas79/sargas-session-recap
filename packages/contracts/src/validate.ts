@@ -17,6 +17,7 @@ import type { RecapPackage } from './schemas/recap-package.ts';
 import type { RecapSentenceEdit } from './schemas/recap-sentence-edit.ts';
 import type { Recap } from './schemas/recap.ts';
 import type { ReviewOverride } from './schemas/review-override.ts';
+import type { ToolsLock, WhisperOverrides } from './schemas/tools-lock.ts';
 import type { TranscriptionSegment } from './schemas/transcription-segment.ts';
 
 /**
@@ -52,6 +53,8 @@ export interface ContractTypes {
   'recap-editorial-transition': RecapEditorialTransition;
   'recap-approval': RecapApproval;
   'recap-export-manifest': RecapExportManifest;
+  'tools-lock': ToolsLock;
+  'whisper-overrides': WhisperOverrides;
 }
 
 const MAX_ISSUES = 50;
@@ -221,3 +224,6 @@ export const validateRecapEditorialTransition = (data: unknown) =>
 export const validateRecapApproval = (data: unknown) => validateContract('recap-approval', data);
 export const validateRecapExportManifest = (data: unknown) =>
   validateContract('recap-export-manifest', data);
+export const validateToolsLock = (data: unknown) => validateContract('tools-lock', data);
+export const validateWhisperOverrides = (data: unknown) =>
+  validateContract('whisper-overrides', data);

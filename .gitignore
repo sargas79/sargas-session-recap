@@ -42,3 +42,8 @@ npm-debug.log*
 Thumbs.db
 .idea/
 .vscode/
+
+# whisper.cpp models and binaries (T23): provisioned under the data root, never in git.
+ggml-*.bin
+whisper-cli
+whisper-cli.exe

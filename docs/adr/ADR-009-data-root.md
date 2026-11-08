@@ -6,6 +6,7 @@
 - Related: ADR-001 (ownership), ADR-004 (identity), ADR-006 (package layout), T04 (#20 config),
   T07 (#23 jobs), T12 (#30 overrides), T23 (#47 tools download)
 - Amended: T07 (#23) added `state/locks/` to the layout (`DataPaths.locksDir`, `sessionLockFile()`)
+- Amended: T23 (#47) defined the layout under `tools/whisper/` (`DataPaths.whisperDir` and friends)
 
 ## Context
 
@@ -50,6 +51,9 @@ wide-character Windows APIs), and tests cover both.
   state/backups/                                   pre-migration backups of recap.sqlite
   state/locks/<campaign_id>/<session_id>.lock      per-session job lock mirror (T07; the row in SQLite is authoritative)
   tools/                                           downloaded tools such as whisper (T23)
+  tools/whisper/<install_dir>/                     pinned whisper.cpp binary and its DLLs (T23)
+  tools/whisper/models/<file>                      pinned ggml models (T23)
+  tools/whisper/overrides.yaml                     operator-supplied binary and model paths (T23)
   logs/                                            structured logs (allowlisted fields only)
 ```
 

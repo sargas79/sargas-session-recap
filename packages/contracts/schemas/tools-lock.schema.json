@@ -1,0 +1,260 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sargas-recap:schema:tools-lock:v1",
+  "title": "Pinned whisper.cpp binary and models",
+  "$comment": "Generated from packages/contracts/src by npm run schemas. Do not edit. Stored as: packages/core/tools.lock.json (T23).",
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "schema_version",
+    "whisper"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Per-record schema version (ADR-002).",
+      "const": 1,
+      "type": "number"
+    },
+    "whisper": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "version",
+        "commit",
+        "binary",
+        "active_model",
+        "models"
+      ],
+      "properties": {
+        "version": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$",
+          "type": "string"
+        },
+        "commit": {
+          "pattern": "^[0-9a-f]{40}$",
+          "type": "string"
+        },
+        "binary": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "source",
+                "platform",
+                "install_dir",
+                "executable",
+                "files",
+                "build"
+              ],
+              "properties": {
+                "source": {
+                  "const": "local-build",
+                  "type": "string"
+                },
+                "platform": {
+                  "pattern": "^[a-z0-9]+-[a-z0-9]+$",
+                  "description": "Node `<platform>-<arch>` this binary runs on, e.g. `win32-x64`.",
+                  "type": "string"
+                },
+                "install_dir": {
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+                  "description": "Directory name under `<data-root>/tools/whisper/`.",
+                  "type": "string"
+                },
+                "executable": {
+                  "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(?:/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$",
+                  "maxLength": 240,
+                  "description": "Entry of `files` that is the CLI to run.",
+                  "type": "string"
+                },
+                "files": {
+                  "minItems": 1,
+                  "maxItems": 64,
+                  "description": "Every file the binary needs, relative to `install_dir`, including the DLLs it loads. All are hash-checked.",
+                  "type": "array",
+                  "items": {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "required": [
+                      "path",
+                      "sha256"
+                    ],
+                    "properties": {
+                      "path": {
+                        "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(?:/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$",
+                        "maxLength": 240,
+                        "type": "string"
+                      },
+                      "sha256": {
+                        "pattern": "^sha256:[0-9a-f]{64}$",
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "build": {
+                  "additionalProperties": false,
+                  "description": "How the pinned binary was built. Rebuilds are not byte-reproducible.",
+                  "type": "object",
+                  "required": [
+                    "repository",
+                    "flags"
+                  ],
+                  "properties": {
+                    "repository": {
+                      "pattern": "^https?://[^\\s]+$",
+                      "maxLength": 2048,
+                      "type": "string"
+                    },
+                    "flags": {
+                      "maxItems": 32,
+                      "type": "array",
+                      "items": {
+                        "minLength": 1,
+                        "maxLength": 200,
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "source",
+                "platform",
+                "install_dir",
+                "executable",
+                "files",
+                "archive"
+              ],
+              "properties": {
+                "source": {
+                  "const": "archive",
+                  "type": "string"
+                },
+                "platform": {
+                  "pattern": "^[a-z0-9]+-[a-z0-9]+$",
+                  "description": "Node `<platform>-<arch>` this binary runs on, e.g. `win32-x64`.",
+                  "type": "string"
+                },
+                "install_dir": {
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+                  "description": "Directory name under `<data-root>/tools/whisper/`.",
+                  "type": "string"
+                },
+                "executable": {
+                  "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(?:/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$",
+                  "maxLength": 240,
+                  "description": "Entry of `files` that is the CLI to run.",
+                  "type": "string"
+                },
+                "files": {
+                  "minItems": 1,
+                  "maxItems": 64,
+                  "description": "Every file the binary needs, relative to `install_dir`, including the DLLs it loads. All are hash-checked.",
+                  "type": "array",
+                  "items": {
+                    "additionalProperties": false,
+                    "type": "object",
+                    "required": [
+                      "path",
+                      "sha256"
+                    ],
+                    "properties": {
+                      "path": {
+                        "pattern": "^[A-Za-z0-9_-][A-Za-z0-9._-]*(?:/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$",
+                        "maxLength": 240,
+                        "type": "string"
+                      },
+                      "sha256": {
+                        "pattern": "^sha256:[0-9a-f]{64}$",
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "archive": {
+                  "additionalProperties": false,
+                  "description": "Zip archive holding `files`.",
+                  "type": "object",
+                  "required": [
+                    "url",
+                    "sha256",
+                    "bytes"
+                  ],
+                  "properties": {
+                    "url": {
+                      "pattern": "^https?://[^\\s]+$",
+                      "maxLength": 2048,
+                      "type": "string"
+                    },
+                    "sha256": {
+                      "pattern": "^sha256:[0-9a-f]{64}$",
+                      "type": "string"
+                    },
+                    "bytes": {
+                      "minimum": 1,
+                      "maximum": 9007199254740991,
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "active_model": {
+          "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+          "description": "The `id` of the entry of `models` to use.",
+          "type": "string"
+        },
+        "models": {
+          "minItems": 1,
+          "maxItems": 32,
+          "type": "array",
+          "items": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+              "id",
+              "file",
+              "url",
+              "sha256",
+              "bytes"
+            ],
+            "properties": {
+              "id": {
+                "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+                "description": "Model name, e.g. `large-v3-turbo`.",
+                "type": "string"
+              },
+              "file": {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$",
+                "description": "File name under `<data-root>/tools/whisper/models/`.",
+                "type": "string"
+              },
+              "url": {
+                "pattern": "^https?://[^\\s]+$",
+                "maxLength": 2048,
+                "type": "string"
+              },
+              "sha256": {
+                "pattern": "^sha256:[0-9a-f]{64}$",
+                "type": "string"
+              },
+              "bytes": {
+                "minimum": 1,
+                "maximum": 9007199254740991,
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

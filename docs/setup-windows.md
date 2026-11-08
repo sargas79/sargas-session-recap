@@ -120,7 +120,8 @@ recap doctor
 
 If a tool is missing or older than 6.0, doctor prints `MISSING` or `UNUSABLE` with a `fix:` line. A data
 root inside a git checkout shows as `REFUSED`, and a database from a newer recap shows as `UNUSABLE` (see
-[Data root and app state](#data-root-and-app-state)).
+[Data root and app state](#data-root-and-app-state)). doctor also reports whisper.cpp and Vulkan (see
+[Transcription tools](#transcription-tools-whispercpp)).
 Plain `recap doctor` always exits 0. Use `recap doctor --strict` in scripts: it exits 1 when a check
 fails.
 
@@ -175,6 +176,91 @@ exits 1 on errors. Windows notes:
 and `packages/foundry-module/dist/sargas-session-recap.zip`. It needs no extra tools on Windows (the zip is
 written in JavaScript). Releases are cut by pushing a `foundry-v<version>` tag; see
 [`packages/foundry-module/README.md`](../packages/foundry-module/README.md).
+
+## Transcription tools (whisper.cpp)
+
+Local transcription uses a pinned whisper.cpp binary and model. They live under
+`<data-root>\tools\whisper\`, never in the repository. `packages\core\tools.lock.json` is the committed
+record of what is pinned: the whisper.cpp version and commit, the sha256 of the binary and each DLL it
+loads, and the URL, size and sha256 of each model.
+
+```text
+<data-root>\tools\whisper\v1.9.5-vulkan\         whisper-cli.exe, whisper.dll, ggml*.dll
+<data-root>\tools\whisper\models\                ggml-large-v3-turbo.bin
+<data-root>\tools\whisper\overrides.yaml         optional, see below
+```
+
+**Set it up:**
+
+```powershell
+npm run recap -- setup whisper
+```
+
+Before anything is downloaded, recap lists each file with its source, size and sha256 and asks
+`Download these files? [y/N]`. Only `y` or `yes` starts a download, and there is no flag to skip the
+question, so it needs an interactive terminal. Each file must match the size and sha256 in the lock. A
+corrupt, truncated or tampered download is deleted and the command fails. Re-running is safe: files that
+already verify are left alone.
+
+**Build the binary.** whisper.cpp publishes no prebuilt Windows Vulkan binary, so the GM builds it once.
+You need Git, CMake, Visual Studio 2022 Build Tools (C++ workload) and the
+[LunarG Vulkan SDK](https://vulkan.lunarg.com/). S04 used CMake 4.4.4, MSVC 17.14.44 and Vulkan SDK
+1.4.363.0.
+
+```powershell
+git clone https://github.com/ggml-org/whisper.cpp D:\wsrc
+git -C D:\wsrc checkout d1be6fde11ac6e0407606b4e42fe72d34add8037
+cmake -S D:\wsrc -B D:\wvk -DGGML_VULKAN=ON
+cmake --build D:\wvk --config Release -j
+npm run recap -- setup whisper --from-build D:\wvk\bin\Release
+```
+
+Keep the build directory short (`D:\wvk`). The Vulkan shader sub-build goes past the Windows 260-character
+path limit if the build directory is under `%LOCALAPPDATA%\sargas-recap\tools\...`, unless Windows long
+paths are enabled.
+
+`--from-build` hashes the files in that directory and copies them into the data root only if every one
+matches the lock.
+
+**After a rebuild.** Local builds are not byte-reproducible, so a new build will not match the pin. Nothing
+is installed, and recap prints the new hashes as a `files` block. If you rebuilt on purpose, replace
+`files` under `whisper.binary` in `tools.lock.json` with that block, commit it, and run `--from-build`
+again. The binary hash is an input of the transcription stage, so existing transcripts count as out of
+date after that.
+
+**Change the model.** Set `active_model` in `tools.lock.json` to another entry of `models` (for example
+`large-v3`) and run `recap setup whisper`. `large-v3-turbo` is a provisional choice from S04; Portuguese
+table audio has not been tested yet. Changing the model changes the transcription stage's inputs, so
+transcription runs again.
+
+**Use your own files.** Create `<data-root>\tools\whisper\overrides.yaml`. Either path is optional, and
+relative paths resolve against this file:
+
+```yaml
+schema_version: 1
+binary_path: D:\wvk\bin\Release\whisper-cli.exe
+model_path: D:\models\ggml-large-v3-turbo.bin
+```
+
+Overridden files are still hashed. The DLLs are looked for next to `binary_path`. A difference from the
+lock is a warning in `recap doctor` and the file is still used. The job records the hash of what was
+really used. A path that does not exist is an error, and recap does not fall back to the pinned file.
+
+**Check it.** `recap doctor` adds these lines, and hashes the files each time, so it takes a few seconds:
+
+```text
+  whisper:  ok v1.9.5 (d1be6fd)
+            path: C:\Users\you\AppData\Local\sargas-recap\tools\whisper\v1.9.5-vulkan\whisper-cli.exe (from lock)
+            sha256: 6 files verified
+  model:    ok large-v3-turbo
+            path: C:\Users\you\AppData\Local\sargas-recap\tools\whisper\models\ggml-large-v3-turbo.bin (from lock)
+            sha256: verified
+  vulkan:   ok AMD Radeon RX 9070 XT (discrete GPU), AMD Radeon(TM) Graphics (integrated GPU)
+```
+
+Tools that are not installed yet show as `MISSING` with a `fix:` line and do not fail `--strict`. A file
+that fails its hash shows as `HASH MISMATCH` and does fail it. The `vulkan` line comes from `vulkaninfo`
+and shows the devices Windows exposes, not which one whisper.cpp will pick.
 
 ## Data location
 

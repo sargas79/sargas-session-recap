@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "whisper": {
+    "version": "v1.9.5",
+    "commit": "d1be6fde11ac6e0407606b4e42fe72d34add8037",
+    "binary": {
+      "source": "local-build",
+      "platform": "win32-x64",
+      "install_dir": "v1.9.5-vulkan",
+      "executable": "whisper-cli.exe",
+      "files": [
+        {
+          "path": "whisper-cli.exe",
+          "sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "build": {
+        "repository": "https://github.com/ggml-org/whisper.cpp",
+        "flags": [
+          "-DGGML_VULKAN=ON"
+        ]
+      }
+    },
+    "active_model": "large-v3-turbo",
+    "models": [
+      {
+        "id": "large-v3-turbo",
+        "file": "../evil.bin",
+        "url": "https://example.invalid/m.bin",
+        "sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "bytes": 10
+      }
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sargas-recap:schema:whisper-overrides:v1",
+  "title": "Operator-supplied whisper.cpp paths",
+  "$comment": "Generated from packages/contracts/src by npm run schemas. Do not edit. Stored as: <data-root>/tools/whisper/overrides.yaml, outside git (T23).",
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "schema_version"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Per-record schema version (ADR-002).",
+      "const": 1,
+      "type": "number"
+    },
+    "binary_path": {
+      "minLength": 1,
+      "maxLength": 1024,
+      "description": "Path to the whisper-cli binary.",
+      "type": "string"
+    },
+    "model_path": {
+      "minLength": 1,
+      "maxLength": 1024,
+      "description": "Path to the ggml model file.",
+      "type": "string"
+    }
+  }
+}
