@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sargas-recap:schema:recap-export-manifest:v1",
+  "title": "Recap export manifest",
+  "$comment": "Generated from packages/contracts/src by npm run schemas. Do not edit. Stored as: SQLite recap_exports row (T15, ADR-010).",
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "schema_version",
+    "export_id",
+    "campaign_id",
+    "session_id",
+    "recap_revision",
+    "content_hash",
+    "approval_id",
+    "package_schema_version",
+    "package_sha256",
+    "package_bytes",
+    "generator_version",
+    "reviewer_id",
+    "exported_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Per-record schema version (ADR-002).",
+      "const": 1,
+      "type": "number"
+    },
+    "export_id": {
+      "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$",
+      "type": "string"
+    },
+    "campaign_id": {
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+      "description": "Campaign identifier (config, T04).",
+      "type": "string"
+    },
+    "session_id": {
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+      "description": "Session identifier within a campaign.",
+      "type": "string"
+    },
+    "recap_revision": {
+      "minimum": 1,
+      "maximum": 9007199254740991,
+      "description": "Monotonic per session (ADR-004).",
+      "type": "integer"
+    },
+    "content_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "Equals the package content_hash (ADR-007, ADR-010).",
+      "type": "string"
+    },
+    "approval_id": {
+      "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$",
+      "description": "Approval in force at export; same content_hash.",
+      "type": "string"
+    },
+    "package_schema_version": {
+      "description": "schema_version of the written recap-package.",
+      "const": 1,
+      "type": "number"
+    },
+    "package_sha256": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "SHA-256 of the exact bytes of the written file.",
+      "type": "string"
+    },
+    "package_bytes": {
+      "minimum": 0,
+      "maximum": 9007199254740991,
+      "type": "integer"
+    },
+    "generator_version": {
+      "minLength": 1,
+      "maxLength": 32,
+      "type": "string"
+    },
+    "reviewer_id": {
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+      "description": "Operator identity slug (ADR-010); not a real name or an email.",
+      "type": "string"
+    },
+    "exported_at": {
+      "format": "date-time",
+      "maxLength": 40,
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "invalid-approve-from-draft.json": [
+    {
+      "path": "/from_state",
+      "keyword": "enum"
+    }
+  ],
+  "invalid-approve-without-approval-id.json": [
+    {
+      "path": "/approval_id",
+      "keyword": "required"
+    }
+  ],
+  "invalid-edit-on-exported.json": [
+    {
+      "path": "/from_state",
+      "keyword": "enum"
+    }
+  ],
+  "invalid-review-with-approval-id.json": [
+    {
+      "path": "/approval_id",
+      "keyword": "false schema"
+    }
+  ],
+  "invalid-unknown-state.json": [
+    {
+      "path": "/to_state",
+      "keyword": "enum"
+    }
+  ]
+}
