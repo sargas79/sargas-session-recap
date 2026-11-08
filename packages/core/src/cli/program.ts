@@ -6,6 +6,7 @@ import {
   type AudioToolCheck,
   type AudioToolchainOptions,
 } from '../audio/index.ts';
+import { registerPackageCommands } from '../package/cli.ts';
 import { checkDataRoot, type DataRootCheck, type DataRootCheckOptions } from '../paths/index.ts';
 
 /** Output channel, injectable so the program can be tested in-process. */
@@ -111,6 +112,8 @@ export function buildProgram(io: CliIo = defaultIo): Command {
         process.exitCode = 1;
       }
     });
+
+  registerPackageCommands(program, io);
 
   return program;
 }

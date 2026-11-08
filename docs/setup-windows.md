@@ -143,6 +143,28 @@ After changing a contract in `packages/contracts/src`, regenerate the committed 
 `npm run schemas -w @sargas-recap/contracts` (see `docs/adr/README.md`). `npm test` fails if they are
 stale.
 
+## Session package integrity
+
+```powershell
+npm run recap -- package validate <package-dir>      # add --json for a machine-readable report
+npm run recap -- package seal <package-dir>
+npm run recap -- package purge-audio <package-dir>   # asks first; --yes for scripts
+```
+
+`validate` prints the package state (`capturing`, `sealed`, ..., `audio-purged`) or `corrupt` /
+`invalid`, and one line per problem naming the file, the field and the rule, never the value. It
+exits 1 on errors. Windows notes:
+
+- Package paths named like devices (`CON`, `NUL`, `COM1.wav`), ending in a dot or space, containing
+  `:` (alternate data streams) or differing only in case are rejected on every OS, so a package
+  stays portable.
+- Junctions and symlinks are followed with `realpath`; any that lead outside the package are
+  rejected. Creating a junction (`mklink /J`) needs no admin rights; the file-symlink tests are
+  skipped unless Developer Mode is on.
+- Writes go to a temp file (`.<name>.<pid>.<random>.tmp`), are flushed, then renamed. If antivirus or
+  the indexer briefly locks the target, the rename is retried for about 1.6 s. A temp file left by a
+  crash is reported as a warning and is safe to delete.
+
 ## Foundry module package
 
 `npm run package:foundry` builds the Foundry module and writes `packages/foundry-module/dist/module.json`

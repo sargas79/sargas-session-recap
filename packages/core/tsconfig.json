@@ -1,7 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "noEmit": true
+    "noEmit": true,
+    // Resolve contracts from source, so typecheck and lint don't need a prior contracts build.
+    // The build (tsconfig.build.json) resolves the built package instead.
+    "paths": {
+      "@sargas-recap/contracts": ["../contracts/src/index.ts"]
+    }
   },
   "include": ["src", "test"]
 }
