@@ -10,8 +10,8 @@
  *   stage's provider requires new records.
  * - AI stages additionally require active `recording` consent (any recording provider).
  * - A record is active on day D when granted_on <= D and it is not withdrawn on or before D. When a
- *   speaker has several matching records, the most recent grant decides; a withdrawal on any of the
- *   most recent ones refuses.
+ *   speaker has several matching records, the most recent grant decides, but any withdrawal dated
+ *   on or after that grant (on whichever record) refuses: a later withdrawal always wins.
  * - An empty speaker list is refused.
  */
 import type {
@@ -70,8 +70,11 @@ function refusalFor(
   const granted = matching.filter((r) => r.granted_on <= day);
   if (granted.length === 0) return 'not-yet-granted';
   const latest = granted.reduce((max, r) => (r.granted_on > max ? r.granted_on : max), '');
-  const current = granted.filter((r) => r.granted_on === latest);
-  const withdrawn = current.some((r) => r.withdrawn_on !== undefined && r.withdrawn_on <= day);
+  // A withdrawal dated on or after the latest grant revokes it, whichever record carries it: a
+  // re-grant only restores consent if it is newer than every withdrawal in effect.
+  const withdrawn = granted.some(
+    (r) => r.withdrawn_on !== undefined && r.withdrawn_on >= latest && r.withdrawn_on <= day,
+  );
   return withdrawn ? 'withdrawn' : null;
 }
 

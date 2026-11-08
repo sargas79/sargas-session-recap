@@ -113,6 +113,29 @@ describe('assertConsent', () => {
     expect(refusal(input).refusals[0]?.reason).toBe('withdrawn');
   });
 
+  it('a withdrawal on an older record after a newer re-grant still refuses', () => {
+    const c = campaign();
+    const bruno = at(c.speakers, 2);
+    // Granted 2026-01-01 (fixture), re-granted 2026-03-01, then the old record is withdrawn later.
+    bruno.consent.push({
+      purpose: 'classification',
+      provider: 'claude-cli',
+      granted_on: '2026-03-01',
+    });
+    const old = bruno.consent.findIndex(
+      (r) => r.purpose === 'classification' && r.granted_on < '2026-03-01',
+    );
+    expect(old).toBeGreaterThanOrEqual(0);
+    bruno.consent[old] = { ...at(bruno.consent, old), withdrawn_on: '2026-03-05' };
+    const input = {
+      campaign: c,
+      speakerIds: ['player-bruno'],
+      provider: 'claude-cli',
+      stage: 'classification',
+    } as const;
+    expect(refusal(input).refusals[0]?.reason).toBe('withdrawn');
+  });
+
   it('requires active recording consent for AI stages', () => {
     const c = campaign();
     const ana = at(c.speakers, 1);
