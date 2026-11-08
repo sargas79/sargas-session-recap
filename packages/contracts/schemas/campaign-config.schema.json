@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sargas-recap:schema:campaign-config:v1",
+  "title": "Campaign config",
+  "$comment": "Generated from packages/contracts/src by npm run schemas. Do not edit. Stored as: campaign.yaml in the data root, outside git (T04).",
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "schema_version",
+    "campaign_id",
+    "system",
+    "language",
+    "provider",
+    "speakers"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Per-record schema version (ADR-002).",
+      "const": 1,
+      "type": "number"
+    },
+    "campaign_id": {
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+      "description": "Campaign identifier (config, T04).",
+      "type": "string"
+    },
+    "system": {
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+      "description": "Game system, e.g. `pf2e`.",
+      "type": "string"
+    },
+    "language": {
+      "pattern": "^[a-z]{2,3}(?:-[A-Z]{2})?$",
+      "type": "string"
+    },
+    "consent_mode": {
+      "description": "How consent is established: `records` (default) or `implied` (attending the session is consent).",
+      "type": "string",
+      "enum": [
+        "records",
+        "implied"
+      ]
+    },
+    "background": {
+      "minLength": 1,
+      "maxLength": 8000,
+      "description": "Campaign background given to the recap stage only.",
+      "type": "string"
+    },
+    "provider": {
+      "additionalProperties": false,
+      "description": "Provider used by each stage.",
+      "type": "object",
+      "required": [
+        "recording",
+        "asr",
+        "classification",
+        "recap"
+      ],
+      "properties": {
+        "recording": {
+          "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+          "description": "Provider identifier. A different provider needs its own consent (T04).",
+          "type": "string"
+        },
+        "asr": {
+          "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+          "description": "Provider identifier. A different provider needs its own consent (T04).",
+          "type": "string"
+        },
+        "classification": {
+          "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+          "description": "Provider identifier. A different provider needs its own consent (T04).",
+          "type": "string"
+        },
+        "recap": {
+          "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+          "description": "Provider identifier. A different provider needs its own consent (T04).",
+          "type": "string"
+        }
+      }
+    },
+    "speakers": {
+      "minItems": 1,
+      "maxItems": 32,
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "speaker_id",
+          "role"
+        ],
+        "properties": {
+          "speaker_id": {
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+            "description": "Speaker identifier from campaign config.",
+            "type": "string"
+          },
+          "display_name": {
+            "minLength": 1,
+            "maxLength": 80,
+            "pattern": "^[^\\u0000-\\u001F\\u007F]+$",
+            "description": "Operator-facing label. Never sent to a provider.",
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "gm",
+              "player",
+              "guest"
+            ]
+          },
+          "characters": {
+            "uniqueItems": true,
+            "maxItems": 20,
+            "description": "Character names this speaker plays (classification and recap context).",
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "maxLength": 120,
+              "pattern": "^[^\\u0000-\\u001F\\u007F]+$",
+              "type": "string"
+            }
+          },
+          "consent": {
+            "maxItems": 64,
+            "description": "Consent records (synthetic in git; real ones live in the data root). Not needed when consent_mode is `implied`.",
+            "type": "array",
+            "items": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "purpose",
+                "provider",
+                "granted_on"
+              ],
+              "properties": {
+                "purpose": {
+                  "type": "string",
+                  "enum": [
+                    "recording",
+                    "asr",
+                    "classification",
+                    "recap"
+                  ]
+                },
+                "provider": {
+                  "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+                  "description": "Provider identifier. A different provider needs its own consent (T04).",
+                  "type": "string"
+                },
+                "granted_on": {
+                  "format": "date",
+                  "maxLength": 10,
+                  "type": "string"
+                },
+                "withdrawn_on": {
+                  "format": "date",
+                  "maxLength": 10,
+                  "type": "string"
+                },
+                "evidence_ref": {
+                  "pattern": "^[^\\u0000-\\u001F\\u007F]+$",
+                  "maxLength": 260,
+                  "description": "Path to the consent evidence kept outside git (signed form, call note). Never opened by the loader; never committed.",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

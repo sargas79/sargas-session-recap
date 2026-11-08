@@ -1,0 +1,32 @@
+{
+  "invalid-unknown-type.json": [
+    {
+      "path": "/entries/1/type",
+      "keyword": "enum"
+    }
+  ],
+  "invalid-bad-id.json": [
+    {
+      "path": "/entries/0/id",
+      "keyword": "pattern"
+    }
+  ],
+  "invalid-multiline-spelling.json": [
+    {
+      "path": "/entries/3/spelling",
+      "keyword": "pattern"
+    }
+  ],
+  "invalid-missing-spelling.json": [
+    {
+      "path": "/entries/2/spelling",
+      "keyword": "required"
+    }
+  ],
+  "invalid-english-flag-type.json": [
+    {
+      "path": "/entries/2/is_english_term",
+      "keyword": "type"
+    }
+  ]
+}

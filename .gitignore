@@ -7,6 +7,8 @@ coverage/
 # Session data: never commit real recordings, transcripts or state.
 # The data root lives outside the repo by default (see T02/T25).
 sessions/
+# Real consent evidence (T04) lives in the data root, never in git.
+consent/
 
 # Audio
 *.wav

@@ -1,8 +1,10 @@
 import type { TSchema } from '@sinclair/typebox';
+import { CampaignConfigSchema } from './schemas/campaign-config.ts';
 import { ClassificationResultSchema } from './schemas/classification-result.ts';
 import { EffectiveTranscriptSchema } from './schemas/effective-transcript.ts';
 import { FoundryEventSchema } from './schemas/foundry-event.ts';
 import { FragmentSchema } from './schemas/fragment.ts';
+import { GlossarySchema } from './schemas/glossary.ts';
 import { JobRecordSchema } from './schemas/job-record.ts';
 import { ManifestSchema } from './schemas/manifest.ts';
 import { RecapApprovalSchema } from './schemas/recap-approval.ts';
@@ -70,6 +72,16 @@ export const CONTRACTS = {
     schema: JobRecordSchema,
     title: 'Job record',
     where: 'SQLite jobs row (T07)',
+  },
+  'campaign-config': {
+    schema: CampaignConfigSchema,
+    title: 'Campaign config',
+    where: 'campaign.yaml in the data root, outside git (T04)',
+  },
+  glossary: {
+    schema: GlossarySchema,
+    title: 'Campaign glossary',
+    where: 'glossary.yaml in the data root, outside git (T04)',
   },
   'recap-sentence-edit': {
     schema: RecapSentenceEditSchema,

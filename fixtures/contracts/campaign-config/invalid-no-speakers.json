@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "campaign_id": "synthetic-vaults",
+  "system": "pf2e",
+  "language": "pt-BR",
+  "background": "SYNTHETIC. The party explores a ruined lighthouse above a sealed dungeon.",
+  "provider": {
+    "recording": "craig",
+    "asr": "whisper-local",
+    "classification": "claude-cli",
+    "recap": "claude-cli"
+  },
+  "speakers": []
+}
