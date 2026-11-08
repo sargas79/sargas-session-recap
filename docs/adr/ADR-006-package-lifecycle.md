@@ -78,7 +78,11 @@ recap/<revision>/recap.md
   backslashes, or `.`/`..` segments). T03 resolves them safely on disk (traversal, symlink escape,
   Windows reserved names).
 - Run directories are written to a temporary name and renamed into place when complete (T03 atomic
-  finalization), so a half-written run is never mistaken for a finished one.
+  finalization), so a half-written run is never mistaken for a finished one. An unfinished
+  transcription run keeps that name across a crash so it can resume per chunk (T09); `purge-audio`
+  removes it.
+- `transcript/<transcription_run_id>/raw/chunk-<chunk_index>.json` is whisper.cpp's output for that
+  chunk, unchanged (T09). It is not a contract and nothing else reads it.
 
 ## Consequences
 

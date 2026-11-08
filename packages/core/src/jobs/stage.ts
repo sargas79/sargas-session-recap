@@ -100,6 +100,11 @@ export interface StageDefinition {
   readonly upstream?: readonly JobStage[] | undefined;
   /** Hash providers: config stage hashes, prompts (T26), models, source artifacts... */
   inputs?(ctx: InputContext): readonly JobInput[] | Promise<readonly JobInput[]>;
+  /**
+   * Inputs recorded on the job but excluded from invalidation: what the job used, when a change to
+   * it must not rerun the stage by itself. A later change is reported as `staleReceipts`.
+   */
+  receipts?(ctx: InputContext): readonly JobInput[] | Promise<readonly JobInput[]>;
   readonly provider?: StageProvider | undefined;
   readonly retry?: Partial<RetryPolicy> | undefined;
   run(ctx: StageContext): Promise<StageResult | undefined> | StageResult | undefined;

@@ -10,7 +10,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { validateContract, type Manifest } from '@sargas-recap/contracts';
 import type { Logger } from '../log/index.ts';
-import { writeFileAtomic, type AtomicOptions } from './atomic.ts';
+import { isAtomicTempName, writeFileAtomic, type AtomicOptions } from './atomic.ts';
 import { sha256File } from './hash.ts';
 import { PackageError, type PackageIssue } from './issues.ts';
 import { realPackageRoot, resolveInsidePackage } from './safe-path.ts';
@@ -242,6 +242,23 @@ async function removeEmptyDirs(dir: string, keep: string): Promise<void> {
 }
 
 /**
+ * Removes interrupted transcription runs: they may still hold decoded copies of the audio, and
+ * they cannot be finished once the audio is gone.
+ */
+async function removeUnfinishedRuns(transcriptDir: string): Promise<void> {
+  const entries = await readdir(transcriptDir, { withFileTypes: true }).catch(() => []);
+  for (const entry of entries) {
+    if (!isAtomicTempName(entry.name)) continue;
+    await rm(path.join(transcriptDir, entry.name), {
+      recursive: true,
+      force: true,
+      maxRetries: 5,
+      retryDelay: 100,
+    });
+  }
+}
+
+/**
  * `recap package purge-audio`: deletes every sealed audio file and records purge provenance
  * (`purged_at`, `purged_by`, `reason`, `purged_artifacts[] = {path, hash}`), moving the lifecycle
  * to `audio-purged` (ADR-006). Confirmation is the caller's job (the CLI asks or requires `--yes`).
@@ -284,6 +301,7 @@ export async function purgeAudio(root: string, options: PurgeOptions = {}): Prom
   }
   const audioRoot = path.join(realRoot, AUDIO_DIR);
   await removeEmptyDirs(audioRoot, realRoot);
+  await removeUnfinishedRuns(path.join(realRoot, 'transcript'));
 
   const after = await validatePackage(root);
   if (after.state !== 'audio-purged') {

@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "transcription_run_id": "01JBX7Q8M2N4P6R8S0T2V4W6XY",
+  "segment_id": "01JBX7Q8M2N4P6R8S0T2V4W6XY:12:3",
+  "chunk_index": 12,
+  "seq": 3,
+  "speaker_id": "player-ana",
+  "language": "pt",
+  "text_original": "Texto sintetico repetido.",
+  "text_hash": "sha256:7f2a19457f621864b50a0ff09763841541b3b21259f24fb0b1e1e621d8601e80",
+  "start_offset_ms": 5402900,
+  "end_offset_ms": 5405500,
+  "timing_uncertainty_ms": 60,
+  "chunk_start_ms": 900,
+  "chunk_end_ms": 3500,
+  "source_spans": [
+    {
+      "fragment_id": "player-ana:0",
+      "start_sample": 14400,
+      "end_sample": 56000
+    }
+  ],
+  "confidence_permille": 910,
+  "flags": ["repetition_loop"]
+}

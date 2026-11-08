@@ -14,7 +14,13 @@ import {
   Ulid,
 } from '../common.ts';
 
-export const SEGMENT_FLAGS = ['short', 'low_confidence', 'overlap', 'timestamp_clamped'] as const;
+export const SEGMENT_FLAGS = [
+  'short',
+  'low_confidence',
+  'overlap',
+  'timestamp_clamped',
+  'repetition_loop',
+] as const;
 
 /** Piece of source audio a segment came from (piecewise chunk-to-source map, ADR-003). */
 const SourceSpan = Type.Object(

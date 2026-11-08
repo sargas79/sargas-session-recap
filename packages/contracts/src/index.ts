@@ -8,6 +8,7 @@ export * from './common.ts';
 export * from './content-hash.ts';
 export * from './registry.ts';
 export * from './validate.ts';
+export * from './schemas/asr-config.ts';
 export * from './schemas/campaign-config.ts';
 export * from './schemas/chunk-plan.ts';
 export * from './schemas/classification-result.ts';

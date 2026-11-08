@@ -107,7 +107,7 @@ async function loadParams(ctx: Pick<InputContext, 'config'>): Promise<ChunkPlanP
 }
 
 /** The manifest of a sealed package whose audio is still present. */
-async function readSealedManifest(root: string): Promise<Manifest> {
+export async function readSealedManifest(root: string, stage = 'chunk-plan'): Promise<Manifest> {
   const { readFile } = await import('node:fs/promises');
   const path = await import('node:path');
   const { validateContract } = await import('@sargas-recap/contracts');
@@ -123,14 +123,14 @@ async function readSealedManifest(root: string): Promise<Manifest> {
   if (manifest.seal === undefined || manifest.lifecycle === 'audio-purged') {
     throw new JobError(
       'JOB_INVALID_INPUT',
-      `stage chunk-plan needs a sealed package with its audio (lifecycle is ${manifest.lifecycle})`,
-      { hint: 'seal the package first; chunk planning is impossible after the audio is purged' },
+      `stage ${stage} needs a sealed package with its audio (lifecycle is ${manifest.lifecycle})`,
+      { hint: `seal the package first; ${stage} is impossible after the audio is purged` },
     );
   }
   return manifest;
 }
 
-async function readFragments(root: string): Promise<Fragment[]> {
+export async function readFragments(root: string): Promise<Fragment[]> {
   const { readFile } = await import('node:fs/promises');
   const path = await import('node:path');
   const { validateContract } = await import('@sargas-recap/contracts');

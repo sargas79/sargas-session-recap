@@ -16,6 +16,8 @@ import { checkDataRoot, type DataRootCheck, type DataRootCheckOptions } from '..
 import { registerSetupCommands } from '../tools/cli.ts';
 import type { WhisperCheck, WhisperCheckOptions } from '../tools/doctor.ts';
 import { createChunkPlanStage } from '../transcribe/chunk-plan-stage.ts';
+import { registerRetranscribeCommand } from '../transcribe/retranscribe.ts';
+import { createTranscribeStage } from '../transcribe/transcribe-stage.ts';
 
 /** Output channel, injectable so the program can be tested in-process. */
 export interface CliIo {
@@ -131,7 +133,9 @@ export function buildProgram(io: CliIo = defaultIo): Command {
   registerImportCommands(program, io, { toolVersion: readVersion() });
   registerPackageCommands(program, io);
   registerConfigCommands(program, io);
-  registerJobCommands(program, io, { stages: defineStages([createChunkPlanStage()]) });
+  const stages = defineStages([createChunkPlanStage(), createTranscribeStage()]);
+  registerJobCommands(program, io, { stages });
+  registerRetranscribeCommand(program, io, { stages });
   registerSecretsCommands(program, io);
   registerSetupCommands(program, io);
 
