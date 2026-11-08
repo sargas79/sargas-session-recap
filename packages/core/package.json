@@ -20,7 +20,8 @@
   "files": [
     "bin",
     "dist",
-    "prompts"
+    "prompts",
+    "tools.lock.json"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json && node scripts/copy-migrations.js",
@@ -33,9 +34,11 @@
     "@sargas-recap/contracts": "0.0.0",
     "better-sqlite3": "12.11.1",
     "commander": "^15.1.0",
-    "yaml": "^2.9.1"
+    "yaml": "^2.9.1",
+    "yauzl": "3.4.0"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "9.6.0"
+    "@types/better-sqlite3": "9.6.0",
+    "@types/yauzl": "3.4.0"
   }
 }

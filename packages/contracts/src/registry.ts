@@ -16,6 +16,7 @@ import { RecapPackageSchema } from './schemas/recap-package.ts';
 import { RecapSentenceEditSchema } from './schemas/recap-sentence-edit.ts';
 import { RecapSchema } from './schemas/recap.ts';
 import { ReviewOverrideSchema } from './schemas/review-override.ts';
+import { ToolsLockSchema, WhisperOverridesSchema } from './schemas/tools-lock.ts';
 import { TranscriptionSegmentSchema } from './schemas/transcription-segment.ts';
 
 export const JSON_SCHEMA_DIALECT = 'https://json-schema.org/draft/2020-12/schema';
@@ -114,6 +115,16 @@ export const CONTRACTS = {
     schema: RecapExportManifestSchema,
     title: 'Recap export manifest',
     where: 'SQLite recap_exports row (T15, ADR-010)',
+  },
+  'tools-lock': {
+    schema: ToolsLockSchema,
+    title: 'Pinned whisper.cpp binary and models',
+    where: 'packages/core/tools.lock.json (T23)',
+  },
+  'whisper-overrides': {
+    schema: WhisperOverridesSchema,
+    title: 'Operator-supplied whisper.cpp paths',
+    where: '<data-root>/tools/whisper/overrides.yaml, outside git (T23)',
   },
 } as const satisfies Record<string, { schema: TSchema; title: string; where: string }>;
 

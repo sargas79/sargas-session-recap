@@ -1,0 +1,14 @@
+{
+  "invalid-bad-hash.json": [
+    {
+      "path": "/whisper/models/0/sha256",
+      "keyword": "pattern"
+    }
+  ],
+  "invalid-traversal-file.json": [
+    {
+      "path": "/whisper/models/0/file",
+      "keyword": "pattern"
+    }
+  ]
+}

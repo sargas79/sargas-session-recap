@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "binary_path": "D:\\wvk\\bin\\Release\\whisper-cli.exe",
+  "model_path": "models/ggml.bin"
+}

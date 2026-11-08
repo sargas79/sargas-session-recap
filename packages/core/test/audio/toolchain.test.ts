@@ -368,13 +368,20 @@ describe('doctor checks', () => {
 
   it('adds a precision note below the recommended version', async () => {
     const { runner } = versionRunner('6.1.1-3ubuntu5');
-    const report = await doctorReport({ env: { PATH: dir }, runner });
+    const report = await doctorReport({
+      env: { PATH: dir },
+      runner,
+      dataRoot: { flag: path.join(root, 'doctor-data') },
+    });
     expect(report.ok).toBe(true);
     expect(report.lines.join('\n')).toContain('7.0.0+ recommended');
   });
 
   it('reports a missing tool with a fix and ok=false', async () => {
-    const report = await doctorReport({ env: { PATH: path.join(root, 'empty') } });
+    const report = await doctorReport({
+      env: { PATH: path.join(root, 'empty') },
+      dataRoot: { flag: path.join(root, 'doctor-data') },
+    });
     expect(report.ok).toBe(false);
     const text = report.lines.join('\n');
     expect(text).toContain('ffmpeg:   MISSING');
@@ -383,7 +390,11 @@ describe('doctor checks', () => {
 
   it('reports a too-old tool as UNUSABLE', async () => {
     const { runner } = versionRunner('5.1.6');
-    const report = await doctorReport({ env: { PATH: dir }, runner });
+    const report = await doctorReport({
+      env: { PATH: dir },
+      runner,
+      dataRoot: { flag: path.join(root, 'doctor-data') },
+    });
     expect(report.ok).toBe(false);
     expect(report.lines.join('\n')).toContain('UNUSABLE');
     expect(report.lines.join('\n')).toContain('AUDIO_TOOL_TOO_OLD');

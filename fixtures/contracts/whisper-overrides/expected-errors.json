@@ -1,0 +1,8 @@
+{
+  "invalid-extra-property.json": [
+    {
+      "path": "/binary",
+      "keyword": "additionalProperties"
+    }
+  ]
+}

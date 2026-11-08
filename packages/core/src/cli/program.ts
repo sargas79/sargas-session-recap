@@ -13,6 +13,8 @@ import { defineStages } from '../jobs/stage.ts';
 import { registerSecretsCommands } from '../llm/cli.ts';
 import { registerPackageCommands } from '../package/cli.ts';
 import { checkDataRoot, type DataRootCheck, type DataRootCheckOptions } from '../paths/index.ts';
+import { registerSetupCommands } from '../tools/cli.ts';
+import type { WhisperCheck, WhisperCheckOptions } from '../tools/doctor.ts';
 import { createChunkPlanStage } from '../transcribe/chunk-plan-stage.ts';
 
 /** Output channel, injectable so the program can be tested in-process. */
@@ -55,15 +57,18 @@ export interface DoctorResult {
   readonly checks: readonly AudioToolCheck[];
   /** Data root, free disk space and DB schema version (T25). */
   readonly dataRoot: DataRootCheck;
+  /** whisper.cpp binary, model and Vulkan (T23). */
+  readonly whisper: WhisperCheck;
 }
 
 export interface DoctorOptions extends AudioToolchainOptions {
   readonly dataRoot?: DataRootCheckOptions | undefined;
+  readonly whisper?: WhisperCheckOptions | undefined;
 }
 
 /**
  * Runs the `recap doctor` checks (Node, platform, ffmpeg, ffprobe, data root,
- * disk, DB). Never throws for a missing or broken tool: problems become report
+ * disk, DB, whisper.cpp binary and model, Vulkan). Never throws for a missing or broken tool: problems become report
  * lines with a fix. Never creates the data root or the database.
  */
 export async function doctorReport(options: DoctorOptions = {}): Promise<DoctorResult> {
@@ -71,16 +76,20 @@ export async function doctorReport(options: DoctorOptions = {}): Promise<DoctorR
     checkAudioToolchain(options),
     checkDataRoot(options.dataRoot),
   ]);
-  const ok = checks.every((check) => check.ok) && dataRoot.ok;
+  // Loaded here so `recap --help` does not pull in the contracts.
+  const { checkWhisper } = await import('../tools/doctor.ts');
+  const whisper = await checkWhisper(dataRoot.root, options.whisper);
+  const ok = checks.every((check) => check.ok) && dataRoot.ok && whisper.ok;
   const lines = [
     'recap doctor',
     `  node:     ${process.version}`,
     `  platform: ${process.platform} ${process.arch}`,
     ...checks.flatMap(formatAudioToolCheck),
     ...dataRoot.lines,
+    ...whisper.lines,
     ok ? '  result:   ok' : '  result:   problems found (`recap doctor --strict` exits non-zero)',
   ];
-  return { lines, ok, checks, dataRoot };
+  return { lines, ok, checks, dataRoot, whisper };
 }
 
 export function buildProgram(io: CliIo = defaultIo): Command {
@@ -100,7 +109,7 @@ export function buildProgram(io: CliIo = defaultIo): Command {
 
   program
     .command('doctor')
-    .description('check the local environment (Node, ffmpeg, ffprobe, data root, database)')
+    .description('check the local environment (Node, ffmpeg, whisper, data root, database)')
     .option('--strict', 'exit with code 1 when a check fails')
     .option(
       '--data-root <dir>',
@@ -124,6 +133,7 @@ export function buildProgram(io: CliIo = defaultIo): Command {
   registerConfigCommands(program, io);
   registerJobCommands(program, io, { stages: defineStages([createChunkPlanStage()]) });
   registerSecretsCommands(program, io);
+  registerSetupCommands(program, io);
 
   return program;
 }
