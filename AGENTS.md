@@ -44,6 +44,22 @@ Every provider call (capture, ASR, classification, recap) must first pass `asser
 record checks off per campaign (`consent_mode: implied`, `recap config consent off`); `assertConsent()`
 still runs and still refuses speakers not listed in `campaign.yaml`.
 
+### Prompts (T26)
+
+- LLM prompts live in `packages/core/prompts/<stage>/<name>.v<N>.md` and are loaded only through the
+  prompt registry (`packages/core/src/prompts/`). Classify and recap stages record the prompt they use
+  as a job input (`promptJobInput()`); the runner refuses those stages without one.
+- **Editing a prompt requires a version bump.** A committed `<name>.v<N>.md` is immutable: copy it to
+  `<name>.v<N+1>.md`, set `version: N+1`, edit the copy, and add its hash to
+  `packages/core/test/prompts/prompt-hashes.json` (the failing test prints it). Never change an
+  existing line of that file. Line endings do not count as an edit (the hash normalizes them).
+- **Prompts are tuned only against the S01 tuning subset.** Never show the S01 held-out subset (or
+  any other evaluation data) to a prompt-tuning loop; see `docs/evaluation/labelling-guide.md`
+  section 5.
+- Transcript text and anything else from a session is untrusted data. It goes only into a declared
+  `{{data:<slot>}}` slot, rendered inside a nonce-tagged `untrusted-data-<nonce>` block; never
+  interpolate it into instruction text.
+
 ### Stack (decided in T01, see plan section 3)
 
 | Area       | Decision                                                                                                                    |

@@ -21,6 +21,7 @@ import {
   backoffDelay,
   DEFAULT_RETRY,
   planStages,
+  PROMPT_JOB_STAGES,
   requireConfig,
   type InputContext,
   type RecoveredFrom,
@@ -340,6 +341,12 @@ async function stageInputs(stage: StageDefinition, ctx: InputContext): Promise<J
   }
   const all = [...declared, ...fromUpstream];
   validateInputs(all, stage.name);
+  if (PROMPT_JOB_STAGES.includes(stage.name) && !all.some((i) => i.kind === 'prompt')) {
+    throw new JobError(
+      'JOB_INVALID_INPUT',
+      `stage ${stage.name} declared no prompt input; record the prompt it uses with promptJobInput()`,
+    );
+  }
   return dedupeInputs(all);
 }
 
