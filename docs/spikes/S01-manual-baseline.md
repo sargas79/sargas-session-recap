@@ -4,7 +4,18 @@ Issue: #11 (`S01`, parent #2 `F00`, roadmap #1). Blocks #17 `G01` and #34 `T20`.
 Type: SPIKE, **human-required**. This file is a template prepared by an agent; every number below must be filled
 in by the GM from a real run. Empty cells are intentional. Do not fill them with estimates you did not measure.
 
-**Outcome: PENDING (human run required)**
+**Outcome: UNRESOLVED (not run; waived by the GM on 2026-11-08)**
+
+The GM will not be able to run this spike and decided to continue on the assumption that a generated recap saves
+review time compared with writing one from scratch. That assumption is **untested**: every result cell below stays empty
+on purpose, and no baseline, label or measurement exists.
+
+Consequences:
+
+- No from-scratch baseline exists, so `gm_review_time_ratio` in `docs/decisions/G01-thresholds.yaml` has no S01 baseline.
+- No tuning or held-out subset exists, so prompts cannot be tuned against labelled data until the GM labels a sample.
+- T20 (#34) requires S01 to record PASS, which this outcome does not satisfy. The GM must change that gate before T20
+  starts; T20 must not report PASS on a metric that has no threshold.
 
 ---
 
@@ -223,4 +234,4 @@ Leave blank until the results above exist. These are proposals; G01 records the 
 Set exactly one, as the last line of the closing comment on #11 too. FAIL is a valid outcome and does not
 authorize gated work.
 
-`Outcome: PENDING (human run required)`  <!-- replace with PASS | FAIL | UNRESOLVED -->
+`Outcome: UNRESOLVED` (not run; waived by the GM on 2026-11-08, see the top of this file)
