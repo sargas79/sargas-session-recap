@@ -1,7 +1,6 @@
-import { randomBytes } from 'node:crypto';
-import { rename, rm, stat } from 'node:fs/promises';
+import { rm, stat } from 'node:fs/promises';
 import path from 'node:path';
-import { setTimeout as delay } from 'node:timers/promises';
+import { commitFileAtomic, tempPathFor } from '../package/atomic.ts';
 import { AudioToolError } from './errors.ts';
 import { resolveInputFile } from './input.ts';
 import { resolveTool, type ResolvedTool } from './locate.ts';
@@ -69,35 +68,14 @@ function samePath(a: string, b: string): boolean {
   return process.platform === 'win32' ? a.toLowerCase() === b.toLowerCase() : a === b;
 }
 
-/** Rename with a short bounded retry for transient Windows locks (antivirus, indexer). */
-async function renameWithRetry(from: string, to: string): Promise<void> {
-  const delays = [50, 150, 400];
-  for (let attempt = 0; ; attempt += 1) {
-    try {
-      await rename(from, to);
-      return;
-    } catch (error) {
-      const code = (error as NodeJS.ErrnoException).code;
-      const retryable = code === 'EPERM' || code === 'EBUSY' || code === 'EACCES';
-      const wait = delays[attempt];
-      if (!retryable || wait === undefined) {
-        throw error;
-      }
-      await delay(wait);
-    }
-  }
-}
-
 /**
  * Decodes the first audio stream of `src` to a 16 kHz mono `pcm_s16le` WAV at
  * `dst`.
  *
- * The output is written to a temp file in the destination directory and then
- * renamed over `dst`, so `dst` is either the previous file or the complete new
- * one, never a partial write.
- *
- * TODO(#19): switch to the T03 atomic-write helper (fsync + rename with retry)
- * once it lands.
+ * The output is written to a temp file in the destination directory, fsynced
+ * and renamed over `dst` with the T03 atomic helper (bounded retry on transient
+ * Windows locks), so `dst` is either the previous file or the complete new one,
+ * never a partial write.
  */
 export async function decodeToPcm16kMono(
   src: string,
@@ -129,10 +107,7 @@ export async function decodeToPcm16kMono(
 
   const ffmpeg = options.ffmpeg ?? (await resolveTool('ffmpeg', options));
   const runner = options.runner ?? runTool;
-  const temp = path.join(
-    dir,
-    `.${path.basename(output)}.${process.pid}.${randomBytes(4).toString('hex')}.tmp`,
-  );
+  const temp = tempPathFor(output);
   try {
     const result = await runner(ffmpeg.path, decodeArgs(input, temp), {
       tool: 'ffmpeg',
@@ -142,7 +117,7 @@ export async function decodeToPcm16kMono(
     });
     assertSuccess(result, 'ffmpeg', 'decoding to 16 kHz mono PCM');
     try {
-      await renameWithRetry(temp, output);
+      await commitFileAtomic(temp, output);
     } catch (error) {
       throw new AudioToolError(
         'AUDIO_WRITE_FAILED',

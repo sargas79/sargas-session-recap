@@ -110,10 +110,17 @@ recap doctor
             path: C:\Users\you\AppData\Local\Microsoft\WinGet\Links\ffmpeg.exe (from PATH)
   ffprobe:  ok 7.1.1-essentials_build-www.gyan.dev
             path: C:\Users\you\AppData\Local\Microsoft\WinGet\Links\ffprobe.exe (from PATH)
+  data:     C:\Users\you\AppData\Local\sargas-recap (from default)
+            not created yet
+  disk:     412.3 GiB free (at C:\Users\you\AppData\Local)
+  db:       not initialized (created at schema v1 on first use)
+            path: C:\Users\you\AppData\Local\sargas-recap\state\recap.sqlite
   result:   ok
 ```
 
-If a tool is missing or older than 6.0, doctor prints `MISSING` or `UNUSABLE` with a `fix:` line.
+If a tool is missing or older than 6.0, doctor prints `MISSING` or `UNUSABLE` with a `fix:` line. A data
+root inside a git checkout shows as `REFUSED`, and a database from a newer recap shows as `UNUSABLE` (see
+[Data root and app state](#data-root-and-app-state)).
 Plain `recap doctor` always exits 0. Use `recap doctor --strict` in scripts: it exits 1 when a check
 fails.
 
@@ -136,6 +143,28 @@ After changing a contract in `packages/contracts/src`, regenerate the committed 
 `npm run schemas -w @sargas-recap/contracts` (see `docs/adr/README.md`). `npm test` fails if they are
 stale.
 
+## Session package integrity
+
+```powershell
+npm run recap -- package validate <package-dir>      # add --json for a machine-readable report
+npm run recap -- package seal <package-dir>
+npm run recap -- package purge-audio <package-dir>   # asks first; --yes for scripts
+```
+
+`validate` prints the package state (`capturing`, `sealed`, ..., `audio-purged`) or `corrupt` /
+`invalid`, and one line per problem naming the file, the field and the rule, never the value. It
+exits 1 on errors. Windows notes:
+
+- Package paths named like devices (`CON`, `NUL`, `COM1.wav`), ending in a dot or space, containing
+  `:` (alternate data streams) or differing only in case are rejected on every OS, so a package
+  stays portable.
+- Junctions and symlinks are followed with `realpath`; any that lead outside the package are
+  rejected. Creating a junction (`mklink /J`) needs no admin rights; the file-symlink tests are
+  skipped unless Developer Mode is on.
+- Writes go to a temp file (`.<name>.<pid>.<random>.tmp`), are flushed, then renamed. If antivirus or
+  the indexer briefly locks the target, the rename is retried for about 1.6 s. A temp file left by a
+  crash is reported as a warning and is safe to delete.
+
 ## Foundry module package
 
 `npm run package:foundry` builds the Foundry module and writes `packages/foundry-module/dist/module.json`
@@ -146,8 +175,57 @@ written in JavaScript). Releases are cut by pushing a `foundry-v<version>` tag; 
 ## Data location
 
 Never put real session recordings or transcripts inside the repository. `sessions/`, audio files,
-transcripts, SQLite databases and `.env*` files are git-ignored as a safety net. The default data root
-outside the repo is defined in T25.
+transcripts, SQLite databases and `.env*` files are git-ignored as a safety net.
+
+## Data root and app state
+
+recap keeps session packages, the state database, downloaded tools and logs under one **data root**
+([ADR-009](adr/ADR-009-data-root.md)). On Windows the default is:
+
+```text
+%LOCALAPPDATA%\sargas-recap\          e.g. C:\Users\you\AppData\Local\sargas-recap
+  campaigns\<campaign_id>\sessions\<session_id>\
+  state\recap.sqlite                  SQLite (WAL); state\backups\ holds pre-migration copies
+  tools\
+  logs\
+```
+
+User names with spaces or accents (`C:\Users\José Núñez\...`) are fine. To use another location
+(for example a larger drive), pick one of these. The first one that is set wins:
+
+```powershell
+npm run recap -- doctor --data-root "D:\Recap Data"    # 1. per command
+$env:RECAP_DATA_ROOT = "D:\Recap Data"                 # 2. per terminal (or set it in System settings)
+# 3. data_root in the recap config (T04)
+# 4. default: %LOCALAPPDATA%\sargas-recap
+```
+
+Keep the data root on a local disk. SQLite's WAL mode doesn't work on network shares, and synced folders
+(OneDrive, Dropbox) can corrupt the database. recap **refuses a data root inside a git working tree**
+(it looks for a `.git` folder or file in the root and every parent) so private recordings can't be
+committed by accident. Pass `--allow-in-repo` only if you really mean it.
+
+`recap doctor` shows the resolved data root and where it came from, free disk space, and the database
+schema version. It never creates anything. Before the first real command runs, the database shows as
+`not initialized`:
+
+```text
+  data:     C:\Users\you\AppData\Local\sargas-recap (from default)
+            not created yet
+  disk:     412.3 GiB free (at C:\Users\you\AppData\Local)
+  db:       not initialized (created at schema v1 on first use)
+            path: C:\Users\you\AppData\Local\sargas-recap\state\recap.sqlite
+```
+
+When a newer recap needs a schema upgrade, it copies the database to `state\backups\` first and then
+migrates in a single transaction. If the upgrade fails, the database stays at its old version. An older
+recap refuses to open a database written by a newer one (`DB_SCHEMA_TOO_NEW`). Update recap, or restore a
+backup from `state\backups\`.
+
+SQLite comes from `better-sqlite3`. During `npm ci` it downloads a prebuilt Windows binary from GitHub
+(cached under `%LOCALAPPDATA%\npm-cache\_prebuilds`), so you don't need Visual Studio Build Tools or
+Python. If the download is blocked (proxy, offline), it tries to compile and fails without Build Tools.
+Allow `github.com` or install the "Desktop development with C++" workload.
 
 ## Campaign config and consent
 

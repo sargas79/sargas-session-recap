@@ -22,13 +22,17 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-migrations.js",
     "typecheck": "tsc -p tsconfig.json",
     "recap": "node src/cli/main.ts"
   },
   "dependencies": {
     "@sargas-recap/contracts": "0.0.0",
+    "better-sqlite3": "12.11.1",
     "commander": "^15.1.0",
     "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "9.6.0"
   }
 }

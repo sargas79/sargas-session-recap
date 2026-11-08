@@ -10,20 +10,20 @@ JSON Schema 2020-12 files are committed in `packages/contracts/schemas/`, and sy
 
 ## Index
 
-| ADR                                            | Title                                                 | Status            | Task      |
-| ---------------------------------------------- | ----------------------------------------------------- | ----------------- | --------- |
-| [ADR-001](ADR-001-artifact-ownership.md)       | Artifact ownership and the single source of truth     | Accepted          | T02 (#18) |
-| [ADR-002](ADR-002-schema-version-placement.md) | `schema_version` placement                            | Accepted          | T02 (#18) |
-| [ADR-003](ADR-003-timeline.md)                 | Timeline: integer milliseconds and sample offsets     | Accepted          | T02 (#18) |
-| [ADR-004](ADR-004-identity-and-revisions.md)   | Identity and revisions                                | Accepted          | T02 (#18) |
-| [ADR-005](ADR-005-override-reconciliation.md)  | Review override reconciliation                        | Accepted          | T02 (#18) |
-| [ADR-006](ADR-006-package-lifecycle.md)        | Session package lifecycle and path layout             | Accepted          | T02 (#18) |
-| [ADR-007](ADR-007-approval-and-import.md)      | Approval binding and Foundry import rules             | Accepted          | T02 (#18) |
-| ADR-008                                        | Workspace layout                                      | Reserved, see #44 | T24 (#44) |
-| ADR-009                                        | Data root and app-state locations                     | Reserved, see #45 | T25 (#45) |
-| [ADR-010](ADR-010-recap-editorial-state.md)    | Recap editorial state and content-hash canonical form | Accepted          | T27 (#46) |
+| ADR                                            | Title                                                 | Status   | Task      |
+| ---------------------------------------------- | ----------------------------------------------------- | -------- | --------- |
+| [ADR-001](ADR-001-artifact-ownership.md)       | Artifact ownership and the single source of truth     | Accepted | T02 (#18) |
+| [ADR-002](ADR-002-schema-version-placement.md) | `schema_version` placement                            | Accepted | T02 (#18) |
+| [ADR-003](ADR-003-timeline.md)                 | Timeline: integer milliseconds and sample offsets     | Accepted | T02 (#18) |
+| [ADR-004](ADR-004-identity-and-revisions.md)   | Identity and revisions                                | Accepted | T02 (#18) |
+| [ADR-005](ADR-005-override-reconciliation.md)  | Review override reconciliation                        | Accepted | T02 (#18) |
+| [ADR-006](ADR-006-package-lifecycle.md)        | Session package lifecycle and path layout             | Accepted | T02 (#18) |
+| [ADR-007](ADR-007-approval-and-import.md)      | Approval binding and Foundry import rules             | Accepted | T02 (#18) |
+| [ADR-008](ADR-008-workspace-layout.md)         | Workspace layout                                      | Accepted | T24 (#44) |
+| [ADR-009](ADR-009-data-root.md)                | Data root and app-state locations                     | Accepted | T25 (#45) |
+| [ADR-010](ADR-010-recap-editorial-state.md)    | Recap editorial state and content-hash canonical form | Accepted | T27 (#46) |
 
-ADR-008, ADR-009 and ADR-010 are numbered here so references stay stable. Their content belongs to
+ADR-008, ADR-009 and ADR-010 were reserved here so references stay stable. Their content belongs to
 the listed tasks.
 
 ## Contracts
