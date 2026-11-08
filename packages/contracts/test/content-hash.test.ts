@@ -223,7 +223,9 @@ describe('what the hash covers', () => {
       })),
     };
     expect(canonicalContentHash(changed)).toBe(EXPECTED_HASH);
-    expect(canonicalContentHash({ ...recap, gm_notes: [] })).toBe(EXPECTED_HASH);
+    // A non-literal argument: extra properties such as gm_notes are allowed and must be ignored.
+    const withEmptyNotes = { ...recap, gm_notes: [] };
+    expect(canonicalContentHash(withEmptyNotes)).toBe(EXPECTED_HASH);
     expect(canonicalContentJson(changed)).not.toContain('mestre');
   });
 

@@ -28,18 +28,22 @@ the listed tasks.
 
 ## Contracts
 
-| Contract                | Schema file                         | Stored as                                          | Owner (ADR-001)       |
-| ----------------------- | ----------------------------------- | -------------------------------------------------- | --------------------- |
-| `manifest`              | `manifest.schema.json`              | `manifest.json`                                    | package               |
-| `fragment`              | `fragment.schema.json`              | `fragments.jsonl`, one record per line             | capture / import      |
-| `foundry-event`         | `foundry-event.schema.json`         | `foundry.jsonl`, one record per line               | Foundry capture (T16) |
-| `transcription-segment` | `transcription-segment.schema.json` | `transcript/<transcription_run_id>/segments.jsonl` | transcription run     |
-| `classification-result` | `classification-result.schema.json` | `classify/<classification_run_id>/results.jsonl`   | classification run    |
-| `review-override`       | `review-override.schema.json`       | SQLite `review_overrides` row                      | SQLite                |
-| `effective-transcript`  | `effective-transcript.schema.json`  | computed on demand; a cache is never authoritative | derived               |
-| `recap`                 | `recap.schema.json`                 | `recap/<revision>/recap.json`                      | recap generation      |
-| `recap-package`         | `recap-package.schema.json`         | export file imported by the Foundry module         | derived snapshot      |
-| `job-record`            | `job-record.schema.json`            | SQLite `jobs` row                                  | SQLite                |
+| Contract                     | Schema file                              | Stored as                                          | Owner (ADR-001)       |
+| ---------------------------- | ---------------------------------------- | -------------------------------------------------- | --------------------- |
+| `manifest`                   | `manifest.schema.json`                   | `manifest.json`                                    | package               |
+| `fragment`                   | `fragment.schema.json`                   | `fragments.jsonl`, one record per line             | capture / import      |
+| `foundry-event`              | `foundry-event.schema.json`              | `foundry.jsonl`, one record per line               | Foundry capture (T16) |
+| `transcription-segment`      | `transcription-segment.schema.json`      | `transcript/<transcription_run_id>/segments.jsonl` | transcription run     |
+| `classification-result`      | `classification-result.schema.json`      | `classify/<classification_run_id>/results.jsonl`   | classification run    |
+| `review-override`            | `review-override.schema.json`            | SQLite `review_overrides` row                      | SQLite                |
+| `effective-transcript`       | `effective-transcript.schema.json`       | computed on demand; a cache is never authoritative | derived               |
+| `recap`                      | `recap.schema.json`                      | `recap/<revision>/recap.json`                      | recap generation      |
+| `recap-package`              | `recap-package.schema.json`              | export file imported by the Foundry module         | derived snapshot      |
+| `job-record`                 | `job-record.schema.json`                 | SQLite `jobs` row                                  | SQLite                |
+| `recap-sentence-edit`        | `recap-sentence-edit.schema.json`        | SQLite `recap_edits` row                           | SQLite                |
+| `recap-editorial-transition` | `recap-editorial-transition.schema.json` | SQLite `recap_editorial_transitions` row           | SQLite                |
+| `recap-approval`             | `recap-approval.schema.json`             | SQLite `recap_approvals` row                       | SQLite                |
+| `recap-export-manifest`      | `recap-export-manifest.schema.json`      | SQLite `recap_exports` row                         | SQLite                |
 
 ## Session package path layout
 
