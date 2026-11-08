@@ -380,7 +380,7 @@ speaker per file, no noise, no crosstalk, no PF2e or English game terms. It comp
 
 Observations:
 
-- **large-v3 hit a repetition loop** in chapter 1: one phrase of seven words appears 8 times and the output has 228 more words than
+- **large-v3 hit a repetition loop** in chapter 1: a passage of roughly 35 words appears 8 times and the output has 228 more words than
   turbo's. That loop explains most of its 17.62%. Without it, the models are close. Turbo showed no such loop here. T09 needs loop
   detection whichever model is chosen.
 - Segment length varies by reader from about 1 s to 30 s, on both models. T08 and the review UI cannot assume a typical segment length.
