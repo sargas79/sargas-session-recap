@@ -350,6 +350,47 @@ Excerpt length: ____ s, ____ reference words, ____ glossary-term occurrences, __
 | ffmpeg silencedetect | -35 dB / 500 ms | | | n/a | n/a | n/a |
 | ffmpeg silencedetect | -40 dB / 500 ms | | | n/a | n/a | n/a |
 
+### 5.8 Agent-run Portuguese audiobook benchmark (2026-11-08)
+
+Run by an agent at the GM's request. **Not table audio**: studio-style narration of 19th-century Brazilian Portuguese prose, one
+speaker per file, no noise, no crosstalk, no PF2e or English game terms. It compares the two models on Portuguese; it does not fill
+§5.3 to §5.7.
+
+- Audio: LibriVox _Histórias Sem Data_ (Machado de Assis, Public Domain Mark), chapters 1, 2, 5 and 8, four readers, 4,828 s in total.
+  MP3 hashes matched archive.org's SHA-1 metadata. Converted to 16 kHz mono WAV.
+- Reference: Project Gutenberg #33056 (11,472 words).
+- Runs: Vulkan build, `-l pt`, no prompt, no VAD, 2 repeats, 16 runs, all exit 0. Outputs are identical across repeats on all 8
+  model and chapter pairs.
+- Scoring: word error rate with free leading and trailing words, so the LibriVox intro and outro do not count. Both sides are
+  normalized for accents and for 1880s spelling (`ph`, `th`, `y`, doubled consonants, initial `h`). Remaining spelling differences and
+  any words the reader changed still count, so **the absolute values are upper bounds**; the comparison between models is the useful part.
+
+| Chapter (words) | turbo WER | large-v3 WER | turbo segments / mean length | large-v3 segments / mean length |
+|---|---|---|---|---|
+| 1 (2,696) | 9.24% | **17.62%** | 788 / 1.2 s | 281 / 3.7 s |
+| 2 (3,129) | 9.59% | 10.23% | 511 / 2.6 s | 48 / 27.8 s |
+| 5 (2,647) | 7.59% | 7.44% | 870 / 1.2 s | 444 / 2.3 s |
+| 8 (3,000) | 8.63% | 10.40% | 114 / 11.5 s | 66 / 19.7 s |
+| **All (11,472)** | **8.80%** | **11.37%** | | |
+
+| Model | Wall time, 4,828 s of audio | RTF | Segments flagged low confidence |
+|---|---|---|---|
+| large-v3-turbo | 109.6 s | 0.023 | 103 of 2,283 |
+| large-v3 | 263.4 s | 0.055 | 121 of 839 |
+
+Observations:
+
+- **large-v3 hit a repetition loop** in chapter 1: one phrase of seven words appears 8 times and the output has 228 more words than
+  turbo's. That loop explains most of its 17.62%. Without it, the models are close. Turbo showed no such loop here. T09 needs loop
+  detection whichever model is chosen.
+- Segment length varies by reader from about 1 s to 30 s, on both models. T08 and the review UI cannot assume a typical segment length.
+- Turbo often drops punctuation and breaks sentences mid-phrase; large-v3 keeps sentence punctuation. This matters for reading the
+  transcript and was not scored.
+- Both models are fast enough on this GPU that speed does not decide the choice.
+
+Provisional reading: `large-v3-turbo` is the better default on this audio, because it is faster and did not loop. Whether that holds on
+table audio with crosstalk and game terms is untested.
+
 ## 6. Findings (to be filled in from the measurements)
 
 ### 6.1 Timestamp findings
