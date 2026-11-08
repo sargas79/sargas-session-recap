@@ -2,6 +2,7 @@ import { Ajv2020, type ErrorObject, type ValidateFunction } from 'ajv/dist/2020.
 import addFormatsModule from 'ajv-formats';
 import type { CampaignConfig } from './schemas/campaign-config.ts';
 import { CONTRACT_NAMES, schemaId, toJsonSchema, type ContractName } from './registry.ts';
+import type { ChunkPlan } from './schemas/chunk-plan.ts';
 import type { ClassificationResult } from './schemas/classification-result.ts';
 import type { EffectiveTranscript } from './schemas/effective-transcript.ts';
 import type { FoundryEvent } from './schemas/foundry-event.ts';
@@ -39,6 +40,7 @@ export interface ContractTypes {
   fragment: Fragment;
   'foundry-event': FoundryEvent;
   'transcription-segment': TranscriptionSegment;
+  'chunk-plan': ChunkPlan;
   'classification-result': ClassificationResult;
   'review-override': ReviewOverride;
   'effective-transcript': EffectiveTranscript;

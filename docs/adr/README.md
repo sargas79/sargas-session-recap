@@ -34,6 +34,7 @@ the listed tasks.
 | `fragment`                   | `fragment.schema.json`                   | `fragments.jsonl`, one record per line             | capture / import      |
 | `foundry-event`              | `foundry-event.schema.json`              | `foundry.jsonl`, one record per line               | Foundry capture (T16) |
 | `transcription-segment`      | `transcription-segment.schema.json`      | `transcript/<transcription_run_id>/segments.jsonl` | transcription run     |
+| `chunk-plan`                 | `chunk-plan.schema.json`                 | `chunk-plans/<plan_hash_hex>.json`                 | chunk-plan stage      |
 | `classification-result`      | `classification-result.schema.json`      | `classify/<classification_run_id>/results.jsonl`   | classification run    |
 | `review-override`            | `review-override.schema.json`            | SQLite `review_overrides` row                      | SQLite                |
 | `effective-transcript`       | `effective-transcript.schema.json`       | computed on demand; a cache is never authoritative | derived               |
@@ -57,6 +58,7 @@ segments, no drive letters).
   fragments.jsonl                                ADR-003: one fragment record per line
   audio/<speaker_id>/<n>.<ext>                   source audio fragments (sealed, purgeable)
   foundry.jsonl                                  Foundry event envelopes (optional, sealed when present)
+  chunk-plans/<plan_hash_hex>.json               ASR chunk plan, content-addressed (T08)
   transcript/<transcription_run_id>/
     segments.jsonl                               immutable transcription segments
     raw/                                         raw ASR output kept for audit (T09)

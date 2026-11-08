@@ -1,5 +1,6 @@
 import type { TSchema } from '@sinclair/typebox';
 import { CampaignConfigSchema } from './schemas/campaign-config.ts';
+import { ChunkPlanSchema } from './schemas/chunk-plan.ts';
 import { ClassificationResultSchema } from './schemas/classification-result.ts';
 import { EffectiveTranscriptSchema } from './schemas/effective-transcript.ts';
 import { FoundryEventSchema } from './schemas/foundry-event.ts';
@@ -43,6 +44,11 @@ export const CONTRACTS = {
     schema: TranscriptionSegmentSchema,
     title: 'Transcription segment (immutable)',
     where: 'transcript/<transcription_run_id>/segments.jsonl (one record per line)',
+  },
+  'chunk-plan': {
+    schema: ChunkPlanSchema,
+    title: 'Per-speaker chunk plan',
+    where: 'chunk-plans/<plan hash>.json',
   },
   'classification-result': {
     schema: ClassificationResultSchema,

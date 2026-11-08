@@ -1,0 +1,268 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sargas-recap:schema:chunk-plan:v1",
+  "title": "Per-speaker chunk plan",
+  "$comment": "Generated from packages/contracts/src by npm run schemas. Do not edit. Stored as: chunk-plans/<plan hash>.json.",
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "schema_version",
+    "plan_hash",
+    "planner_version",
+    "params",
+    "chunks",
+    "pauses",
+    "excluded_fragments"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Per-record schema version (ADR-002).",
+      "const": 1,
+      "type": "number"
+    },
+    "plan_hash": {
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "sha256 of the canonical JSON of this record without it.",
+      "type": "string"
+    },
+    "planner_version": {
+      "minimum": 1,
+      "description": "Bumped on any planning change.",
+      "type": "integer"
+    },
+    "params": {
+      "additionalProperties": false,
+      "type": "object",
+      "required": [
+        "target_chunk_ms",
+        "max_chunk_ms",
+        "min_chunk_ms",
+        "remove_pause_min_ms",
+        "removal_padding_ms",
+        "silence_threshold_db",
+        "min_silence_ms"
+      ],
+      "properties": {
+        "target_chunk_ms": {
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "description": "Preferred chunk duration.",
+          "type": "integer"
+        },
+        "max_chunk_ms": {
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "description": "Upper limit when a pause allows it. Speech is never cut to honor it.",
+          "type": "integer"
+        },
+        "min_chunk_ms": {
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Prefer chunks at least this long. Shorter chunks are flagged, never dropped.",
+          "type": "integer"
+        },
+        "remove_pause_min_ms": {
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "description": "Pauses at least this long are removed from chunk audio; shorter ones are kept.",
+          "type": "integer"
+        },
+        "removal_padding_ms": {
+          "minimum": 0,
+          "maximum": 9007199254740991,
+          "description": "Audio kept on each speech side of a removed pause, so word edges are not cut.",
+          "type": "integer"
+        },
+        "silence_threshold_db": {
+          "minimum": -200,
+          "maximum": 0,
+          "description": "ffmpeg silencedetect noise level, in dBFS.",
+          "type": "integer"
+        },
+        "min_silence_ms": {
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "description": "ffmpeg silencedetect minimum duration.",
+          "type": "integer"
+        }
+      }
+    },
+    "chunks": {
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "chunk_index",
+          "speaker_id",
+          "duration_ms",
+          "flags",
+          "pieces"
+        ],
+        "properties": {
+          "chunk_index": {
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Position in `chunks`.",
+            "type": "integer"
+          },
+          "speaker_id": {
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+            "description": "Speaker identifier from campaign config.",
+            "type": "string"
+          },
+          "duration_ms": {
+            "minimum": 1,
+            "maximum": 9007199254740991,
+            "type": "integer"
+          },
+          "flags": {
+            "uniqueItems": true,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "over_max",
+                "under_min"
+              ]
+            }
+          },
+          "pieces": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "chunk_start_ms",
+                "duration_ms",
+                "fragment_id",
+                "sample_rate_hz",
+                "fragment_start_sample",
+                "sample_length",
+                "fragment_start_ms",
+                "session_start_offset_ms",
+                "timing_uncertainty_ms"
+              ],
+              "properties": {
+                "chunk_start_ms": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "duration_ms": {
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "fragment_id": {
+                  "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?:(?:0|[1-9][0-9]{0,15})$",
+                  "description": "<speaker_id>:<n> (ADR-004).",
+                  "type": "string"
+                },
+                "sample_rate_hz": {
+                  "minimum": 8000,
+                  "maximum": 192000,
+                  "type": "integer"
+                },
+                "fragment_start_sample": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "sample_length": {
+                  "minimum": 1,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "fragment_start_ms": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "floor(fragment_start_sample * 1000 / sample_rate_hz).",
+                  "type": "integer"
+                },
+                "session_start_offset_ms": {
+                  "minimum": -9007199254740991,
+                  "maximum": 9007199254740991,
+                  "type": "integer"
+                },
+                "timing_uncertainty_ms": {
+                  "minimum": 0,
+                  "maximum": 9007199254740991,
+                  "description": "Uncertainty of the source fragment.",
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "pauses": {
+      "description": "Every detected pause and whether it stays in the chunk audio.",
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "fragment_id",
+          "start_ms",
+          "end_ms",
+          "disposition"
+        ],
+        "properties": {
+          "fragment_id": {
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?:(?:0|[1-9][0-9]{0,15})$",
+            "description": "<speaker_id>:<n> (ADR-004).",
+            "type": "string"
+          },
+          "start_ms": {
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Fragment time.",
+            "type": "integer"
+          },
+          "end_ms": {
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Fragment time, exclusive.",
+            "type": "integer"
+          },
+          "disposition": {
+            "type": "string",
+            "enum": [
+              "preserved",
+              "removed"
+            ]
+          }
+        }
+      }
+    },
+    "excluded_fragments": {
+      "description": "Fragments with no audio to transcribe; nothing else is left out.",
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "fragment_id",
+          "reason"
+        ],
+        "properties": {
+          "fragment_id": {
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?:(?:0|[1-9][0-9]{0,15})$",
+            "description": "<speaker_id>:<n> (ADR-004).",
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "empty",
+              "all_silence"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

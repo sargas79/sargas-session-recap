@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "campaign_id": "synthetic-vaults",
+  "system": "pf2e",
+  "language": "pt-BR",
+  "provider": {
+    "recording": "craig",
+    "asr": "whisper-local",
+    "classification": "claude-cli",
+    "recap": "claude-cli"
+  },
+  "chunking": {
+    "target_chunk_ms": 20000,
+    "silence_threshold_db": -40
+  },
+  "speakers": [
+    {
+      "speaker_id": "gm",
+      "role": "gm"
+    }
+  ],
+  "consent_mode": "implied"
+}
