@@ -79,6 +79,24 @@ accepted, not `.cmd`/`.bat` wrappers, and the current directory is never searche
 Paths with spaces and non-ASCII characters (for example `D:\Sessões\sessão 12\áudio.wav`) work: recap
 passes arguments to ffmpeg directly, never through a shell.
 
+**Chunk planning** (`recap run chunk-plan --config <campaign.yaml> --glossary <glossary.yaml>`) uses
+FFmpeg's silence detection on each fragment. Its settings are optional, in `campaign.yaml`:
+
+```yaml
+chunking:
+  target_chunk_ms: 25000 # preferred chunk length
+  max_chunk_ms: 30000 # limit when a pause allows it; speech is never cut
+  min_chunk_ms: 5000 # shorter chunks are flagged, never dropped
+  remove_pause_min_ms: 2000 # shorter pauses stay in the chunk audio
+  removal_padding_ms: 250 # kept on each speech side of a removed pause
+  silence_threshold_db: -35
+  min_silence_ms: 500
+```
+
+These are the built-in defaults, and they are **provisional**: the whisper.cpp spike (S04) did not
+measure chunk length, boundary drift or pause settings on real audio. Recheck them on the first
+recorded session. Changing any of them invalidates the plan and everything after it.
+
 ## 4. Install dependencies and build
 
 From the repository root:

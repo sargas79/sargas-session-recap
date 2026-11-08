@@ -1,4 +1,10 @@
 {
+  "invalid-chunking-unknown-field.json": [
+    {
+      "path": "/chunking/<key>",
+      "keyword": "additionalProperties"
+    }
+  ],
   "invalid-consent-without-provider.json": [
     {
       "path": "/speakers/0/consent/1/provider",

@@ -65,6 +65,7 @@ manifest.json
 fragments.jsonl
 audio/<speaker_id>/<n>.<ext>
 foundry.jsonl
+chunk-plans/<plan_hash_hex>.json
 transcript/<transcription_run_id>/segments.jsonl
 transcript/<transcription_run_id>/raw/
 classify/<classification_run_id>/results.jsonl

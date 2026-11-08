@@ -9,11 +9,13 @@ import {
 import { registerImportCommands } from '../capture/cli.ts';
 import { registerConfigCommands } from '../config/cli.ts';
 import { registerJobCommands } from '../jobs/cli.ts';
+import { defineStages } from '../jobs/stage.ts';
 import { registerSecretsCommands } from '../llm/cli.ts';
 import { registerPackageCommands } from '../package/cli.ts';
 import { checkDataRoot, type DataRootCheck, type DataRootCheckOptions } from '../paths/index.ts';
 import { registerSetupCommands } from '../tools/cli.ts';
 import type { WhisperCheck, WhisperCheckOptions } from '../tools/doctor.ts';
+import { createChunkPlanStage } from '../transcribe/chunk-plan-stage.ts';
 
 /** Output channel, injectable so the program can be tested in-process. */
 export interface CliIo {
@@ -129,7 +131,7 @@ export function buildProgram(io: CliIo = defaultIo): Command {
   registerImportCommands(program, io, { toolVersion: readVersion() });
   registerPackageCommands(program, io);
   registerConfigCommands(program, io);
-  registerJobCommands(program, io);
+  registerJobCommands(program, io, { stages: defineStages([createChunkPlanStage()]) });
   registerSecretsCommands(program, io);
   registerSetupCommands(program, io);
 

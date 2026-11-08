@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "plan_hash": "sha256:a51053b12d2cc45a41fe05dfe59608273b3cc0e8fdeadcfb515a0547129a393e",
+  "planner_version": 1,
+  "params": {
+    "target_chunk_ms": 25000,
+    "max_chunk_ms": 30000,
+    "min_chunk_ms": 5000,
+    "remove_pause_min_ms": 2000,
+    "removal_padding_ms": 250,
+    "silence_threshold_db": -35,
+    "min_silence_ms": 500
+  },
+  "chunks": [
+    {
+      "chunk_index": 0,
+      "speaker_id": "gm",
+      "duration_ms": 8900,
+      "flags": [],
+      "pieces": [
+        {
+          "chunk_start_ms": 0,
+          "duration_ms": 3250,
+          "fragment_id": "gm:0",
+          "sample_rate_hz": 48000,
+          "fragment_start_sample": 0,
+          "sample_length": 156000,
+          "fragment_start_ms": 0,
+          "session_start_offset_ms": -1500.5,
+          "timing_uncertainty_ms": 20
+        },
+        {
+          "chunk_start_ms": 3250,
+          "duration_ms": 5250,
+          "fragment_id": "gm:0",
+          "sample_rate_hz": 48000,
+          "fragment_start_sample": 324000,
+          "sample_length": 252000,
+          "fragment_start_ms": 6750,
+          "session_start_offset_ms": 5250,
+          "timing_uncertainty_ms": 20
+        },
+        {
+          "chunk_start_ms": 8500,
+          "duration_ms": 400,
+          "fragment_id": "gm:1",
+          "sample_rate_hz": 48000,
+          "fragment_start_sample": 0,
+          "sample_length": 19200,
+          "fragment_start_ms": 0,
+          "session_start_offset_ms": 15000,
+          "timing_uncertainty_ms": 20
+        }
+      ]
+    },
+    {
+      "chunk_index": 1,
+      "speaker_id": "player-a",
+      "duration_ms": 60,
+      "flags": [
+        "under_min"
+      ],
+      "pieces": [
+        {
+          "chunk_start_ms": 0,
+          "duration_ms": 60,
+          "fragment_id": "player-a:0",
+          "sample_rate_hz": 48000,
+          "fragment_start_sample": 0,
+          "sample_length": 2880,
+          "fragment_start_ms": 0,
+          "session_start_offset_ms": 300,
+          "timing_uncertainty_ms": 20
+        }
+      ]
+    }
+  ],
+  "pauses": [
+    {
+      "fragment_id": "gm:0",
+      "start_ms": 3000,
+      "end_ms": 7000,
+      "disposition": "removed"
+    },
+    {
+      "fragment_id": "gm:0",
+      "start_ms": 9000,
+      "end_ms": 9700,
+      "disposition": "preserved"
+    }
+  ],
+  "excluded_fragments": []
+}

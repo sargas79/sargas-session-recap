@@ -9,6 +9,7 @@ export * from './content-hash.ts';
 export * from './registry.ts';
 export * from './validate.ts';
 export * from './schemas/campaign-config.ts';
+export * from './schemas/chunk-plan.ts';
 export * from './schemas/classification-result.ts';
 export * from './schemas/effective-transcript.ts';
 export * from './schemas/foundry-event.ts';

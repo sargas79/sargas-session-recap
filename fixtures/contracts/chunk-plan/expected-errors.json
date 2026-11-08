@@ -1,0 +1,26 @@
+{
+  "invalid-float-offset.json": [
+    {
+      "path": "/chunks/0/pieces/0/session_start_offset_ms",
+      "keyword": "type"
+    }
+  ],
+  "invalid-no-pieces.json": [
+    {
+      "path": "/chunks/0/pieces",
+      "keyword": "minItems"
+    }
+  ],
+  "invalid-extra-property.json": [
+    {
+      "path": "/<key>",
+      "keyword": "additionalProperties"
+    }
+  ],
+  "invalid-unknown-flag.json": [
+    {
+      "path": "/chunks/0/flags/0",
+      "keyword": "enum"
+    }
+  ]
+}

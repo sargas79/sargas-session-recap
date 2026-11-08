@@ -55,6 +55,17 @@ sample_length)`. The chunk-plan contract itself is defined in T08; this ADR fixe
   falls inside a piece, monotonicity, and no lost short segments. T08 defines how a time exactly at
   a junction between two pieces maps; whatever the rule, the mapped uncertainty must cover the
   removed pause.
+- **Junction rule (T08).** Pieces are half-open, `[chunk_start_ms, chunk_start_ms + duration_ms)`. A
+  chunk time exactly at a junction maps to the first millisecond of the later piece as a start
+  (`edge: 'start'`) and to the exclusive end of the earlier piece as an end (`edge: 'end'`). Either
+  way the mapped uncertainty is the larger uncertainty of the two pieces plus the session gap
+  between them, so it covers the removed pause. Cut points are integer ms, converted to samples with
+  `sample = ceil(ms * sample_rate_hz / 1000)`, which inverts exactly under the floor rule above
+  (a fragment's last piece ends at `sample_count`, so a sub-millisecond tail stays attached to it).
+  Chunk audio is extracted to `duration_ms` per piece, which keeps chunk time exactly on this map.
+- The chunk-plan contract is `chunk-plan` (`chunk-plans/<plan hash>.json`, written by the
+  `chunk-plan` stage). Chunks are split only at pauses or between fragments, never inside
+  speech; see `packages/core/src/transcribe/chunk-plan.ts`.
 
 ### Foundry events
 
