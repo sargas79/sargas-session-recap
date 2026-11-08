@@ -6,7 +6,9 @@
 
 **Outcome: PENDING (human run required)**
 
-Nothing in this document is evidence yet. Every hook name, payload path and Foundry API used by the harness is a
+Section 12 records an agent run on a local Foundry server (2026-11-08). The remote-host session has not happened, so sections 4 to 10 are still empty.
+
+Outside section 12, nothing in this document is evidence yet. Every hook name, payload path and Foundry API used by the harness is a
 **candidate, verify on v14/PF2e**. All result cells are intentionally empty.
 
 ## 1. Question
@@ -239,3 +241,80 @@ without blocking the imported-audio recap path.
 - The zip has `module.json` at its root; whether the v14 installer also needs a top-level folder is to be verified.
 - `npm audit` reports moderate advisories in dev-only lint tooling (typescript-eslint's `minimatch`); none ship in the
   module bundle.
+
+## 12. Agent run on a local Foundry server (2026-11-08)
+
+Run by an agent at the GM's request, on the GM's PC. **This is not the remote-host session in section 4**: it is a local
+server, reached over localhost, in a throwaway world, with game actions driven from the console API rather than by people
+clicking through the sheets. Sections 4 to 10 stay empty until the host session.
+
+| Item | Value |
+|---|---|
+| Foundry core | 14.370 (generation 14, build 370, Stable), Node server, `--noupnp` |
+| PF2e system | 8.7.0 |
+| Other active modules | `sargas-recap-spike@0.0.1` only |
+| Clients | GM: Claude desktop built-in browser. Player: Chrome 157. Separate sessions |
+| Install path | Manual copy of `dist/module` into `Data/modules`. **Manifest install not tested** |
+| Compatibility | Module loaded on v14 with no probe errors (`probeErrors: {}`) |
+
+### Hook categories (one client initiating, one observing)
+
+| Category | Hook | Fires on initiator | Fires on the other client | Fields seen | Status (local) |
+|---|---|---|---|---|---|
+| Rolls / degrees | `createChatMessage` | yes | yes | `flags.pf2e.context.type`, `outcome`, `unadjustedOutcome`, `dc.value`, `rolls[].total`; critical success, failure and critical failure all seen | supported |
+| Damage card | `createChatMessage` | yes | yes | `damage-roll`; a separate `damage-taken` message carries `flags.pf2e.appliedDamage` | partial (the roll card was built by script, not from a real Strike) |
+| HP change | `updateActor` | yes | no (0 on the player for an NPC the player cannot see) | `hpChanged`, `hpAfter` | partial (healing and an owned actor not tested) |
+| Conditions | `createItem`, `updateItem`, `deleteItem` | yes | yes | `type: condition`, `slug`, `conditionValue` | supported |
+| Conditions | `createActiveEffect`, `deleteActiveEffect` | 0 fires | 0 fires | PF2e conditions arrive as items here | unused |
+| Combat | `updateCombat`, `deleteCombat` | yes | yes | `changed.round`, `changed.turn`, `roundAfter`, `turnAfter` | supported |
+| Combat | `combatStart`, `combatRound`, `combatTurn` | yes | **no (0 on the other client)** | `round`, `turn`, `direction` | initiator only |
+| Scene | `updateScene` (`changed.active`) | yes | yes | `changedPaths` includes `active` | supported |
+| Item quantity | `updateItem` (`changed.system.quantity`) | yes | yes | `quantityAfter`, `quantityChanged` | partial (moving an item between actors not tested) |
+
+For T16: derive combat progress from `updateCombat`, because `combatStart`, `combatRound` and `combatTurn` only fire on the
+client that made the change.
+
+### Refresh durability
+
+GM client, 25 Mark clicks, then a page reload in the same tick (all 25 were still buffered in memory, so this exercises the
+`pagehide` flush).
+
+| Trial | Rep | Issued | Persisted | Lost |
+|---|---|---|---|---|
+| T1 immediate reload | 1 | 25 | 25 | 0 |
+| T1 immediate reload | 2 | 25 | 25 | 0 |
+| T1 immediate reload | 3 | 25 | 25 | 0 |
+| T5 idle 2 s, then reload (control) | 1 | 25 | 25 | 0 |
+
+T2 (close tab within 0.2 s), T3 (renderer kill) and T4 (browser kill) were **not run**. Those are the cases most likely to lose data.
+
+### Designated writer
+
+| Check | Observed |
+|---|---|
+| Writer = GM; player `writes` | `false` on the player, `true` on the GM |
+| Player rolls | Player `ignored` +1, GM `issued` +1 |
+| Switch writer to the player, no reload | Player `writes: true`, `issued` +1; GM `writes: false`, `ignored` +1 |
+| Writer disconnects | Panel shows `S03 Player (offline)`; nobody writes |
+| Non-GM sets the writer from the console | Rejected: `lacks permission to update Setting` |
+| Same user in two tabs; setting survives a world reload | Not tested |
+
+### GM-only journal import
+
+| Check | Expected | Observed |
+|---|---|---|
+| Entry and both pages | default None, GM Owner | `{default: 0, <gm>: 3}` on all three |
+| Panel re-check | no violations | "GM-only (entry and all pages)" |
+| Injection file | rejected, nothing created | Rejected with listed errors; journal count unchanged |
+| Player: on-screen text | hidden | Canary and title not on screen; `visible: false`, permission 0 |
+| Player console `game.journal.getName(...)` | `undefined` | **Returned the entry** |
+| Player console `pages[i].text.content` | not available | **Contains `S03-CANARY-PAGE-1` and `-2`** |
+
+**Finding: GM-only is display-only on this build.** The full text of a journal the player has no permission for reached the
+player's browser, and could be read from the developer console. Nothing shows it in the UI, but T19 must not treat journal
+ownership as confidentiality. The GM should decide whether that is acceptable for draft recaps.
+
+### Not covered
+
+The friend-hosted server, manifest install, a real Strike and healing through the sheets, moving items between actors, whether
+two clients produce the same `eventId`, and durability trials T2 to T4.
