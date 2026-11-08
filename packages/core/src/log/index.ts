@@ -10,3 +10,4 @@ export {
   type Logger,
   type LoggerOptions,
 } from './logger.ts';
+export { REDACTED, SECRET_ENV_VARS, SecretRedactor, secretRedactor } from './secrets.ts';

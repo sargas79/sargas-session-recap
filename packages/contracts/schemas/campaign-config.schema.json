@@ -80,6 +80,27 @@
         }
       }
     },
+    "llm_model": {
+      "additionalProperties": false,
+      "description": "Explicit model ID per LLM stage (T10). There is no built-in default: the LLM stages refuse to run without it.",
+      "type": "object",
+      "required": [
+        "classification",
+        "recap"
+      ],
+      "properties": {
+        "classification": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\[\\]-]{0,127}$",
+          "description": "Model ID, e.g. `claude-sonnet-5-5`.",
+          "type": "string"
+        },
+        "recap": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:\\[\\]-]{0,127}$",
+          "description": "Model ID, e.g. `claude-sonnet-5-5`.",
+          "type": "string"
+        }
+      }
+    },
     "speakers": {
       "minItems": 1,
       "maxItems": 32,

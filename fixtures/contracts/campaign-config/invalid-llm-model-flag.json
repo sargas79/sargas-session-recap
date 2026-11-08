@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "campaign_id": "synthetic-campaign",
+  "system": "pf2e",
+  "language": "pt-BR",
+  "consent_mode": "implied",
+  "provider": {
+    "recording": "craig",
+    "asr": "whisper-local",
+    "classification": "claude-cli",
+    "recap": "claude-cli"
+  },
+  "llm_model": { "classification": "--dangerous-flag", "recap": "claude-sonnet-5-5" },
+  "speakers": [{ "speaker_id": "gm", "role": "gm" }]
+}

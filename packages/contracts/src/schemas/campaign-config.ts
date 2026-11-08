@@ -29,6 +29,13 @@ export const ConsentDate = () => Type.String({ format: 'date', maxLength: 10 });
 export const ProviderId = () =>
   Slug({ description: 'Provider identifier. A different provider needs its own consent (T04).' });
 
+/** Model ID as the provider names it. Cannot start with `-`: it is passed as a CLI argument. */
+export const LlmModelId = () =>
+  Type.String({
+    pattern: '^[A-Za-z0-9][A-Za-z0-9._:\\[\\]-]{0,127}$',
+    description: 'Model ID, e.g. `claude-sonnet-5-5`.',
+  });
+
 /** No control characters: names end up in prompts and file listings. */
 const SINGLE_LINE = '^[^\\u0000-\\u001F\\u007F]+$';
 
@@ -111,6 +118,16 @@ export const CampaignConfigSchema = Type.Object(
         recap: ProviderId(),
       },
       { additionalProperties: false, description: 'Provider used by each stage.' },
+    ),
+    llm_model: Type.Optional(
+      Type.Object(
+        { classification: LlmModelId(), recap: LlmModelId() },
+        {
+          additionalProperties: false,
+          description:
+            'Explicit model ID per LLM stage (T10). There is no built-in default: the LLM stages refuse to run without it.',
+        },
+      ),
     ),
     speakers: Type.Array(Speaker, { minItems: 1, maxItems: 32 }),
   },

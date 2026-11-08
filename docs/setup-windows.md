@@ -295,6 +295,54 @@ BOM) and CRLF line endings are fine.
   exist, processing refuses to run and names the speakers whose consent is missing.
 - Invalid files are reported as `<file>:<line>:<col>: <path>: <problem>`. Values are never printed.
 
+## LLM backend
+
+Classification and recap call Claude through the backend named in `campaign.yaml`, one model ID per
+stage. There is no built-in default model; the stages refuse to run without `llm_model`:
+
+```yaml
+provider:
+  classification: claude-cli # or claude-api
+  recap: claude-cli
+llm_model:
+  classification: claude-sonnet-5-5
+  recap: claude-sonnet-5-5
+```
+
+Changing a stage's provider needs new consent records for it, unless consent checks are off.
+
+**`claude-cli` (default path).** Uses your Claude Code login.
+
+```powershell
+winget install --id Anthropic.ClaudeCode -e
+claude    # then /login, then exit
+```
+
+If a new terminal can't find `claude`, point recap at the executable. A `claude.cmd` npm shim can't be
+used, because recap starts the CLI without a shell:
+
+```powershell
+[Environment]::SetEnvironmentVariable('RECAP_CLAUDE', 'C:\full\path\to\claude.exe', 'User')
+```
+
+Each run gets no tools and no MCP servers, works in an empty temporary folder that is deleted afterwards,
+and receives the transcript on stdin. API-key variables are not passed to it, so an `ANTHROPIC_API_KEY`
+in your environment can't silently bill the API. If a run fails with `llm-not-logged-in`, repeat
+`/login`.
+
+**`claude-api` (fallback).** Needs an API key, kept in Windows Credential Manager:
+
+```powershell
+npm run recap -- secrets set anthropic      # hidden prompt; the key is never printed
+npm run recap -- secrets delete anthropic
+```
+
+`ANTHROPIC_API_KEY` is read only when `CI=true`. Never put a key in `campaign.yaml` or in the repository.
+
+Failed output (invalid JSON, or output that breaks the contract) and temporary errors are retried up to
+3 times per call, and the tokens of every attempt are added to the job. `recap status` shows them.
+Error messages and logs never contain transcript text, prompts or keys.
+
 ## Importing a recording
 
 `recap import` turns a multitrack recording (one audio file per speaker, for example a Craig export)
