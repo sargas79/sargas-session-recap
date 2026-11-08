@@ -3,7 +3,12 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ConsentError } from '../../src/config/index.ts';
-import { buildChildEnv, buildClaudeArgs, TOOL_LOCKDOWN_ARGS } from '../../src/llm/claude-code.ts';
+import {
+  buildChildEnv,
+  buildClaudeArgs,
+  interpretRun,
+  TOOL_LOCKDOWN_ARGS,
+} from '../../src/llm/claude-code.ts';
 import { isLlmError, type LlmError } from '../../src/llm/index.ts';
 import {
   classifyPrompt,
@@ -202,6 +207,27 @@ describe('Claude Code results', () => {
     expect(error.message).toContain('/login');
     expect(error.retryable).toBe(false);
     expect(r.invocations()).toBe(1);
+  });
+
+  it.each([
+    [429, true],
+    [529, true],
+    [401, false],
+  ])('does not report API status %i with zero tokens as not logged in', (status, retryable) => {
+    const stdout = JSON.stringify({
+      is_error: true,
+      subtype: 'success',
+      api_error_status: status,
+      usage: { input_tokens: 0, output_tokens: 0 },
+    });
+    let caught: unknown;
+    try {
+      interpretRun({ exitCode: 1, stdout, stderr: '' });
+    } catch (error) {
+      caught = error;
+    }
+    expect(isLlmError(caught)).toBe(true);
+    expect(caught).toMatchObject({ code: 'llm-cli-error', retryable });
   });
 
   it('maps an unrecognized model to a non-retryable error', async () => {

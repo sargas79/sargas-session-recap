@@ -305,7 +305,13 @@ export function interpretRun(
   const usage = usageFrom(parsed['usage']);
   // Anything but an explicit `false` is treated as a failure.
   if (parsed['is_error'] !== false || run.exitCode !== 0) {
-    if (usage.input_tokens === 0 && usage.output_tokens === 0 && run.stderr.trim() === '') {
+    // An API status means the request got through, so a rate limit or outage is not a login problem.
+    if (
+      parsed['api_error_status'] == null &&
+      usage.input_tokens === 0 &&
+      usage.output_tokens === 0 &&
+      run.stderr.trim() === ''
+    ) {
       throw new LlmError(
         'llm-not-logged-in',
         'Claude Code failed before using any tokens, which usually means it is not logged in; run `claude`, then /login',
