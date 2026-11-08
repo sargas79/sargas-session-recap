@@ -1,5 +1,7 @@
 import { spawnSync } from 'node:child_process';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
@@ -63,6 +65,40 @@ describe.each(entries)('recap CLI (%s)', (_label, entry) => {
     const strict = runCli(entry, ['doctor', '--strict'], env);
     expect(strict.status).toBe(1);
     expect(strict.stdout).toContain('fix: ');
+  });
+
+  it('doctor reports the data root, disk and DB without creating anything', () => {
+    const base = mkdtempSync(path.join(os.tmpdir(), 'recap doctor ü '));
+    try {
+      const root = path.join(base, 'data');
+      const viaEnv = runCli(entry, ['doctor'], { ...process.env, RECAP_DATA_ROOT: root });
+      expect(viaEnv.status).toBe(0);
+      expect(viaEnv.stdout).toContain(`data:     ${root} (from RECAP_DATA_ROOT)`);
+      expect(viaEnv.stdout).toMatch(/^ {2}disk: +\d+(\.\d)? (GiB|MiB) free/m);
+      expect(viaEnv.stdout).toMatch(
+        /^ {2}db: +not initialized \(created at schema v\d+ on first use\)/m,
+      );
+      expect(existsSync(root)).toBe(false);
+
+      const viaFlag = runCli(entry, ['doctor', '--data-root', root], {
+        ...process.env,
+        RECAP_DATA_ROOT: path.join(base, 'ignored'),
+      });
+      expect(viaFlag.stdout).toContain(`(from --data-root)`);
+    } finally {
+      rmSync(base, { recursive: true, force: true });
+    }
+  });
+
+  it('doctor --strict refuses a data root inside the repository', () => {
+    const inRepo = fileURLToPath(new URL('./no-such-data-root', import.meta.url));
+    const strict = runCli(entry, ['doctor', '--strict', '--data-root', inRepo]);
+    expect(strict.status).toBe(1);
+    expect(strict.stdout).toContain('[PATHS_DATA_ROOT_IN_REPO]');
+    expect(strict.stdout).toContain('--allow-in-repo');
+    const allowed = runCli(entry, ['doctor', '--data-root', inRepo, '--allow-in-repo']);
+    expect(allowed.stdout).toContain('allowed by --allow-in-repo');
+    expect(existsSync(inRepo)).toBe(false);
   });
 
   it('fails on an unknown command', () => {

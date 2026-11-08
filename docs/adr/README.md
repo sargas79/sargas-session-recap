@@ -20,7 +20,7 @@ JSON Schema 2020-12 files are committed in `packages/contracts/schemas/`, and sy
 | [ADR-006](ADR-006-package-lifecycle.md)        | Session package lifecycle and path layout             | Accepted          | T02 (#18) |
 | [ADR-007](ADR-007-approval-and-import.md)      | Approval binding and Foundry import rules             | Accepted          | T02 (#18) |
 | ADR-008                                        | Workspace layout                                      | Reserved, see #44 | T24 (#44) |
-| ADR-009                                        | Data root and app-state locations                     | Reserved, see #45 | T25 (#45) |
+| [ADR-009](ADR-009-data-root.md)                | Data root and app-state locations                     | Accepted          | T25 (#45) |
 | ADR-010                                        | Recap editorial state and content-hash canonical form | Reserved, see #46 | T27 (#46) |
 
 ADR-008, ADR-009 and ADR-010 are numbered here so references stay stable. Their content belongs to
