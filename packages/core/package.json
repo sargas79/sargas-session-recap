@@ -28,6 +28,8 @@
     "recap": "node src/cli/main.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "1.6.0",
+    "@napi-rs/keyring": "2.1.2",
     "@sargas-recap/contracts": "0.0.0",
     "better-sqlite3": "12.11.1",
     "commander": "^15.1.0",

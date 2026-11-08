@@ -9,8 +9,10 @@
  *
  * The record envelope (`ts`, `level`, `event`) is always present. When fields
  * are dropped, only their count is recorded (`redacted`), never their names or
- * values.
+ * values. The serialized line also passes through the process secret redactor, so a secret that
+ * reached an allowed field is masked.
  */
+import { secretRedactor } from './secrets.ts';
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
@@ -131,7 +133,7 @@ export function createLogger(options: LoggerOptions = {}): Logger {
     if (LEVEL_ORDER[level] < minLevel) {
       return;
     }
-    sink(JSON.stringify(redact(level, event, fields, allowed, now())));
+    sink(secretRedactor.redact(JSON.stringify(redact(level, event, fields, allowed, now()))));
   };
 
   return {

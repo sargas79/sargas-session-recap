@@ -12,6 +12,9 @@ provider:
   asr: whisper-local
   classification: claude-cli
   recap: claude-cli
+llm_model:
+  classification: claude-sonnet-5-5
+  recap: claude-sonnet-5-5
 speakers:
   - speaker_id: gm
     display_name: GM (synthetic)

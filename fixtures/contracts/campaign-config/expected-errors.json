@@ -35,6 +35,12 @@
       "keyword": "additionalProperties"
     }
   ],
+  "invalid-llm-model-flag.json": [
+    {
+      "path": "/llm_model/classification",
+      "keyword": "pattern"
+    }
+  ],
   "invalid-unknown-consent-mode.json": [
     {
       "path": "/consent_mode",

@@ -141,7 +141,10 @@ describe('templating: untrusted data stays inside its delimiter', () => {
   });
 
   it('the shipped prompts tell the model the exact tag and put data only in the block', () => {
-    for (const asset of loadPromptRegistry().list()) {
+    // System prompts carry no data, so they have no block to name.
+    for (const asset of loadPromptRegistry()
+      .list()
+      .filter((p) => p.dataSlots.length > 0)) {
       const data = Object.fromEntries(asset.dataSlots.map((s) => [s, `DATA-${s}`]));
       const rendered = renderPrompt(asset, data);
       const parsed = structure(rendered.text, rendered.tag);

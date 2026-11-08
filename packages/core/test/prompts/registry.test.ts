@@ -44,7 +44,7 @@ function messageOf(fn: () => unknown): string {
 }
 
 describe('prompt registry: shipped prompts', () => {
-  it('loads one placeholder prompt per stage with front matter matching the file name', () => {
+  it('loads a task and a system prompt per stage with front matter matching the file name', () => {
     const registry = loadPromptRegistry();
     const summary = registry.list().map((p) => ({
       id: p.id,
@@ -55,6 +55,14 @@ describe('prompt registry: shipped prompts', () => {
       file: p.file,
     }));
     expect(summary).toEqual([
+      {
+        id: 'classification.system',
+        version: 1,
+        stage: 'classification',
+        outputSchema: 'classification-result',
+        dataSlots: [],
+        file: 'classification/system.v1.md',
+      },
       {
         id: 'classification.window',
         version: 1,
@@ -70,6 +78,14 @@ describe('prompt registry: shipped prompts', () => {
         outputSchema: 'recap',
         dataSlots: ['transcript'],
         file: 'recap/draft.v1.md',
+      },
+      {
+        id: 'recap.system',
+        version: 1,
+        stage: 'recap',
+        outputSchema: 'recap',
+        dataSlots: [],
+        file: 'recap/system.v1.md',
       },
     ]);
     expect(new Set(registry.list().map((p) => p.stage))).toEqual(

@@ -27,6 +27,7 @@ export * from './paths/index.ts';
 export * from './db/index.ts';
 export * from './jobs/index.ts';
 export * from './prompts/index.ts';
+export * from './llm/index.ts';
 export {
   buildProgram,
   doctorReport,
