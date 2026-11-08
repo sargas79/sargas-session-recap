@@ -208,26 +208,48 @@ UNRESOLVED` as the last comment on #14, with links to this document. Never commi
 
 ## 5. Results (to be filled in by the GM)
 
+### 5.0 Agent-run CPU smoke test (2026-11-08)
+
+Run by an agent at the GM's request, on the GM's PC, before the Vulkan build and the Portuguese samples exist.
+**This is not the S04 benchmark**: English public-domain sample only, CPU only, no WER.
+
+Input: `samples/jfk.wav` from whisper.cpp v1.9.5 (11.0 s, English). Command:
+`whisper-cli -m <model> -f jfk.wav -l en -ojf -t 8` (defaults: 5 beams, best of 5, flash attention on).
+
+| Model | Device | Wall time (whisper `total time`) | Real-time factor | Segments | Mean token p | Transcript correct? |
+|---|---|---|---|---|---|---|
+| large-v3-turbo | CPU, 8 threads | 5.46 s | 0.50 | 1 (0.00–10.40 s) | 0.910 | yes |
+| large-v3 | CPU, 8 threads | 8.70 s | 0.79 | 3 (0–3, 3–8, 8–11 s) | 0.915 | yes |
+
+Observations:
+- Both models run on this CPU build and the JSON matches the parser (§5.1).
+- Turbo returned one long segment where large-v3 split at phrase boundaries. Segment length matters for review and
+  chunk planning (T08); check this on the Portuguese long file.
+- CPU large-v3 is close to real time (RTF 0.79, about 47 min per hour of transcribed audio) even on a 9800X3D, and
+  transcription runs per speaker track. Only speech after pause removal counts, but a full session is still hours
+  on CPU. The Vulkan build is what makes large-v3 practical, so step 2 is still required for the S04 decision.
+- RTF here is measured on an 11 s clip, which overstates model-load overhead; use the long-file numbers (§5.3).
+
 ### 5.1 Environment and provenance
 
 | Item | Value |
 |---|---|
-| Date of runs | |
-| Windows version / build | |
-| GPU | |
+| Date of runs | 2026-11-08 (agent CPU smoke test only; see §5.0) |
+| Windows version / build | Windows 11 Pro 10.0.26300 |
+| GPU | AMD Radeon RX 9070 XT (CPU: AMD Ryzen 7 9800X3D, AVX-512) |
 | AMD Adrenalin version | |
-| Windows `DriverVersion` | |
-| Vulkan `apiVersion` / `driverVersion` (vulkaninfo) | |
-| whisper.cpp tag and commit | |
-| Binary source (built: CMake / MSVC / Vulkan SDK versions; or prebuilt: URL + archive sha256) | |
-| `whisper-cli.exe` sha256 | |
-| ffmpeg version and source | |
-| `ggml-large-v3-turbo.bin` sha256 / size | |
-| `ggml-large-v3.bin` sha256 / size | |
+| Windows `DriverVersion` | 32.0.32015.7029 |
+| Vulkan `apiVersion` / `driverVersion` (vulkaninfo) | 1.4.359 / 2.0.416 |
+| whisper.cpp tag and commit | v1.9.5, release build `b5454` (2026-10-06) |
+| Binary source (built: CMake / MSVC / Vulkan SDK versions; or prebuilt: URL + archive sha256) | Prebuilt **CPU-only** `whisper-bin-x64.zip` from https://github.com/ggml-org/whisper.cpp/releases/download/b5454/whisper-bin-x64.zip, sha256 `6ba69e3482d7826214f90a6a9c84ca07782aec1e1d0c6a7c30c994fd5d816ccb`. No prebuilt Windows Vulkan build exists in recent releases (CPU, BLAS and CUDA only); a Vulkan build must be compiled (step 2). |
+| `whisper-cli.exe` sha256 | `331dba46d6427105d2b802cdbc7eae916ea1c5abf9b0d3b5cfe460d8db8e4366` (CPU build) |
+| ffmpeg version and source | 9.0.2 full build, winget `Gyan.FFmpeg` |
+| `ggml-large-v3-turbo.bin` sha256 / size | `1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69` / 1,624,555,275 bytes (matches Hugging Face LFS oid) |
+| `ggml-large-v3.bin` sha256 / size | `64d182b440b98d5203c4f9bd541544d84c605196c4f7b845dfa11fb23594d1e2` / 3,095,033,483 bytes (matches Hugging Face LFS oid) |
 | Other models (quantized, VAD) sha256 | |
 | Glossary prompt sha256 (from `results.json`) | |
 | Prompt diacritics passed intact on Windows? (step 6) | |
-| JSON shape matches fixture? Differences: | |
+| JSON shape matches fixture? Differences: | Yes for v1.9.5 `-ojf`: `npm run parse` on real output reports no warnings for both models (top-level `systeminfo, model, params, result, transcription`; per-token `text, timestamps, offsets, id, p, t_dtw`). |
 
 ### 5.2 Vulkan reliability
 
