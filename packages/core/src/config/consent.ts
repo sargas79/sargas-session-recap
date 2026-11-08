@@ -5,6 +5,10 @@
  *
  * Rules (fail closed):
  * - `provider` must be the one configured for `stage` in campaign.yaml.
+ * - Every speaker must be listed in campaign.yaml (in both modes).
+ * - `consent_mode: implied` (switch with `recap config consent off`): attending the session is
+ *   consent, so no records are checked. The receipt says `mode: implied` so runs stay traceable.
+ * - `consent_mode: records` (the default) also applies the record rules below.
  * - Each speaker must exist in campaign.yaml and have an active consent record whose `purpose` is
  *   the stage and whose `provider` is exactly that provider. Consent is per provider: changing a
  *   stage's provider requires new records.
@@ -14,10 +18,12 @@
  *   on or after that grant (on whichever record) refuses: a later withdrawal always wins.
  * - An empty speaker list is refused.
  */
-import type {
-  CampaignConfig,
-  CampaignConsentRecord,
-  ConsentPurpose,
+import {
+  consentModeOf,
+  type CampaignConfig,
+  type CampaignConsentRecord,
+  type ConsentMode,
+  type ConsentPurpose,
 } from '@sargas-recap/contracts';
 import { consentPolicyHash } from './hashes.ts';
 import { ConsentError, type ConsentRefusal, type ConsentRefusalReason } from './errors.ts';
@@ -35,6 +41,8 @@ export interface AssertConsentInput {
 
 export interface ConsentReceipt {
   readonly stage: ConsentPurpose;
+  /** `implied` when consent_mode is off: no records were checked. */
+  readonly mode: ConsentMode;
   readonly provider: string;
   readonly speaker_ids: readonly string[];
   readonly policy_hash: Sha256;
@@ -100,6 +108,7 @@ export function assertConsent(input: AssertConsentInput): ConsentReceipt {
     );
   }
 
+  const mode = consentModeOf(campaign);
   const bySpeaker = new Map(campaign.speakers.map((s) => [s.speaker_id, s]));
   const refusals: ConsentRefusal[] = [];
   for (const id of speakerIds) {
@@ -108,27 +117,30 @@ export function assertConsent(input: AssertConsentInput): ConsentReceipt {
       refusals.push({ speaker_id: id, reason: 'unknown-speaker' });
       continue;
     }
-    if (
-      stage !== 'recording' &&
-      refusalFor(speaker.consent, 'recording', undefined, day) !== null
-    ) {
+    if (mode === 'implied') continue;
+    const records = speaker.consent ?? [];
+    if (stage !== 'recording' && refusalFor(records, 'recording', undefined, day) !== null) {
       refusals.push({ speaker_id: id, reason: 'no-recording-consent' });
       continue;
     }
-    const reason = refusalFor(speaker.consent, stage, provider, day);
+    const reason = refusalFor(records, stage, provider, day);
     if (reason !== null) refusals.push({ speaker_id: id, reason });
   }
   if (refusals.length > 0) {
+    const unknownOnly = refusals.every((r) => r.reason === 'unknown-speaker');
     throw new ConsentError(
       'CONSENT_MISSING',
       stage,
       provider,
       refusals,
-      'missing recorded consent; add a consent record to campaign.yaml after obtaining it',
+      unknownOnly
+        ? 'speaker not listed in campaign.yaml; add them to speakers first'
+        : 'missing recorded consent; add a consent record to campaign.yaml after obtaining it, or turn record checks off with `recap config consent off <campaign.yaml>`',
     );
   }
   return {
     stage,
+    mode,
     provider,
     speaker_ids: speakerIds,
     policy_hash: consentPolicyHash(campaign),

@@ -8,7 +8,7 @@ import {
   consentPolicyHash,
   type AssertConsentInput,
 } from '../../src/config/index.ts';
-import { at, campaign } from './helpers.ts';
+import { at, campaign, recordsOf } from './helpers.ts';
 
 const NOW = new Date('2026-03-15T12:00:00Z');
 
@@ -34,6 +34,7 @@ describe('assertConsent', () => {
     });
     expect(receipt).toEqual({
       stage: 'recap',
+      mode: 'records',
       provider: 'claude-cli',
       speaker_ids: ['gm', 'player-ana'],
       policy_hash: consentPolicyHash(c),
@@ -92,7 +93,7 @@ describe('assertConsent', () => {
   it('a newer grant after a withdrawal restores consent; a newer withdrawal wins', () => {
     const c = campaign();
     const bruno = at(c.speakers, 2);
-    bruno.consent.push({
+    recordsOf(bruno).push({
       purpose: 'classification',
       provider: 'claude-cli',
       granted_on: '2026-03-01',
@@ -104,7 +105,7 @@ describe('assertConsent', () => {
       stage: 'classification',
     } as const;
     expect(() => assertConsent({ ...input, now: NOW })).not.toThrow();
-    bruno.consent.push({
+    recordsOf(bruno).push({
       purpose: 'classification',
       provider: 'claude-cli',
       granted_on: '2026-03-01',
@@ -117,16 +118,16 @@ describe('assertConsent', () => {
     const c = campaign();
     const bruno = at(c.speakers, 2);
     // Granted 2026-01-01 (fixture), re-granted 2026-03-01, then the old record is withdrawn later.
-    bruno.consent.push({
+    recordsOf(bruno).push({
       purpose: 'classification',
       provider: 'claude-cli',
       granted_on: '2026-03-01',
     });
-    const old = bruno.consent.findIndex(
+    const old = recordsOf(bruno).findIndex(
       (r) => r.purpose === 'classification' && r.granted_on < '2026-03-01',
     );
     expect(old).toBeGreaterThanOrEqual(0);
-    bruno.consent[old] = { ...at(bruno.consent, old), withdrawn_on: '2026-03-05' };
+    recordsOf(bruno)[old] = { ...at(recordsOf(bruno), old), withdrawn_on: '2026-03-05' };
     const input = {
       campaign: c,
       speakerIds: ['player-bruno'],
@@ -136,10 +137,73 @@ describe('assertConsent', () => {
     expect(refusal(input).refusals[0]?.reason).toBe('withdrawn');
   });
 
+  describe('consent_mode: implied', () => {
+    const implied = () => {
+      const c = campaign();
+      c.consent_mode = 'implied';
+      for (const sp of c.speakers) delete sp.consent;
+      return c;
+    };
+
+    it('allows every listed speaker without any consent records', () => {
+      const c = implied();
+      const receipt = assertConsent({
+        campaign: c,
+        speakerIds: c.speakers.map((sp) => sp.speaker_id),
+        provider: 'claude-cli',
+        stage: 'recap',
+        now: NOW,
+      });
+      expect(receipt.mode).toBe('implied');
+      expect(receipt.policy_hash).toBe(consentPolicyHash(c));
+    });
+
+    it('ignores withdrawn or missing records', () => {
+      const c = campaign();
+      c.consent_mode = 'implied';
+      // player-bruno's classification consent is withdrawn in the fixture.
+      expect(() =>
+        assertConsent({
+          campaign: c,
+          speakerIds: ['player-bruno'],
+          provider: 'claude-cli',
+          stage: 'classification',
+          now: NOW,
+        }),
+      ).not.toThrow();
+    });
+
+    it('still refuses speakers that are not listed in campaign.yaml', () => {
+      const r = refusal({
+        campaign: implied(),
+        speakerIds: ['gm', 'stray-track'],
+        provider: 'claude-cli',
+        stage: 'recap',
+      });
+      expect(r.refusals).toEqual([{ speaker_id: 'stray-track', reason: 'unknown-speaker' }]);
+    });
+
+    it('still refuses a provider that is not configured for the stage', () => {
+      expect(
+        refusal({ campaign: implied(), speakerIds: ['gm'], provider: 'other-llm', stage: 'recap' })
+          .code,
+      ).toBe('CONSENT_PROVIDER_NOT_CONFIGURED');
+    });
+
+    it('changes the consent policy hash, so runs record which mode applied', () => {
+      const c = campaign();
+      const before = consentPolicyHash(c);
+      c.consent_mode = 'implied';
+      expect(consentPolicyHash(c)).not.toBe(before);
+      c.consent_mode = 'records';
+      expect(consentPolicyHash(c)).toBe(before);
+    });
+  });
+
   it('requires active recording consent for AI stages', () => {
     const c = campaign();
     const ana = at(c.speakers, 1);
-    ana.consent[0] = { ...at(ana.consent, 0), withdrawn_on: '2026-03-01' };
+    recordsOf(ana)[0] = { ...at(recordsOf(ana), 0), withdrawn_on: '2026-03-01' };
     const err = refusal({
       campaign: c,
       speakerIds: ['player-ana'],
@@ -199,7 +263,7 @@ describe('assertConsent', () => {
         refusal({ campaign: c, speakerIds: ['gm'], provider: 'claude-cli', stage: 'recap' }).code,
       ).toBe('CONSENT_PROVIDER_NOT_CONFIGURED');
       for (const s of c.speakers.slice(0, 2)) {
-        s.consent.push({ purpose: 'recap', provider: 'other-llm', granted_on: '2026-03-02' });
+        recordsOf(s).push({ purpose: 'recap', provider: 'other-llm', granted_on: '2026-03-02' });
       }
       expect(() =>
         assertConsent({

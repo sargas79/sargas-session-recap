@@ -34,5 +34,11 @@
       "path": "/speakers/1/<key>",
       "keyword": "additionalProperties"
     }
+  ],
+  "invalid-unknown-consent-mode.json": [
+    {
+      "path": "/consent_mode",
+      "keyword": "enum"
+    }
   ]
 }

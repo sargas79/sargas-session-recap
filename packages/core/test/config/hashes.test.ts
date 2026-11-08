@@ -8,7 +8,7 @@ import {
   DEPENDENCY_STAGES,
   type DependencyStage,
 } from '../../src/config/index.ts';
-import { at, campaign, glossary } from './helpers.ts';
+import { at, campaign, glossary, recordsOf } from './helpers.ts';
 
 type Mutation = (c: CampaignConfig, g: Glossary) => void;
 
@@ -70,7 +70,7 @@ describe('stage dependency hashes', () => {
     [
       'consent records',
       (c) =>
-        c.speakers[2]?.consent.push({
+        recordsOf(at(c.speakers, 2)).push({
           purpose: 'recap',
           provider: 'claude-cli',
           granted_on: '2026-03-01',
@@ -97,7 +97,7 @@ describe('stage dependency hashes', () => {
 
   it('consent changes leave stage hashes alone but change the campaign and consent hashes', () => {
     const r = changedStages((c) => {
-      const rec = c.speakers[2]?.consent[2];
+      const rec = c.speakers[2]?.consent?.[2];
       if (rec) delete rec.withdrawn_on;
     });
     expect(r).toEqual({ stages: [], campaign: true, glossary: false, consent: true });

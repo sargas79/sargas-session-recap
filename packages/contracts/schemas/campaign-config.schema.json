@@ -33,6 +33,14 @@
       "pattern": "^[a-z]{2,3}(?:-[A-Z]{2})?$",
       "type": "string"
     },
+    "consent_mode": {
+      "description": "How consent is established: `records` (default) or `implied` (attending the session is consent).",
+      "type": "string",
+      "enum": [
+        "records",
+        "implied"
+      ]
+    },
     "background": {
       "minLength": 1,
       "maxLength": 8000,
@@ -81,8 +89,7 @@
         "type": "object",
         "required": [
           "speaker_id",
-          "role",
-          "consent"
+          "role"
         ],
         "properties": {
           "speaker_id": {
@@ -119,7 +126,7 @@
           },
           "consent": {
             "maxItems": 64,
-            "description": "Consent records (synthetic in git; real ones live in the data root).",
+            "description": "Consent records (synthetic in git; real ones live in the data root). Not needed when consent_mode is `implied`.",
             "type": "array",
             "items": {
               "additionalProperties": false,

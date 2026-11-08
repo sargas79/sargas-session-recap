@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import type { CampaignConfig, Glossary } from '@sargas-recap/contracts';
+import type { CampaignConfig, Glossary, CampaignConsentRecord } from '@sargas-recap/contracts';
 import { parseCampaignConfig, parseGlossary } from '../../src/config/index.ts';
 
 export const CAMPAIGN_FILE = fileURLToPath(
@@ -26,4 +26,10 @@ export function at<T>(arr: readonly T[], i: number): T {
 
 export function glossary(): Glossary {
   return structuredClone(parseGlossary(glossaryText()).value);
+}
+
+/** A speaker's consent list, created when absent (consent is optional in the schema). */
+export function recordsOf(speaker: { consent?: CampaignConsentRecord[] }): CampaignConsentRecord[] {
+  speaker.consent ??= [];
+  return speaker.consent;
 }

@@ -19,7 +19,12 @@
  * spelling) and normalize defaults (`is_english_term` false, `mishearings` []), so writing a default
  * explicitly does not invalidate anything.
  */
-import type { CampaignConfig, Glossary, GlossaryEntry } from '@sargas-recap/contracts';
+import {
+  consentModeOf,
+  type CampaignConfig,
+  type Glossary,
+  type GlossaryEntry,
+} from '@sargas-recap/contracts';
 import { contentHash, type Sha256 } from './canonical.ts';
 
 export const DEPENDENCY_STAGES = ['asr', 'classification', 'recap'] as const;
@@ -117,7 +122,7 @@ export function stageDependencyHash(
 }
 
 /**
- * Hash of the consent policy (every speaker's consent records), for the manifest consent snapshot
+ * Hash of the consent policy (consent mode and every speaker's consent records), for the manifest consent snapshot
  * `policy_hash` (ADR-001). Order-independent across speakers.
  */
 export function consentPolicyHash(campaign: CampaignConfig): Sha256 {
@@ -125,10 +130,11 @@ export function consentPolicyHash(campaign: CampaignConfig): Sha256 {
     projection: 'consent-policy',
     version: PROJECTION_VERSION,
     campaign_id: campaign.campaign_id,
+    consent_mode: consentModeOf(campaign),
     provider: campaign.provider,
     speakers: [...campaign.speakers]
       .sort((a, b) => byCodeUnit(a.speaker_id, b.speaker_id))
-      .map((s) => ({ speaker_id: s.speaker_id, consent: s.consent })),
+      .map((s) => ({ speaker_id: s.speaker_id, consent: s.consent ?? [] })),
   });
 }
 

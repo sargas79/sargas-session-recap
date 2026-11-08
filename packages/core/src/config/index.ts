@@ -5,6 +5,7 @@
  */
 export { assertConsent, type AssertConsentInput, type ConsentReceipt } from './consent.ts';
 export { canonicalJson, contentHash, type Sha256 } from './canonical.ts';
+export { readConsentMode, setConsentMode, type ConsentModeChange } from './consent-mode.ts';
 export {
   ConfigError,
   ConsentError,

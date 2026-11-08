@@ -9,6 +9,16 @@ import { CONSENT_SCOPES } from './manifest.ts';
 export const CONSENT_PURPOSES = CONSENT_SCOPES;
 export type ConsentPurpose = (typeof CONSENT_PURPOSES)[number];
 
+/**
+ * How consent is established for the campaign (T04):
+ * - `records`: every included speaker needs an active, dated consent record per purpose and provider.
+ * - `implied`: taking part in the session is consent. No records are needed; only speakers listed in
+ *   campaign.yaml are processed. Switch with `recap config consent on|off <campaign.yaml>`.
+ */
+export const CONSENT_MODES = ['records', 'implied'] as const;
+export type ConsentMode = (typeof CONSENT_MODES)[number];
+export const DEFAULT_CONSENT_MODE: ConsentMode = 'records';
+
 export const SPEAKER_ROLES = ['gm', 'player', 'guest'] as const;
 export type SpeakerRole = (typeof SPEAKER_ROLES)[number];
 
@@ -59,10 +69,13 @@ const Speaker = Type.Object(
         description: 'Character names this speaker plays (classification and recap context).',
       }),
     ),
-    consent: Type.Array(ConsentRecord, {
-      maxItems: 64,
-      description: 'Consent records (synthetic in git; real ones live in the data root).',
-    }),
+    consent: Type.Optional(
+      Type.Array(ConsentRecord, {
+        maxItems: 64,
+        description:
+          'Consent records (synthetic in git; real ones live in the data root). Not needed when consent_mode is `implied`.',
+      }),
+    ),
   },
   { additionalProperties: false },
 );
@@ -77,6 +90,12 @@ export const CampaignConfigSchema = Type.Object(
     campaign_id: CampaignId(),
     system: Slug({ description: 'Game system, e.g. `pf2e`.' }),
     language: Language(),
+    consent_mode: Type.Optional(
+      StringEnum(CONSENT_MODES, {
+        description:
+          'How consent is established: `records` (default) or `implied` (attending the session is consent).',
+      }),
+    ),
     background: Type.Optional(
       Type.String({
         minLength: 1,
@@ -99,4 +118,9 @@ export const CampaignConfigSchema = Type.Object(
 );
 export type CampaignConfig = Static<typeof CampaignConfigSchema>;
 export type CampaignSpeaker = CampaignConfig['speakers'][number];
-export type CampaignConsentRecord = CampaignSpeaker['consent'][number];
+export type CampaignConsentRecord = NonNullable<CampaignSpeaker['consent']>[number];
+
+/** The effective consent mode (`records` when not set). */
+export function consentModeOf(campaign: Pick<CampaignConfig, 'consent_mode'>): ConsentMode {
+  return campaign.consent_mode ?? DEFAULT_CONSENT_MODE;
+}

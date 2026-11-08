@@ -84,7 +84,7 @@ function campaignRules(value: CampaignConfig): ConfigIssue[] {
         message: `duplicates /speakers/${String(seen)}/speaker_id`,
       });
     }
-    speaker.consent.forEach((record, j) => {
+    (speaker.consent ?? []).forEach((record, j) => {
       if (record.withdrawn_on !== undefined && record.withdrawn_on < record.granted_on) {
         issues.push({
           path: `/speakers/${String(i)}/consent/${String(j)}/withdrawn_on`,

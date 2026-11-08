@@ -229,10 +229,23 @@ Allow `github.com` or install the "Desktop development with C++" workload.
 
 ## Campaign config and consent
 
-Each campaign has a `campaign.yaml` (speakers, per-stage provider, consent records) and a
+Each campaign has a `campaign.yaml` (speakers, per-stage provider, consent mode and records) and a
 `glossary.yaml`. Keep both in the data root, never in the repository: they name real people and record
 their consent. Start from the synthetic examples in `fixtures/config/`. Notepad's UTF-8 (with or without
 BOM) and CRLF line endings are fine.
+
+- **Consent switch.** By default recap checks consent records (below). If attending your table is
+  consent enough, turn the checks off for that campaign; turn them back on the same way:
+
+  ```powershell
+  npm run recap -- config consent off "D:\Recap Data\campaigns\my-campaign\campaign.yaml"
+  npm run recap -- config consent status "D:\Recap Data\campaigns\my-campaign\campaign.yaml"
+  npm run recap -- config consent on "D:\Recap Data\campaigns\my-campaign\campaign.yaml"
+  ```
+
+  This sets `consent_mode: implied` (off) or `records` (on) in `campaign.yaml`, keeping your comments.
+  When off, speakers need no `consent:` entries, but only speakers listed in `campaign.yaml` are
+  processed, and every run records that consent was implied.
 
 - Consent is recorded per speaker, per purpose (`recording`, `asr`, `classification`, `recap`) and per
   provider, with the date (`granted_on: 2026-01-10`, optional `withdrawn_on`). Keep signed forms or call
