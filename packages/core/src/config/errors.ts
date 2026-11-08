@@ -8,7 +8,7 @@
  */
 import type { ConsentPurpose } from '@sargas-recap/contracts';
 
-export type ConfigKind = 'campaign-config' | 'glossary';
+export type ConfigKind = 'campaign-config' | 'glossary' | 'import-mapping';
 
 export type ConfigErrorCode =
   | 'CONFIG_READ_FAILED'

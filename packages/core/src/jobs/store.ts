@@ -13,10 +13,10 @@ import {
   type JobStage,
   type JobStatus,
 } from './state.ts';
+import { ULID_RE } from '../ids/ulid.ts';
 
 const HASH_RE = /^sha256:[0-9a-f]{64}$/;
 const REL_PATH_RE = /^[A-Za-z0-9_-][A-Za-z0-9._-]*(?:\/[A-Za-z0-9_-][A-Za-z0-9._-]*)*$/;
-const ULID_RE = /^[0-7][0-9A-HJKMNP-TV-Z]{25}$/;
 const MAX_SAFE = Number.MAX_SAFE_INTEGER;
 const MAX_MESSAGE = 500;
 

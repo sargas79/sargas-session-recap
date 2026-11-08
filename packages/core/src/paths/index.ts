@@ -14,7 +14,12 @@ export {
   type ResolvedDataRoot,
 } from './resolve.ts';
 export { assertDataRootOutsideRepo, findEnclosingGit, type ExistsFn } from './repo-guard.ts';
-export { createDataPaths, DB_FILE_NAME, type DataPaths } from './layout.ts';
+export {
+  CAMPAIGN_CONFIG_FILE_NAME,
+  createDataPaths,
+  DB_FILE_NAME,
+  type DataPaths,
+} from './layout.ts';
 export {
   checkDataRoot,
   formatBytes,

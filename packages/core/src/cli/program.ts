@@ -6,6 +6,7 @@ import {
   type AudioToolCheck,
   type AudioToolchainOptions,
 } from '../audio/index.ts';
+import { registerImportCommands } from '../capture/cli.ts';
 import { registerConfigCommands } from '../config/cli.ts';
 import { registerJobCommands } from '../jobs/cli.ts';
 import { registerPackageCommands } from '../package/cli.ts';
@@ -115,6 +116,7 @@ export function buildProgram(io: CliIo = defaultIo): Command {
       }
     });
 
+  registerImportCommands(program, io, { toolVersion: readVersion() });
   registerPackageCommands(program, io);
   registerConfigCommands(program, io);
   registerJobCommands(program, io);

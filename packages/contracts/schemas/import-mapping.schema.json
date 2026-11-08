@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sargas-recap:schema:import-mapping:v1",
+  "title": "Multitrack import mapping",
+  "$comment": "Generated from packages/contracts/src by npm run schemas. Do not edit. Stored as: recap-tracks.yaml next to the imported tracks, or --mapping (T05).",
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "schema_version",
+    "tracks"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Per-record schema version (ADR-002).",
+      "const": 1,
+      "type": "number"
+    },
+    "recorder": {
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+      "description": "Provider that recorded the tracks. Must be campaign.yaml provider.recording (consent is per provider). Default: that provider.",
+      "type": "string"
+    },
+    "origin_uncertainty_ms": {
+      "minimum": 0,
+      "maximum": 9007199254740991,
+      "description": "Uncertainty of the provisional session origin (ADR-003). Default 0.",
+      "type": "integer"
+    },
+    "default_timing_uncertainty_ms": {
+      "minimum": 0,
+      "maximum": 9007199254740991,
+      "description": "timing_uncertainty_ms for tracks that do not set one. Default 0.",
+      "type": "integer"
+    },
+    "tracks": {
+      "minItems": 1,
+      "maxItems": 256,
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "file",
+          "speaker_id"
+        ],
+        "properties": {
+          "file": {
+            "pattern": "^(?!\\.\\.?$)[^\\\\/:*?\"<>|\\u0000-\\u001F\\u007F]{1,255}$",
+            "description": "File name of the track in the import directory (no sub-directories).",
+            "type": "string"
+          },
+          "speaker_id": {
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+            "description": "Speaker identifier from campaign config.",
+            "type": "string"
+          },
+          "start_offset_ms": {
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Session offset of the first sample of this track (ADR-003). Default 0: the track starts at session zero.",
+            "type": "integer"
+          },
+          "timing_uncertainty_ms": {
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Bound on the error of start_offset_ms. Default: the mapping default.",
+            "type": "integer"
+          },
+          "label": {
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[^\\u0000-\\u001F\\u007F]+$",
+            "description": "Track label recorded in fragments.jsonl. Default: the file name.",
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

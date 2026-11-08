@@ -5,6 +5,7 @@ import { EffectiveTranscriptSchema } from './schemas/effective-transcript.ts';
 import { FoundryEventSchema } from './schemas/foundry-event.ts';
 import { FragmentSchema } from './schemas/fragment.ts';
 import { GlossarySchema } from './schemas/glossary.ts';
+import { ImportMappingSchema } from './schemas/import-mapping.ts';
 import { JobRecordSchema } from './schemas/job-record.ts';
 import { ManifestSchema } from './schemas/manifest.ts';
 import { RecapApprovalSchema } from './schemas/recap-approval.ts';
@@ -82,6 +83,11 @@ export const CONTRACTS = {
     schema: GlossarySchema,
     title: 'Campaign glossary',
     where: 'glossary.yaml in the data root, outside git (T04)',
+  },
+  'import-mapping': {
+    schema: ImportMappingSchema,
+    title: 'Multitrack import mapping',
+    where: 'recap-tracks.yaml next to the imported tracks, or --mapping (T05)',
   },
   'recap-sentence-edit': {
     schema: RecapSentenceEditSchema,

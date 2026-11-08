@@ -8,6 +8,7 @@ import {
   SchemaVersion1,
   SessionId,
   SessionOffsetMs,
+  Slug,
   SpeakerId,
   StringEnum,
   Timestamp,
@@ -47,6 +48,15 @@ const ConsentProvenance = Type.Object(
     policy_hash: Hash({
       description: 'Hash of the consent policy/config applied at capture (T04).',
     }),
+    mode: Type.Optional(
+      StringEnum(['records', 'implied'] as const, {
+        description:
+          'Consent mode of the receipt (T04): `records` (dated records checked) or `implied` (attendance is consent).',
+      }),
+    ),
+    provider: Type.Optional(
+      Slug({ description: 'Provider the consent check was made for (receipt of assertConsent).' }),
+    ),
     recorded_at: Timestamp(),
   },
   { additionalProperties: false },

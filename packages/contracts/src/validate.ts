@@ -7,6 +7,7 @@ import type { EffectiveTranscript } from './schemas/effective-transcript.ts';
 import type { FoundryEvent } from './schemas/foundry-event.ts';
 import type { Fragment } from './schemas/fragment.ts';
 import type { Glossary } from './schemas/glossary.ts';
+import type { ImportMapping } from './schemas/import-mapping.ts';
 import type { JobRecord } from './schemas/job-record.ts';
 import type { Manifest } from './schemas/manifest.ts';
 import type { RecapApproval } from './schemas/recap-approval.ts';
@@ -46,6 +47,7 @@ export interface ContractTypes {
   'job-record': JobRecord;
   'campaign-config': CampaignConfig;
   glossary: Glossary;
+  'import-mapping': ImportMapping;
   'recap-sentence-edit': RecapSentenceEdit;
   'recap-editorial-transition': RecapEditorialTransition;
   'recap-approval': RecapApproval;
@@ -211,6 +213,7 @@ export const validateRecapPackage = (data: unknown) => validateContract('recap-p
 export const validateJobRecord = (data: unknown) => validateContract('job-record', data);
 export const validateCampaignConfig = (data: unknown) => validateContract('campaign-config', data);
 export const validateGlossary = (data: unknown) => validateContract('glossary', data);
+export const validateImportMapping = (data: unknown) => validateContract('import-mapping', data);
 export const validateRecapSentenceEdit = (data: unknown) =>
   validateContract('recap-sentence-edit', data);
 export const validateRecapEditorialTransition = (data: unknown) =>

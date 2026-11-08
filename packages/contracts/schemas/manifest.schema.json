@@ -275,6 +275,19 @@
             "description": "Hash of the consent policy/config applied at capture (T04).",
             "type": "string"
           },
+          "mode": {
+            "description": "Consent mode of the receipt (T04): `records` (dated records checked) or `implied` (attendance is consent).",
+            "type": "string",
+            "enum": [
+              "records",
+              "implied"
+            ]
+          },
+          "provider": {
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+            "description": "Provider the consent check was made for (receipt of assertConsent).",
+            "type": "string"
+          },
           "recorded_at": {
             "format": "date-time",
             "maxLength": 40,

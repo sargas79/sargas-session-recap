@@ -40,5 +40,11 @@
       "path": "/package_id",
       "keyword": "required"
     }
+  ],
+  "invalid-unknown-consent-mode.json": [
+    {
+      "path": "/consent/0/mode",
+      "keyword": "enum"
+    }
   ]
 }

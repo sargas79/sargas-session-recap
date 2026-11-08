@@ -11,6 +11,7 @@ import {
   validateContract,
   type CampaignConfig,
   type Glossary,
+  type ImportMapping,
   type ValidationIssue,
 } from '@sargas-recap/contracts';
 import { contentHash, type Sha256 } from './canonical.ts';
@@ -36,6 +37,7 @@ export interface LoadedConfig<T> {
 interface KindTypes {
   'campaign-config': CampaignConfig;
   glossary: Glossary;
+  'import-mapping': ImportMapping;
 }
 
 const UTF8 = new TextDecoder('utf-8', { fatal: true, ignoreBOM: false });
@@ -114,6 +116,36 @@ function glossaryRules(value: Glossary): ConfigIssue[] {
   return issues;
 }
 
+function importMappingRules(value: ImportMapping): ConfigIssue[] {
+  const issues: ConfigIssue[] = [];
+  const firstIndex = new Map<string, number>();
+  value.tracks.forEach((track, i) => {
+    // Case-insensitive: on Windows `GM.flac` and `gm.flac` are the same file.
+    const key = track.file.toLowerCase();
+    const seen = firstIndex.get(key);
+    if (seen === undefined) firstIndex.set(key, i);
+    else {
+      issues.push({
+        path: `/tracks/${String(i)}/file`,
+        keyword: 'unique',
+        message: `duplicates /tracks/${String(seen)}/file (names are compared ignoring case)`,
+      });
+    }
+  });
+  return issues;
+}
+
+function semanticRules(kind: ConfigKind, value: unknown): ConfigIssue[] {
+  switch (kind) {
+    case 'campaign-config':
+      return campaignRules(value as CampaignConfig);
+    case 'glossary':
+      return glossaryRules(value as Glossary);
+    case 'import-mapping':
+      return importMappingRules(value as ImportMapping);
+  }
+}
+
 function parseConfig<K extends ConfigKind>(
   kind: K,
   text: string,
@@ -135,10 +167,7 @@ function parseConfig<K extends ConfigKind>(
     );
   }
   const value = result.value as KindTypes[K];
-  const semantic =
-    kind === 'campaign-config'
-      ? campaignRules(value as CampaignConfig)
-      : glossaryRules(value as Glossary);
+  const semantic = semanticRules(kind, value);
   if (semantic.length > 0) {
     throw new ConfigError(
       'CONFIG_INVALID',
@@ -214,4 +243,21 @@ export function loadGlossary(
   options: LoadOptions = {},
 ): Promise<LoadedConfig<Glossary>> {
   return loadConfig('glossary', file, options);
+}
+
+/** Parse and validate import mapping text (YAML or JSON, T05). Throws {@link ConfigError}. */
+export function parseImportMapping(
+  text: string,
+  file = 'recap-tracks.yaml',
+  options: LoadOptions = {},
+): LoadedConfig<ImportMapping> {
+  return parseConfig('import-mapping', text, file, options.maxBytes ?? DEFAULT_MAX_CONFIG_BYTES);
+}
+
+/** Read, parse and validate an import mapping file (T05). Throws {@link ConfigError}. */
+export function loadImportMapping(
+  file: string,
+  options: LoadOptions = {},
+): Promise<LoadedConfig<ImportMapping>> {
+  return loadConfig('import-mapping', file, options);
 }
