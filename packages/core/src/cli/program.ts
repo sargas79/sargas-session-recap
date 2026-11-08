@@ -6,6 +6,7 @@ import {
   type AudioToolCheck,
   type AudioToolchainOptions,
 } from '../audio/index.ts';
+import { registerPackageCommands } from '../package/cli.ts';
 
 /** Output channel, injectable so the program can be tested in-process. */
 export interface CliIo {
@@ -92,6 +93,8 @@ export function buildProgram(io: CliIo = defaultIo): Command {
         process.exitCode = 1;
       }
     });
+
+  registerPackageCommands(program, io);
 
   return program;
 }
