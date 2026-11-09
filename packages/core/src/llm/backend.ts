@@ -14,7 +14,7 @@ import {
   validateContract,
   type CampaignConfig,
   type ClassificationModelResult,
-  type Recap,
+  type RecapModelOutput,
   type ValidationIssue,
 } from '@sargas-recap/contracts';
 import { assertConsent } from '../config/consent.ts';
@@ -71,7 +71,8 @@ export interface LlmBackend {
   classify(
     call: LlmCall<ClassificationModelResult[]>,
   ): Promise<LlmResult<ClassificationModelResult[]>>;
-  writeRecap(call: LlmCall<Recap>): Promise<LlmResult<Recap>>;
+  /** Returns what the model can know; the recap stage (T13) completes and validates the record. */
+  writeRecap(call: LlmCall<RecapModelOutput>): Promise<LlmResult<RecapModelOutput>>;
 }
 
 export interface LlmBackendOptions {
@@ -113,8 +114,8 @@ function parseClassification(output: unknown): ClassificationModelResult[] {
   return result.value.results;
 }
 
-function parseRecap(output: unknown): Recap {
-  const result = validateContract('recap', output);
+function parseRecap(output: unknown): RecapModelOutput {
+  const result = validateContract('recap-model-output', output);
   if (!result.ok) throw schemaFailure(result.errors);
   return result.value;
 }
@@ -248,6 +249,6 @@ export function createLlmBackend(options: LlmBackendOptions): LlmBackend {
   return {
     classify: (call) =>
       run('classification', call, modelSchema('classification-window-output'), parseClassification),
-    writeRecap: (call) => run('recap', call, modelSchema('recap'), parseRecap),
+    writeRecap: (call) => run('recap', call, modelSchema('recap-model-output'), parseRecap),
   };
 }

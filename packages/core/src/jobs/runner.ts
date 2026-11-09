@@ -247,6 +247,7 @@ export async function runStage(options: RunOptions): Promise<RunReport> {
         break;
       }
       const ctx: InputContext = {
+        db,
         campaignId,
         sessionId,
         paths: options.paths,

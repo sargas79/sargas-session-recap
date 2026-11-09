@@ -1,0 +1,7 @@
+{
+  "invalid-pipeline-field.json": [{ "path": "/recap_revision", "keyword": "additionalProperties" }],
+  "invalid-full-segment-id.json": [
+    { "path": "/sentences/0/citations/segment_refs/0", "keyword": "pattern" }
+  ],
+  "invalid-no-sentences.json": [{ "path": "/sentences", "keyword": "minItems" }]
+}

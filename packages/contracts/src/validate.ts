@@ -17,6 +17,7 @@ import type { Manifest } from './schemas/manifest.ts';
 import type { RecapApproval } from './schemas/recap-approval.ts';
 import type { RecapEditorialTransition } from './schemas/recap-editorial-transition.ts';
 import type { RecapExportManifest } from './schemas/recap-export-manifest.ts';
+import type { RecapModelOutput } from './schemas/recap-model-output.ts';
 import type { RecapPackage } from './schemas/recap-package.ts';
 import type { RecapSentenceEdit } from './schemas/recap-sentence-edit.ts';
 import type { Recap } from './schemas/recap.ts';
@@ -52,6 +53,7 @@ export interface ContractTypes {
   'effective-transcript': EffectiveTranscript;
   'effective-transcript-review': EffectiveTranscriptReview;
   recap: Recap;
+  'recap-model-output': RecapModelOutput;
   'recap-package': RecapPackage;
   'job-record': JobRecord;
   'campaign-config': CampaignConfig;

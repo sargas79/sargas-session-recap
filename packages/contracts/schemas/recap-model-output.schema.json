@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sargas-recap:schema:recap-model-output:v1",
+  "title": "Recap model output",
+  "$comment": "Generated from packages/contracts/src by npm run schemas. Do not edit. Stored as: the response of one LLM call (T13); core turns it into a recap record.",
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "schema_version",
+    "title",
+    "sentences",
+    "gm_notes"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Per-record schema version (ADR-002).",
+      "const": 1,
+      "type": "number"
+    },
+    "title": {
+      "minLength": 1,
+      "maxLength": 200,
+      "type": "string"
+    },
+    "sentences": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "text",
+          "assertion",
+          "citations"
+        ],
+        "properties": {
+          "text": {
+            "minLength": 1,
+            "maxLength": 2000,
+            "type": "string"
+          },
+          "assertion": {
+            "type": "string",
+            "enum": [
+              "completed",
+              "proposed",
+              "ongoing",
+              "background"
+            ]
+          },
+          "outcome_basis": {
+            "type": "string",
+            "enum": [
+              "roll",
+              "narrative"
+            ]
+          },
+          "citations": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+              "segment_refs",
+              "event_ids"
+            ],
+            "properties": {
+              "segment_refs": {
+                "type": "array",
+                "items": {
+                  "pattern": "^(?:0|[1-9][0-9]*):(?:0|[1-9][0-9]*)$",
+                  "maxLength": 24,
+                  "description": "The ref of a segment in the input, copied exactly.",
+                  "type": "string"
+                }
+              },
+              "event_ids": {
+                "type": "array",
+                "items": {
+                  "pattern": "^fvtt:[0-7][0-9A-HJKMNP-TV-Z]{25}:(?:0|[1-9][0-9]{0,15})$",
+                  "description": "fvtt:<capture_id>:<seq> (ADR-004).",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "gm_notes": {
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "reason",
+          "text",
+          "citations"
+        ],
+        "properties": {
+          "reason": {
+            "type": "string",
+            "enum": [
+              "unresolved",
+              "unsupported",
+              "conflict",
+              "spoiler"
+            ]
+          },
+          "text": {
+            "minLength": 1,
+            "maxLength": 2000,
+            "type": "string"
+          },
+          "citations": {
+            "additionalProperties": false,
+            "type": "object",
+            "required": [
+              "segment_refs",
+              "event_ids"
+            ],
+            "properties": {
+              "segment_refs": {
+                "type": "array",
+                "items": {
+                  "pattern": "^(?:0|[1-9][0-9]*):(?:0|[1-9][0-9]*)$",
+                  "maxLength": 24,
+                  "description": "The ref of a segment in the input, copied exactly.",
+                  "type": "string"
+                }
+              },
+              "event_ids": {
+                "type": "array",
+                "items": {
+                  "pattern": "^fvtt:[0-7][0-9A-HJKMNP-TV-Z]{25}:(?:0|[1-9][0-9]{0,15})$",
+                  "description": "fvtt:<capture_id>:<seq> (ADR-004).",
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

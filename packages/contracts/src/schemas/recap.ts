@@ -16,6 +16,8 @@ import {
 } from '../common.ts';
 
 export const ASSERTIONS = ['completed', 'proposed', 'ongoing', 'background'] as const;
+export const OUTCOME_BASES = ['roll', 'narrative'] as const;
+export const GM_NOTE_REASONS = ['unresolved', 'unsupported', 'conflict', 'spoiler'] as const;
 
 export const RecapCitationsSchema = Type.Object(
   {
@@ -32,7 +34,7 @@ const Sentence = Type.Object(
     assertion: StringEnum(ASSERTIONS, {
       description: 'background never counts as evidence of what happened this session (T13).',
     }),
-    outcome_basis: Type.Optional(StringEnum(['roll', 'narrative'] as const)),
+    outcome_basis: Type.Optional(StringEnum(OUTCOME_BASES)),
     citations: RecapCitationsSchema,
   },
   { additionalProperties: false },
@@ -41,7 +43,7 @@ const Sentence = Type.Object(
 const GmNote = Type.Object(
   {
     note_id: GmNoteId(),
-    reason: StringEnum(['unresolved', 'unsupported', 'conflict', 'spoiler'] as const),
+    reason: StringEnum(GM_NOTE_REASONS),
     text: Text({ maxLength: 2000 }),
     citations: RecapCitationsSchema,
   },

@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "recap_revision": 1,
+  "title": "Sessão",
+  "sentences": [
+    {
+      "text": "Uma frase.",
+      "assertion": "completed",
+      "citations": { "segment_refs": ["12:3"], "event_ids": [] }
+    }
+  ],
+  "gm_notes": []
+}

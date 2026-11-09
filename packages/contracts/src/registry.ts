@@ -15,6 +15,7 @@ import { ManifestSchema } from './schemas/manifest.ts';
 import { RecapApprovalSchema } from './schemas/recap-approval.ts';
 import { RecapEditorialTransitionSchema } from './schemas/recap-editorial-transition.ts';
 import { RecapExportManifestSchema } from './schemas/recap-export-manifest.ts';
+import { RecapModelOutputSchema } from './schemas/recap-model-output.ts';
 import { RecapPackageSchema } from './schemas/recap-package.ts';
 import { RecapSentenceEditSchema } from './schemas/recap-sentence-edit.ts';
 import { RecapSchema } from './schemas/recap.ts';
@@ -88,6 +89,11 @@ export const CONTRACTS = {
     schema: RecapSchema,
     title: 'Generated recap draft',
     where: 'recap/<revision>/recap.json',
+  },
+  'recap-model-output': {
+    schema: RecapModelOutputSchema,
+    title: 'Recap model output',
+    where: 'the response of one LLM call (T13); core turns it into a recap record',
   },
   'recap-package': {
     schema: RecapPackageSchema,

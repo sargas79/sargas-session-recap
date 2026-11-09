@@ -88,6 +88,14 @@ describe('prompt registry: shipped prompts', () => {
         file: 'recap/draft.v1.md',
       },
       {
+        id: 'recap.draft',
+        version: 2,
+        stage: 'recap',
+        outputSchema: 'recap-model-output',
+        dataSlots: ['campaign', 'previous_recaps', 'segments'],
+        file: 'recap/draft.v2.md',
+      },
+      {
         id: 'recap.system',
         version: 1,
         stage: 'recap',

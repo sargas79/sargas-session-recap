@@ -7,6 +7,7 @@
  */
 import type { CampaignConfig, ConsentPurpose, Glossary } from '@sargas-recap/contracts';
 import type { ConfigVersion, ConsentReceipt, DependencyStage } from '../config/index.ts';
+import type { SqliteDatabase } from '../db/index.ts';
 import type { Logger } from '../log/index.ts';
 import type { DataPaths } from '../paths/index.ts';
 import { JobError } from './errors.ts';
@@ -30,6 +31,8 @@ export interface UpstreamResult {
 
 /** Context for computing a stage's inputs (before deciding whether it must run). */
 export interface InputContext {
+  /** The state database, for stages that read SQLite state such as review overrides (T13). */
+  readonly db: SqliteDatabase;
   readonly campaignId: string;
   readonly sessionId: string;
   readonly paths: DataPaths | undefined;
