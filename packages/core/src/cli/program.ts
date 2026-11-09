@@ -16,6 +16,7 @@ import { registerPackageCommands } from '../package/cli.ts';
 import { checkDataRoot, type DataRootCheck, type DataRootCheckOptions } from '../paths/index.ts';
 import { createRecapStage } from '../recap/recap-stage.ts';
 import { registerReviewCommands } from '../review/cli.ts';
+import { registerReviewUiCommand } from '../review-ui/cli.ts';
 import { registerSetupCommands } from '../tools/cli.ts';
 import type { WhisperCheck, WhisperCheckOptions } from '../tools/doctor.ts';
 import { createChunkPlanStage } from '../transcribe/chunk-plan-stage.ts';
@@ -145,6 +146,7 @@ export function buildProgram(io: CliIo = defaultIo): Command {
   registerJobCommands(program, io, { stages });
   registerRetranscribeCommand(program, io, { stages });
   registerReviewCommands(program, io);
+  registerReviewUiCommand(program, io, { stages });
   registerSecretsCommands(program, io);
   registerSetupCommands(program, io);
 

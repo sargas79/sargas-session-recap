@@ -50,7 +50,7 @@ export interface SessionReview {
 
 const clock = (ref: SessionRef): Date => (ref.now ?? (() => new Date()))();
 
-async function readOutput(root: string, output: JobOutput): Promise<string> {
+export async function readJobOutput(root: string, output: JobOutput): Promise<string> {
   try {
     const { absolute } = await resolveInsidePackage(root, output.path);
     const { hash } = await sha256File(absolute);
@@ -93,7 +93,7 @@ function parseLines<N extends ContractName>(
   return records;
 }
 
-function findOutput(job: Job, prefix: string, file: string): JobOutput {
+export function findJobOutput(job: Job, prefix: string, file: string): JobOutput {
   const output = job.outputs.find((o) => o.path.startsWith(prefix) && o.path.endsWith(file));
   if (output === undefined) {
     throw new ReviewError(
@@ -169,8 +169,12 @@ export async function loadActiveRuns(ref: SessionRef): Promise<ActiveRuns> {
       cause: error,
     });
   }
-  const output = findOutput(transcribe, 'transcript/', 'segments.jsonl');
-  const segments = parseLines('transcription-segment', output.path, await readOutput(root, output));
+  const output = findJobOutput(transcribe, 'transcript/', 'segments.jsonl');
+  const segments = parseLines(
+    'transcription-segment',
+    output.path,
+    await readJobOutput(root, output),
+  );
   checkSegments(transcriptionRunId, output.path, segments);
 
   const classify = listJobs(db, campaignId, sessionId)
@@ -184,11 +188,11 @@ export async function loadActiveRuns(ref: SessionRef): Promise<ActiveRuns> {
   if (classify?.outputRunId === undefined) {
     return { transcriptionRunId, segments, classification: null };
   }
-  const resultsOutput = findOutput(classify, 'classify/', 'results.jsonl');
+  const resultsOutput = findJobOutput(classify, 'classify/', 'results.jsonl');
   const results = parseLines(
     'classification-result',
     resultsOutput.path,
-    await readOutput(root, resultsOutput),
+    await readJobOutput(root, resultsOutput),
   );
   checkResults(classify.outputRunId, transcriptionRunId, resultsOutput.path, results, segments);
   return {
