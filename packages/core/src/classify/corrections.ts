@@ -31,16 +31,54 @@ function wholeWord(literal: string): RegExp {
   return new RegExp(`(?<![\\p{L}\\p{N}])${escaped}(?![\\p{L}\\p{N}])`, 'gu');
 }
 
+/** Portuguese function words whisper fuses onto the next word ("amarocas" for "a Marocas"). */
+const JOINED_WORDS: ReadonlySet<string> = new Set([
+  'a',
+  'à',
+  'ao',
+  'as',
+  'às',
+  'o',
+  'os',
+  'e',
+  'de',
+  'da',
+  'do',
+  'das',
+  'dos',
+  'em',
+  'na',
+  'no',
+  'nas',
+  'nos',
+  'um',
+  'uma',
+]);
+
+const folded = (text: string): string => text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+
+/**
+ * True when `to` only splits a function word off a correctly heard glossary name: `from` must be
+ * exactly that word and the spelling run together, ignoring case and accents, so this cannot bring
+ * in any other word.
+ */
+function splitsJoinedName(from: string, to: string, spelling: string): boolean {
+  const suffix = ` ${spelling}`;
+  if (!to.endsWith(suffix)) return false;
+  const word = to.slice(0, -suffix.length);
+  return JOINED_WORDS.has(word.toLowerCase()) && folded(from) === folded(word + spelling);
+}
+
 function glossaryProblem(
   correction: Correction,
   spellings: GlossarySpellings,
 ): CorrectionRejection | undefined {
-  const { glossary_id: id, kind, to } = correction;
+  const { glossary_id: id, kind, from, to } = correction;
   if (id !== undefined && !spellings.has(id)) return 'unknown-glossary-entry';
-  if (kind !== 'spelling' && (id === undefined || spellings.get(id) !== to)) {
-    return 'glossary-mismatch';
-  }
-  return undefined;
+  if (kind === 'spelling') return undefined;
+  const spelling = id === undefined ? undefined : spellings.get(id);
+  if (spelling === undefined) return 'glossary-mismatch';
+  return to === spelling || splitsJoinedName(from, to, spelling) ? undefined : 'glossary-mismatch';
 }
 
 interface Range {

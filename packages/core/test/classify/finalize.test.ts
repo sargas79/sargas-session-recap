@@ -40,6 +40,30 @@ describe('applyCorrections', () => {
     expect(applyCorrections('xyz a.c', [correction], spellings).text).toBe('xyz abc');
   });
 
+  it.each([
+    ['akyra', 'a Kyra'],
+    ['Dekyra', 'de Kyra'],
+    ['Akyra', 'à Kyra'],
+  ])('splits a function word joined to a glossary name: %s -> %s', (from, to) => {
+    const correction: Correction = { kind: 'name', from, to, glossary_id: 'kyra' };
+    const outcome = applyCorrections(`viu ${from} ontem`, [correction], spellings);
+    expect(outcome.text).toBe(`viu ${to} ontem`);
+    expect(outcome.rejected).toEqual([]);
+  });
+
+  it.each([
+    ['the name itself is misheard', 'akira', 'a Kyra'],
+    ['not a function word', 'vilaokyra', 'vilao Kyra'],
+    ['the word differs from the joined one', 'akyra', 'de Kyra'],
+    ['extra text after the name', 'akyra', 'a Kyra agora'],
+    ['extra text before the word', 'akyra', 'nunca a Kyra'],
+  ])('still rejects a joined-name fix when %s', (_why, from, to) => {
+    const correction: Correction = { kind: 'name', from, to, glossary_id: 'kyra' };
+    const outcome = applyCorrections(`viu ${from} ontem`, [correction], spellings);
+    expect(outcome.rejected.map((r) => r.reason)).toEqual(['glossary-mismatch']);
+    expect(outcome.text).toBeUndefined();
+  });
+
   it('keeps a replacement containing $ literal', () => {
     const correction: Correction = { kind: 'spelling', from: 'moeda', to: '$& ouro' };
     expect(applyCorrections('uma moeda', [correction], spellings).text).toBe('uma $& ouro');
