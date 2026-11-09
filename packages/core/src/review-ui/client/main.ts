@@ -68,7 +68,28 @@ function setUpGenerationPoll(): void {
   }, POLL_MS);
 }
 
+/** Copy Markdown: the server only renders the text and the button for an approved revision. */
+function setUpCopyMarkdown(): void {
+  const source = document.getElementById('copy-source');
+  const button = document.getElementById('copy-markdown');
+  const status = document.getElementById('copy-status');
+  if (!(source instanceof HTMLTextAreaElement) || !(button instanceof HTMLButtonElement)) return;
+  button.hidden = false;
+  button.addEventListener('click', () => {
+    source.select();
+    void navigator.clipboard.writeText(source.value).then(
+      () => {
+        if (status !== null) status.textContent = 'Copied.';
+      },
+      () => {
+        if (status !== null) status.textContent = 'Press Ctrl+C to copy the selected text.';
+      },
+    );
+  });
+}
+
 setUpFilters();
 setUpKeys();
 setUpDirtyWarning();
 setUpGenerationPoll();
+setUpCopyMarkdown();

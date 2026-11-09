@@ -146,6 +146,12 @@ export async function writeRecap(
   writeFileSync(file, JSON.stringify(recap, null, 2));
   const { hash } = await sha256File(file);
   const at = `2026-11-02T22:00:${String(revision).padStart(2, '0')}.000Z`;
+  world.db
+    .prepare(
+      `INSERT OR IGNORE INTO recap_revisions (campaign_id, session_id, revision, origin, created_at)
+       VALUES (?, ?, ?, 'generated', ?)`,
+    )
+    .run(CAMPAIGN, SESSION, revision, at);
   const jobId = ulid();
   world.db
     .prepare(

@@ -11,8 +11,18 @@ import type { AddressInfo } from 'node:net';
 import { fileURLToPath } from 'node:url';
 import type { RunConfig, StageRegistry } from '../jobs/stage.ts';
 import { createLogger, type Logger } from '../log/index.ts';
+import {
+  applyRecapEdit,
+  approvedRecapMarkdown,
+  approveRecap,
+  exportRecap,
+  latestExportFile,
+  loadEditorialView,
+  markRecapReviewed,
+  reopenRecap,
+} from '../recap/editorial.ts';
 import { toReviewOverride } from '../review/store.ts';
-import type { SessionRef } from '../review/session.ts';
+import { loadSessionReview, type SessionRef } from '../review/session.ts';
 import {
   applyDiscard,
   applyOverride,
@@ -20,9 +30,15 @@ import {
   assertNoFields,
   assertNoLostExclusions,
   assertRegenerationConfirmed,
+  editBodyFromForm,
   overrideBodyFromForm,
+  parseEditRequest,
+  parseExpectedHash,
   parseOverrideRequest,
   parseReconcileTarget,
+  parseReleaseRequest,
+  parseRevision,
+  releaseBodyFromForm,
 } from './actions.ts';
 import { loadReviewScreen } from './data.ts';
 import { refusalOf, ReviewUiError } from './errors.ts';
@@ -55,6 +71,8 @@ export interface ReviewServerOptions {
   readonly stages?: StageRegistry | undefined;
   readonly loadConfig?: (() => Promise<RunConfig>) | undefined;
   readonly logger?: Logger | undefined;
+  /** Operator slug recorded on edits, approvals and exports (ADR-010). Defaults to `gm`. */
+  readonly reviewer?: string | undefined;
   /** The built client script. Defaults to the bundle beside this file, when there is one. */
   readonly clientScript?: string | undefined;
 }
@@ -69,7 +87,7 @@ export interface RunningReviewServer {
 }
 
 /** Fields the server logs. Identifiers of routes and statuses only. */
-const LOG_FIELDS = ['method', 'route', 'httpStatus', 'port'];
+const LOG_FIELDS = ['method', 'route', 'httpStatus', 'port', 'recapRevision'];
 
 const CLIENT_BUNDLE = new URL('./client.bundle.js', import.meta.url);
 
@@ -190,6 +208,7 @@ export async function startReviewServer(
   const logger = (options.logger ?? createLogger()).child(LOG_FIELDS);
   const token = newToken();
   const clientScript = options.clientScript ?? bundledClient();
+  const reviewer = options.reviewer ?? 'gm';
   const regenerator: Regenerator = createRegenerator({
     ref,
     stages: options.stages,
@@ -263,7 +282,76 @@ export async function startReviewServer(
         return { status: 202, anchor: 'recap', payload: regenerator.state() };
       },
     },
+    {
+      name: '/api/recap/revisions/:n/edits',
+      pattern: /^\/api\/recap\/revisions\/(\d{1,15})\/edits$/,
+      fromForm: editBodyFromForm,
+      action: async ({ match, body }) => {
+        refuseWhileGenerating();
+        const revision = parseRevision(match[1]);
+        const outcome = await applyRecapEdit(ref, revision, parseEditRequest(body), reviewer);
+        logger.info('review-ui.recap-edited', { route: 'edits', recapRevision: outcome.revision });
+        return { status: 200, anchor: 'recap-player', payload: outcome };
+      },
+    },
+    {
+      name: '/api/recap/revisions/:n/review',
+      pattern: /^\/api\/recap\/revisions\/(\d{1,15})\/review$/,
+      fromForm: formFields,
+      action: async ({ match, body }) => {
+        refuseWhileGenerating();
+        const revision = parseRevision(match[1]);
+        const state = await markRecapReviewed(ref, revision, parseExpectedHash(body), reviewer);
+        logger.info('review-ui.recap-reviewed', { route: 'review', recapRevision: revision });
+        return { status: 200, anchor: 'recap-approval', payload: { state } };
+      },
+    },
+    {
+      name: '/api/recap/revisions/:n/approve',
+      pattern: /^\/api\/recap\/revisions\/(\d{1,15})\/approve$/,
+      fromForm: releaseBodyFromForm,
+      action: async ({ match, body }) => {
+        refuseWhileGenerating();
+        const revision = parseRevision(match[1]);
+        const approval = await approveRecap(ref, revision, parseReleaseRequest(body), reviewer);
+        logger.info('review-ui.recap-approved', { route: 'approve', recapRevision: revision });
+        return { status: 200, anchor: 'recap-approval', payload: { approval } };
+      },
+    },
+    {
+      name: '/api/recap/revisions/:n/reopen',
+      pattern: /^\/api\/recap\/revisions\/(\d{1,15})\/reopen$/,
+      fromForm: formFields,
+      action: async ({ match, body }) => {
+        refuseWhileGenerating();
+        assertNoFields(body);
+        const revision = parseRevision(match[1]);
+        const state = await reopenRecap(ref, revision, reviewer);
+        logger.info('review-ui.recap-reopened', { route: 'reopen', recapRevision: revision });
+        return { status: 200, anchor: 'recap-approval', payload: { state } };
+      },
+    },
+    {
+      name: '/api/recap/revisions/:n/export',
+      pattern: /^\/api\/recap\/revisions\/(\d{1,15})\/export$/,
+      fromForm: releaseBodyFromForm,
+      action: async ({ match, body }) => {
+        refuseWhileGenerating();
+        const revision = parseRevision(match[1]);
+        const outcome = await exportRecap(ref, revision, parseReleaseRequest(body), reviewer);
+        logger.info('review-ui.recap-exported', { route: 'export', recapRevision: revision });
+        return { status: 200, anchor: 'recap-approval', payload: outcome };
+      },
+    },
   ];
+
+  /** One action at a time: the guards of an action must not interleave with another's writes. */
+  let queue: Promise<unknown> = Promise.resolve();
+  const serialized = <T>(work: () => Promise<T>): Promise<T> => {
+    const result = queue.then(work, work);
+    queue = result.catch(() => undefined);
+    return result;
+  };
 
   const handlePost = async (
     req: IncomingMessage,
@@ -283,7 +371,7 @@ export async function startReviewServer(
       form.delete(TOKEN_FIELD);
       body = route.fromForm(form);
     }
-    const answer = await route.action({ match, body });
+    const answer = await serialized(() => route.action({ match, body }));
     if (kind === 'json') {
       sendJson(res, answer.status, answer.payload);
     } else {
@@ -291,7 +379,49 @@ export async function startReviewServer(
     }
   };
 
+  /** The per-revision reads. Returns the route name, or `undefined` when `path` is not one. */
+  const handleRevisionGet = async (
+    res: ServerResponse,
+    path: string,
+  ): Promise<string | undefined> => {
+    const match = /^\/api\/recap\/revisions\/(\d{1,15})(\/markdown|\/export\/latest)?$/.exec(path);
+    if (match === null) return undefined;
+    const revision = parseRevision(match[1]);
+    switch (match[2]) {
+      case '/markdown':
+        send(res, 200, 'text/markdown; charset=utf-8', await approvedRecapMarkdown(ref, revision));
+        return '/api/recap/revisions/:n/markdown';
+      case '/export/latest': {
+        const file = await latestExportFile(ref, revision);
+        send(res, 200, JSON_TYPE, file.text, {
+          'Content-Disposition': `attachment; filename="${file.name}"`,
+        });
+        return '/api/recap/revisions/:n/export/latest';
+      }
+      default: {
+        const { view } = await loadSessionReview(ref);
+        const editorial = await loadEditorialView(ref, revision, view);
+        sendJson(res, 200, {
+          revision: editorial.revision,
+          origin: editorial.origin,
+          parent_revision: editorial.parentRevision ?? null,
+          state: editorial.state,
+          content_hash: editorial.contentHash,
+          edit_count: editorial.editCount,
+          approval: editorial.approval,
+          exports: editorial.exports,
+          blockers: editorial.blockers,
+          possible_spoilers_included: editorial.spoilersIncluded,
+          can_copy: editorial.markdown !== null,
+        });
+        return '/api/recap/revisions/:n';
+      }
+    }
+  };
+
   const handleGet = async (res: ServerResponse, path: string): Promise<string> => {
+    const revisionRoute = await handleRevisionGet(res, path);
+    if (revisionRoute !== undefined) return revisionRoute;
     switch (path) {
       case '/': {
         const screen = await loadReviewScreen(ref);

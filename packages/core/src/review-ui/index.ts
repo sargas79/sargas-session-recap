@@ -1,6 +1,6 @@
 /**
  * Review UI: the localhost review server and screen (T14). Corrections go through `review/`, recap
- * generation through the job runner; editing, approval and export of a recap are T15's.
+ * generation through the job runner, and editing, approval and export through `recap/` (T15).
  */
 export const MODULE_NAME = 'review-ui';
 

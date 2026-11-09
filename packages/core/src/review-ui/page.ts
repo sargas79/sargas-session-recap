@@ -2,11 +2,12 @@
  * The server-rendered review screen (T14). Everything interpolated goes through the escaping `html`
  * template; the page carries no inline script and no inline style.
  *
- * It offers corrections and regeneration only. Recap editing, approval and export are T15's, and
- * nothing here reaches players.
+ * It offers corrections, regeneration, and recap editing, approval and export (T15). Nothing here
+ * reaches players: an export is a file the GM takes to Foundry (T19).
  */
-import type { FoundryEvent, RecapCitations } from '@sargas-recap/contracts';
+import type { EditorialState, FoundryEvent, RecapCitations } from '@sargas-recap/contracts';
 import { LABELS } from '@sargas-recap/contracts';
+import type { EffectiveNote, EffectiveSentence, RecapEditorialView } from '../recap/editorial.ts';
 import { clock } from '../recap/render.ts';
 import { unreconciledExclusions } from '../review/project.ts';
 import type { StoredOverride } from '../review/store.ts';
@@ -519,44 +520,320 @@ const STALE_TEXT = {
     'You changed lines since this draft was written. It does not reflect those corrections yet.',
 } as const;
 
-function recapPanels(draft: RecapDraftView, screen: ReviewScreen): SafeHtml {
+function recapEditAction(revision: number): string {
+  return `/api/recap/revisions/${String(revision)}/edits`;
+}
+
+function editHidden(
+  editorial: RecapEditorialView,
+  kind: 'title' | 'sentence' | 'gm_note',
+  id: string,
+  token: string,
+): SafeHtml {
+  return html`${tokenField(token)}
+    <input type="hidden" name="target_kind" value="${kind}" />
+    <input type="hidden" name="target_id" value="${id}" />
+    <input type="hidden" name="expected_edit_count" value="${editorial.editCount}" />`;
+}
+
+function citationBox(citations: RecapCitations): string {
+  return citations.segment_ids.map(shortRef).join(' ');
+}
+
+function sentenceEditForm(
+  sentence: EffectiveSentence,
+  editorial: RecapEditorialView,
+  token: string,
+): SafeHtml {
+  return html`<details class="edit">
+    <summary>Edit sentence</summary>
+    <form class="grid" method="post" action="${recapEditAction(editorial.revision)}">
+      ${editHidden(editorial, 'sentence', sentence.sentence_id, token)}
+      <label class="wide"
+        >Text <textarea name="text" required maxlength="2000">${sentence.text}</textarea>
+      </label>
+      <label class="wide"
+        >Citations (segment refs such as 0:12, separated by spaces; only included lines)
+        <input type="text" name="citations" value="${citationBox(sentence.citations)}"
+      /></label>
+      <button type="submit" name="action" value="replace">Save edit</button>
+      <button type="submit" name="action" value="remove" formnovalidate>Remove sentence</button>
+      ${
+        sentence.edited
+          ? html`<button type="submit" name="action" value="revert" formnovalidate>
+              Back to generated text
+            </button>`
+          : null
+      }
+    </form>
+  </details>`;
+}
+
+function removedSentences(editorial: RecapEditorialView, token: string): SafeHtml | null {
+  const { removedSentences: removed } = editorial.effective;
+  if (removed.length === 0) return null;
+  return html`<h3>Removed sentences (never exported)</h3>
+    <ul class="notes">
+      ${removed.map(
+        (sentence) =>
+          html`<li>
+            <span class="removed">${sentence.text}</span>
+            <form class="inline" method="post" action="${recapEditAction(editorial.revision)}">
+              ${editHidden(editorial, 'sentence', sentence.sentence_id, token)}
+              <button type="submit" name="action" value="revert">Restore</button>
+            </form>
+          </li>`,
+      )}
+    </ul>`;
+}
+
+function noteEditForm(note: EffectiveNote, editorial: RecapEditorialView, token: string): SafeHtml {
+  return html`<details class="edit">
+    <summary>Edit note</summary>
+    <form class="grid" method="post" action="${recapEditAction(editorial.revision)}">
+      ${editHidden(editorial, 'gm_note', note.note_id, token)}
+      <label class="wide"
+        >Text <textarea name="text" required maxlength="2000">${note.text}</textarea>
+      </label>
+      <button type="submit" name="action" value="replace">Save edit</button>
+      <button type="submit" name="action" value="remove" formnovalidate>Hide note</button>
+      ${
+        note.edited
+          ? html`<button type="submit" name="action" value="revert" formnovalidate>
+              Back to generated text
+            </button>`
+          : null
+      }
+    </form>
+  </details>`;
+}
+
+function titleEditForm(editorial: RecapEditorialView, token: string): SafeHtml {
+  return html`<details class="edit">
+    <summary>Edit title</summary>
+    <form class="grid" method="post" action="${recapEditAction(editorial.revision)}">
+      ${editHidden(editorial, 'title', 'title', token)}
+      <label class="wide"
+        >Title
+        <input
+          type="text"
+          name="text"
+          required
+          maxlength="200"
+          value="${editorial.effective.title}"
+      /></label>
+      <button type="submit" name="action" value="replace">Save title</button>
+      ${
+        editorial.effective.titleEdited
+          ? html`<button type="submit" name="action" value="revert" formnovalidate>
+              Back to generated title
+            </button>`
+          : null
+      }
+    </form>
+  </details>`;
+}
+
+function spoilerConfirmation(editorial: RecapEditorialView, what: string): SafeHtml | null {
+  if (editorial.spoilersIncluded.length === 0) return null;
+  return html`${editorial.spoilersIncluded.map(
+      (id) => html`<input type="hidden" name="spoilers_ack" value="${id}" />`,
+    )}
+    <label class="wide">
+      <input type="checkbox" name="spoilers_confirm" value="yes" required />
+      I checked the ${editorial.spoilersIncluded.length} possible spoiler(s) above and ${what}
+    </label>`;
+}
+
+function revisionAction(revision: number, step: string): string {
+  return `/api/recap/revisions/${String(revision)}/${step}`;
+}
+
+const STATE_TEXT: Readonly<Record<EditorialState, string>> = {
+  draft: 'DRAFT: not reviewed',
+  reviewed: 'REVIEWED: not approved',
+  approved: 'APPROVED: this exact content',
+  exported: 'EXPORTED: frozen for content',
+};
+
+function approvalPanel(editorial: RecapEditorialView, token: string): SafeHtml {
+  const { state, revision, contentHash, approval, blockers } = editorial;
+  const canApprove = state === 'reviewed' && blockers.length === 0;
+  const canExport = (state === 'approved' || state === 'exported') && blockers.length === 0;
+  const lastExport = editorial.exports[editorial.exports.length - 1];
+  return html`<section class="panel approval" id="recap-approval">
+    <h2>Approval: revision ${revision} <span class="state-${state}">${STATE_TEXT[state]}</span></h2>
+    <dl>
+      <dt>Content hash</dt>
+      <dd class="mono">${contentHash}</dd>
+      ${
+        approval === null
+          ? null
+          : html`<dt>Approved by</dt>
+              <dd>${approval.reviewer_id} at ${approval.approved_at}</dd>`
+      }
+      ${
+        editorial.origin === 'fork'
+          ? html`<dt>Forked from</dt>
+              <dd>revision ${editorial.parentRevision}</dd>`
+          : null
+      }
+    </dl>
+    ${blockers.map((blocker) => html`<div class="alert danger">${blocker.message}</div>`)}
+    ${
+      state === 'exported'
+        ? html`<div class="alert warn">
+            This revision was exported and is frozen. A change to its text forks a new revision,
+            which then needs its own review and approval.
+          </div>`
+        : null
+    }
+    ${
+      editorial.spoilersIncluded.length > 0 && (state === 'reviewed' || canExport)
+        ? html`<div class="alert danger">
+            ${editorial.spoilersIncluded.length} line(s) flagged as possible spoilers are still
+            included in this recap. Check them before you approve or export: nothing filters them
+            out.
+          </div>`
+        : null
+    }
+    <div class="actions">
+      ${
+        state === 'draft'
+          ? html`<form method="post" action="${revisionAction(revision, 'review')}">
+              ${tokenField(token)}
+              <input type="hidden" name="expected_hash" value="${contentHash}" />
+              <button type="submit">Mark reviewed</button>
+            </form>`
+          : null
+      }
+      ${
+        canApprove
+          ? html`<form class="grid" method="post" action="${revisionAction(revision, 'approve')}">
+              ${tokenField(token)}
+              <input type="hidden" name="expected_hash" value="${contentHash}" />
+              ${spoilerConfirmation(editorial, 'approve them going out with this recap.')}
+              <button type="submit">Approve this exact revision</button>
+            </form>`
+          : null
+      }
+      ${
+        state === 'reviewed' || state === 'approved'
+          ? html`<form class="inline" method="post" action="${revisionAction(revision, 'reopen')}">
+              ${tokenField(token)}
+              <button type="submit">Reopen as draft</button>
+            </form>`
+          : null
+      }
+      ${
+        canExport
+          ? html`<form class="grid" method="post" action="${revisionAction(revision, 'export')}">
+              ${tokenField(token)}
+              <input type="hidden" name="expected_hash" value="${contentHash}" />
+              ${spoilerConfirmation(editorial, 'want them in the exported package.')}
+              <button type="submit">Export recap package</button>
+            </form>`
+          : null
+      }
+    </div>
+    ${
+      lastExport === undefined
+        ? null
+        : html`<p class="muted">
+            Exported ${editorial.exports.length} time(s), last at ${lastExport.exported_at}.
+            <a href="${revisionAction(revision, 'export/latest')}">Download the package</a> for the
+            Foundry import. Nothing is published to players from here.
+          </p>`
+    }
+    ${
+      editorial.markdown === null
+        ? html`<p class="muted">Copy Markdown appears once this exact content is approved.</p>`
+        : html`<h3>Copy Markdown</h3>
+            <textarea id="copy-source" readonly>${editorial.markdown}</textarea>
+            <button type="button" id="copy-markdown" hidden>Copy Markdown</button>
+            <span id="copy-status" class="muted"></span>`
+    }
+  </section>`;
+}
+
+function recapPanels(draft: RecapDraftView, screen: ReviewScreen, token: string): SafeHtml {
   const bySegment = new Map(screen.view.segments.map((s) => [s.segment_id, s]));
   let counter = 0;
   const footnotes: Footnoter = { next: () => (counter += 1) };
-  const { recap } = draft;
+  const { editorial } = draft;
+  const { effective } = editorial;
   return html`${draft.staleness.map(
       (reason) => html`<div class="alert warn">${STALE_TEXT[reason]}</div>`,
     )}
+    ${approvalPanel(editorial, token)}
     <section class="panel player" id="recap-player">
-      <span class="banner">PLAYER-FACING DRAFT (not published anywhere)</span>
-      <h2>${recap.title} <span class="muted">revision ${draft.revision}</span></h2>
+      <span class="banner">PLAYER-FACING (only an approved revision can be exported)</span>
+      <h2>
+        ${effective.title} <span class="muted">revision ${draft.revision}</span>
+        ${effective.titleEdited ? html`<span class="chip warn">edited</span>` : null}
+      </h2>
+      ${titleEditForm(editorial, token)}
       <ol class="sentences">
-        ${recap.sentences.map(
+        ${effective.sentences.map(
           (sentence) =>
             html`<li id="${anchorOfSentence(sentence.sentence_id)}">
               ${sentence.text} ${citationNotes(sentence.citations, bySegment, footnotes)}
               <span class="muted">${sentence.assertion}</span>
+              ${
+                sentence.edited
+                  ? html`<span class="chip warn">edited — verify evidence</span>`
+                  : null
+              }
+              ${
+                sentence.citations.segment_ids.length === 0
+                  ? html`<span class="chip warn">no citation</span>`
+                  : null
+              }
               ${evidenceWarnings(sentence.citations, bySegment)}
+              ${sentenceEditForm(sentence, editorial, token)}
             </li>`,
         )}
       </ol>
-      <p class="muted">Recap editing, approval and export come with T15.</p>
+      ${removedSentences(editorial, token)}
     </section>
     <section class="panel gm-only" id="recap-gm-notes">
       <span class="banner">GM ONLY. NEVER SEND TO PLAYERS</span>
-      <h2>GM notes (${recap.gm_notes.length})</h2>
+      <h2>GM notes (${effective.gmNotes.length})</h2>
       ${
-        recap.gm_notes.length === 0
+        effective.gmNotes.length === 0
           ? html`<p class="muted">No notes.</p>`
           : html`<ul class="notes">
-              ${recap.gm_notes.map(
+              ${effective.gmNotes.map(
                 (note) =>
                   html`<li>
                     <span class="chip">${note.reason}</span> ${note.text}
                     ${citationNotes(note.citations, bySegment, footnotes)}
+                    ${note.edited ? html`<span class="chip warn">edited</span>` : null}
+                    ${noteEditForm(note, editorial, token)}
                   </li>`,
               )}
             </ul>`
+      }
+      ${
+        effective.removedNotes.length === 0
+          ? null
+          : html`<h3>Hidden notes</h3>
+              <ul class="notes">
+                ${effective.removedNotes.map(
+                  (note) =>
+                    html`<li>
+                      <span class="removed">${note.text}</span>
+                      <form
+                        class="inline"
+                        method="post"
+                        action="${recapEditAction(editorial.revision)}"
+                      >
+                        ${editHidden(editorial, 'gm_note', note.note_id, token)}
+                        <button type="submit" name="action" value="revert">Restore</button>
+                      </form>
+                    </li>`,
+                )}
+              </ul>`
       }
     </section>`;
 }
@@ -641,7 +918,7 @@ export function renderReviewPage(context: PageContext): string {
     }
   });
   const citedBy = new Map<string, string[]>();
-  for (const sentence of screen.recap?.recap.sentences ?? []) {
+  for (const sentence of screen.recap?.editorial.effective.sentences ?? []) {
     for (const id of sentence.citations.segment_ids) {
       citedBy.set(id, [...(citedBy.get(id) ?? []), sentence.sentence_id]);
     }
@@ -734,7 +1011,7 @@ export function renderReviewPage(context: PageContext): string {
             ${
               screen.recap === null
                 ? html`<section class="panel"><p class="muted">No recap draft yet.</p></section>`
-                : recapPanels(screen.recap, screen)
+                : recapPanels(screen.recap, screen, token)
             }
             ${regeneratePanel(screen, context, spoilersIncluded)}
           </aside>

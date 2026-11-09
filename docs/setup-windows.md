@@ -540,9 +540,25 @@ everything works except regenerating the recap.
   `recap overrides set`. If the override changed elsewhere after the page loaded, the save is refused:
   reload and redo it. The list can be filtered, and `j` / `k` move between lines.
 - **Foundry events** appear in the list when the session has them. Their position is an estimate.
-- **Recap panel.** Footnotes jump to the cited lines. The player-facing draft and the GM notes are
-  separate panels; GM notes are for you alone. Nothing is published from this page. Editing, approval
-  and export come later.
+- **Recap panel.** Footnotes jump to the cited lines. The player-facing text and the GM notes are
+  separate panels; GM notes are for you alone and never leave this page. Nothing is published from
+  here.
+- **Editing the recap.** Each sentence, the title and each GM note has an `Edit` form. Edited sentences
+  are marked `edited — verify evidence`. A sentence can cite only lines included in the recap; give
+  refs such as `0:12`. The generated draft file is never rewritten, and `Back to generated text` undoes
+  an edit.
+- **Approval.** A recap goes draft → reviewed → approved → exported. `Mark reviewed`, then
+  `Approve this exact revision`. Approval is tied to the exact text and citations: any later change
+  to the title, a sentence or its citations returns the recap to draft, and it must be reviewed and
+  approved again. GM-note edits do not. Approval is refused while a spoiler or privacy exclusion
+  waits for reconciliation, or while a sentence cites a line you have excluded: change its citations
+  or remove the sentence. If lines flagged as possible spoilers are still included, you must confirm
+  them first: nothing removes them for you.
+- **Export and Copy Markdown.** Both work only on an approved revision. `Export recap package` writes
+  `exports\recap-r<revision>-<id>.json` in the session folder and offers it as a download for the
+  Foundry import; `Copy Markdown` copies the approved text. Neither ever contains GM notes, excluded
+  lines or removed sentences. An exported revision is frozen: changing its text creates a new revision,
+  and the screen moves to it. `--reviewer <slug>` (default `gm`) names who is recorded.
 - **Regenerate.** Asks for a confirmation, because it sends the included lines to the provider. It
   writes a new revision, and corrections are locked until it ends. It reports `no new revision` when
   nothing changed since the last draft, and is refused while a spoiler or privacy exclusion waits for
