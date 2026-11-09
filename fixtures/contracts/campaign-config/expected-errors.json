@@ -1,4 +1,10 @@
 {
+  "invalid-asr-unknown-field.json": [
+    {
+      "path": "/asr/<key>",
+      "keyword": "additionalProperties"
+    }
+  ],
   "invalid-chunking-unknown-field.json": [
     {
       "path": "/chunking/<key>",

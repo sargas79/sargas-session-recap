@@ -150,6 +150,67 @@
       },
       "description": "Chunk planning overrides (T08). The built-in defaults are provisional: S04 did not validate them on real audio."
     },
+    "asr": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "short_segment_ms": {
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "description": "Segments shorter than this are flagged.",
+          "type": "integer"
+        },
+        "low_confidence_mean_permille": {
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "Flag when the mean token probability is below this.",
+          "type": "integer"
+        },
+        "low_confidence_min_permille": {
+          "minimum": 0,
+          "maximum": 1000,
+          "description": "Flag when the lowest token probability is below this.",
+          "type": "integer"
+        },
+        "repetition_min_repeats": {
+          "minimum": 2,
+          "maximum": 1000,
+          "description": "Consecutive copies of a passage that count as a repetition loop.",
+          "type": "integer"
+        },
+        "repetition_min_words": {
+          "minimum": 1,
+          "maximum": 100000,
+          "description": "Total repeated words needed, so ordinary speech is not flagged.",
+          "type": "integer"
+        },
+        "repetition_max_unit_words": {
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "Longest repeated passage searched for, in words.",
+          "type": "integer"
+        },
+        "prompt_max_chars": {
+          "minimum": 0,
+          "maximum": 20000,
+          "description": "Glossary terms past this length stay out of the initial prompt.",
+          "type": "integer"
+        },
+        "timeout_base_ms": {
+          "minimum": 1,
+          "maximum": 9007199254740991,
+          "description": "Allowance per chunk for process start, model load and shader compilation.",
+          "type": "integer"
+        },
+        "timeout_audio_multiplier": {
+          "minimum": 1,
+          "maximum": 1000,
+          "description": "Added to the allowance per millisecond of chunk audio.",
+          "type": "integer"
+        }
+      },
+      "description": "Whisper runner overrides (T09). The built-in defaults are provisional: S04 did not validate them on real audio."
+    },
     "speakers": {
       "minItems": 1,
       "maxItems": 32,

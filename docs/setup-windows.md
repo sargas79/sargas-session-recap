@@ -97,6 +97,51 @@ These are the built-in defaults, and they are **provisional**: the whisper.cpp s
 measure chunk length, boundary drift or pause settings on real audio. Recheck them on the first
 recorded session. Changing any of them invalidates the plan and everything after it.
 
+**Transcription** (`recap run transcribe --config <campaign.yaml> --glossary <glossary.yaml>`) runs
+whisper.cpp on each chunk and writes `transcript/<run>/segments.jsonl`, with whisper's own output
+kept in `transcript/<run>/raw/`. It needs ffmpeg and the provisioned binary and model (`recap setup
+whisper`), and every speaker in the audio must pass the consent check. Ctrl+C, a crash or a killed
+process loses at most the chunk in progress: run the same command again and it continues. The first
+run on a machine compiles shaders and is slower; that is not a hang.
+
+Segments are never dropped for being doubtful. They are flagged for review instead: `short`,
+`low_confidence`, `timestamp_clamped` (whisper's times were out of range) and `repetition_loop`
+(the model repeated itself; the text is kept as it came). The limits are optional, in
+`campaign.yaml`:
+
+```yaml
+asr:
+  short_segment_ms: 1000
+  low_confidence_mean_permille: 700 # mean token probability x1000
+  low_confidence_min_permille: 350 # lowest token probability x1000
+  repetition_min_repeats: 3
+  repetition_min_words: 12
+  repetition_max_unit_words: 120
+  prompt_max_chars: 800 # glossary terms past this stay out of the prompt
+  timeout_base_ms: 600000 # per chunk: start, model load, shader compilation
+  timeout_audio_multiplier: 5 # plus this many ms per ms of chunk audio
+```
+
+These are the built-in defaults, and they are **provisional**: S04 did not validate confidence,
+repetition or timeout values on real table audio. Recheck them on the first recorded session.
+Changing any of them except the two timeouts starts a new transcription run.
+
+**Changing the glossary.** Editing the glossary does not change an existing transcript, and `recap
+run` does not transcribe again by itself, because a new run has new segment IDs and your review
+overrides would need reconciling. It tells you the transcript does not reflect the edit. To apply
+it, run:
+
+```powershell
+npm run recap -- retranscribe --campaign <id> --session <id> --config <campaign.yaml> --glossary <glossary.yaml>
+```
+
+This makes a new run beside the old one, which stays as it was. If the glossary did not change it
+does nothing. After `recap package purge-audio` it refuses: the audio is gone.
+
+A glossary with accented letters reaches whisper through a response file. If your data root or model
+path has non-ASCII characters, recap sends the prompt without accents instead, because whisper cannot
+read both correctly on Windows.
+
 ## 4. Install dependencies and build
 
 From the repository root:

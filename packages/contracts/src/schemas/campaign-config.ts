@@ -1,5 +1,6 @@
 import { Type, type Static } from '@sinclair/typebox';
 import { CampaignId, Language, SchemaVersion1, Slug, SpeakerId, StringEnum } from '../common.ts';
+import { AsrConfigSchema } from './asr-config.ts';
 import { ChunkingConfigSchema } from './chunk-plan.ts';
 import { CONSENT_SCOPES } from './manifest.ts';
 
@@ -131,6 +132,7 @@ export const CampaignConfigSchema = Type.Object(
       ),
     ),
     chunking: Type.Optional(ChunkingConfigSchema),
+    asr: Type.Optional(AsrConfigSchema),
     speakers: Type.Array(Speaker, { minItems: 1, maxItems: 32 }),
   },
   { additionalProperties: false },

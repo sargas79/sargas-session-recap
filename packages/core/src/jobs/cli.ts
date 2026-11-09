@@ -65,8 +65,14 @@ function addCommonOptions(command: Command): Command {
 function describeOutcome(o: StageOutcome): string {
   const job = o.jobId === undefined ? '' : ` (job ${o.jobId})`;
   switch (o.action) {
-    case 'up-to-date':
-      return `${o.stage}: up to date${job}`;
+    case 'up-to-date': {
+      const stale = o.staleReceipts ?? [];
+      if (stale.length === 0) return `${o.stage}: up to date${job}`;
+      return (
+        `${o.stage}: up to date${job}; it does not reflect later changes to ${stale.join(', ')}` +
+        (o.stage === 'transcribe' ? '; run `recap retranscribe` to apply them' : '')
+      );
+    }
     case 'succeeded': {
       const why =
         o.reason === 'inputs-changed'
@@ -83,7 +89,7 @@ function describeOutcome(o: StageOutcome): string {
   }
 }
 
-function printReport(io: JobCliIo, report: RunReport): void {
+export function printReport(io: JobCliIo, report: RunReport): void {
   if (report.replacedLock !== undefined) {
     io.out(
       `took over the session lock from pid ${String(report.replacedLock.ownerPid)} (no longer running)\n`,
@@ -119,7 +125,7 @@ function describeJob(job: Job, ownerGone: boolean): string {
   return line;
 }
 
-async function reportError(io: JobCliIo, error: unknown): Promise<void> {
+export async function reportError(io: JobCliIo, error: unknown): Promise<void> {
   const { isJobError } = await import('./errors.ts');
   const { PathsError } = await import('../paths/index.ts');
   const { DbError } = await import('../db/index.ts');

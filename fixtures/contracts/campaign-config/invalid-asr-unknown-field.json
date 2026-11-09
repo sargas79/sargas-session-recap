@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "campaign_id": "synthetic-vaults",
+  "system": "pf2e",
+  "language": "pt-BR",
+  "provider": {
+    "recording": "craig",
+    "asr": "whisper-local",
+    "classification": "claude-cli",
+    "recap": "claude-cli"
+  },
+  "asr": {
+    "beam_size": 5
+  },
+  "speakers": [
+    {
+      "speaker_id": "gm",
+      "role": "gm"
+    }
+  ],
+  "consent_mode": "implied"
+}

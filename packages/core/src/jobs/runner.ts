@@ -60,6 +60,8 @@ export interface RunOptions {
   readonly sessionId: string;
   /** Stage to bring up to date (with its upstream stages). */
   readonly stage: string;
+  /** Run the target stage even when it is up to date. Upstream stages are unaffected. */
+  readonly force?: boolean | undefined;
   readonly stages: StageRegistry;
   readonly paths?: DataPaths | undefined;
   readonly config?: RunConfig | undefined;
@@ -84,9 +86,11 @@ export interface StageOutcome {
   readonly attempts: number;
   /** Why the stage ran: `never-run`, `inputs-changed`, `recovering`, `previous-run-failed`. */
   readonly reason:
-    'never-run' | 'inputs-changed' | 'recovering' | 'previous-not-succeeded' | 'current';
+    'never-run' | 'inputs-changed' | 'recovering' | 'previous-not-succeeded' | 'current' | 'forced';
   /** Names (`kind:ref`) of dependency inputs that differ from the last succeeded job. */
   readonly changedInputs: readonly string[];
+  /** For `up-to-date`: receipts that changed since that job ran, so it does not reflect them. */
+  readonly staleReceipts?: readonly string[];
   readonly error: JobFailure | undefined;
 }
 
@@ -250,6 +254,9 @@ export async function runStage(options: RunOptions): Promise<RunReport> {
         ),
       };
       const inputs = await stageInputs(stage, ctx);
+      const receipts = dedupeInputs((await stage.receipts?.(ctx)) ?? []);
+      validateInputs(receipts, stage.name);
+      const forced = options.force === true && stage.name === options.stage;
       const current = latestJob(db, campaignId, sessionId, stage.name, 'succeeded');
       const previous = latestJob(db, campaignId, sessionId, stage.name);
       const changed =
@@ -259,8 +266,13 @@ export async function runStage(options: RunOptions): Promise<RunReport> {
               current.inputs.filter((i) => i.role === 'dependency'),
               inputs,
             );
-      if (current !== undefined && changed.length === 0) {
+      if (current !== undefined && changed.length === 0 && !forced) {
         upstream.set(stage.name, toUpstream(current));
+        const declared = new Set(receipts.map(inputKey));
+        const stale = diffInputs(
+          current.inputs.filter((i) => i.role === 'receipt' && declared.has(inputKey(i))),
+          receipts,
+        );
         outcomes.push({
           stage: stage.name,
           action: 'up-to-date',
@@ -268,6 +280,7 @@ export async function runStage(options: RunOptions): Promise<RunReport> {
           attempts: 0,
           reason: 'current',
           changedInputs: [],
+          ...(stale.length === 0 ? {} : { staleReceipts: stale }),
           error: undefined,
         });
         logger.info('job.up-to-date', {
@@ -289,13 +302,16 @@ export async function runStage(options: RunOptions): Promise<RunReport> {
             ? previous === undefined
               ? 'never-run'
               : 'previous-not-succeeded'
-            : 'inputs-changed';
+            : changed.length === 0
+              ? 'forced'
+              : 'inputs-changed';
 
       const outcome = await executeJob({
         options,
         stage,
         ctx,
         inputs,
+        receipts,
         recoveredFrom,
         reason,
         changed,
@@ -383,6 +399,7 @@ interface ExecuteArgs {
   readonly stage: StageDefinition;
   readonly ctx: InputContext;
   readonly inputs: readonly JobInput[];
+  readonly receipts: readonly JobInput[];
   readonly recoveredFrom: RecoveredFrom | undefined;
   readonly reason: StageOutcome['reason'];
   readonly changed: readonly string[];
@@ -410,6 +427,7 @@ async function executeJob(args: ExecuteArgs): Promise<StageOutcome> {
     recoveredFromJobId: args.recoveredFrom?.jobId,
     now: now(),
   });
+  addJobInputs(db, jobId, args.receipts, 'receipt');
   const base = {
     stage: stage.name,
     jobId,

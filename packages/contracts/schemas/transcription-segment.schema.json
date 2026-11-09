@@ -141,7 +141,8 @@
           "short",
           "low_confidence",
           "overlap",
-          "timestamp_clamped"
+          "timestamp_clamped",
+          "repetition_loop"
         ]
       }
     }

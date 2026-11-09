@@ -9,4 +9,10 @@ export * from './stage.ts';
 export * from './state.ts';
 export * from './store.ts';
 export { monotonicUlid, ulid, ULID_RE, type UlidFactory } from '../ids/ulid.ts';
-export { registerJobCommands, type JobCliDeps, type JobCliIo } from './cli.ts';
+export {
+  printReport,
+  registerJobCommands,
+  reportError,
+  type JobCliDeps,
+  type JobCliIo,
+} from './cli.ts';

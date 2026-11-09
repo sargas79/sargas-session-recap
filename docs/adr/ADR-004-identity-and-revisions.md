@@ -50,7 +50,8 @@ reruns are not diffable, tests are not stable, and a reference such as "segment 
 ### Revisions
 
 - Transcription: a new run per retranscription. The previous run stays readable until purged by
-  an explicit command.
+  an explicit command. A glossary edit starts no run by itself: its hash is a job receipt, and
+  `recap retranscribe` applies the change (T09), because a new run changes every segment ID.
 - Classification: a new run per reclassification, bound to one transcription run.
 - Recap: a new revision per generation. Edits to a revision are SQLite state (ADR-010);
   approval binds to a revision and its content hash (ADR-007).
