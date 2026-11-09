@@ -6,6 +6,7 @@ import type { ChunkPlan } from './schemas/chunk-plan.ts';
 import type { ClassificationCorrectionsReport } from './schemas/classification-corrections-report.ts';
 import type { ClassificationResult } from './schemas/classification-result.ts';
 import type { ClassificationWindowOutput } from './schemas/classification-window-output.ts';
+import type { EffectiveTranscriptReview } from './schemas/effective-transcript-review.ts';
 import type { EffectiveTranscript } from './schemas/effective-transcript.ts';
 import type { FoundryEvent } from './schemas/foundry-event.ts';
 import type { Fragment } from './schemas/fragment.ts';
@@ -49,6 +50,7 @@ export interface ContractTypes {
   'classification-corrections-report': ClassificationCorrectionsReport;
   'review-override': ReviewOverride;
   'effective-transcript': EffectiveTranscript;
+  'effective-transcript-review': EffectiveTranscriptReview;
   recap: Recap;
   'recap-package': RecapPackage;
   'job-record': JobRecord;

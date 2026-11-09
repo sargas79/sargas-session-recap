@@ -4,6 +4,7 @@ import { ChunkPlanSchema } from './schemas/chunk-plan.ts';
 import { ClassificationCorrectionsReportSchema } from './schemas/classification-corrections-report.ts';
 import { ClassificationResultSchema } from './schemas/classification-result.ts';
 import { ClassificationWindowOutputSchema } from './schemas/classification-window-output.ts';
+import { EffectiveTranscriptReviewSchema } from './schemas/effective-transcript-review.ts';
 import { EffectiveTranscriptSchema } from './schemas/effective-transcript.ts';
 import { FoundryEventSchema } from './schemas/foundry-event.ts';
 import { FragmentSchema } from './schemas/fragment.ts';
@@ -77,6 +78,11 @@ export const CONTRACTS = {
     schema: EffectiveTranscriptSchema,
     title: 'Effective transcript projection (derived)',
     where: 'computed on demand; never authoritative',
+  },
+  'effective-transcript-review': {
+    schema: EffectiveTranscriptReviewSchema,
+    title: 'Effective transcript with provenance, for GM review (derived)',
+    where: 'computed on demand (T12); never authoritative',
   },
   recap: {
     schema: RecapSchema,

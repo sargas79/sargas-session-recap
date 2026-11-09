@@ -15,6 +15,7 @@ export * from './schemas/classification-corrections-report.ts';
 export * from './schemas/classification-result.ts';
 export * from './schemas/classification-window-output.ts';
 export * from './schemas/effective-transcript.ts';
+export * from './schemas/effective-transcript-review.ts';
 export * from './schemas/foundry-event.ts';
 export * from './schemas/fragment.ts';
 export * from './schemas/glossary.ts';

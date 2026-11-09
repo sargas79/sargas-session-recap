@@ -14,6 +14,7 @@ import { defineStages } from '../jobs/stage.ts';
 import { registerSecretsCommands } from '../llm/cli.ts';
 import { registerPackageCommands } from '../package/cli.ts';
 import { checkDataRoot, type DataRootCheck, type DataRootCheckOptions } from '../paths/index.ts';
+import { registerReviewCommands } from '../review/cli.ts';
 import { registerSetupCommands } from '../tools/cli.ts';
 import type { WhisperCheck, WhisperCheckOptions } from '../tools/doctor.ts';
 import { createChunkPlanStage } from '../transcribe/chunk-plan-stage.ts';
@@ -141,6 +142,7 @@ export function buildProgram(io: CliIo = defaultIo): Command {
   ]);
   registerJobCommands(program, io, { stages });
   registerRetranscribeCommand(program, io, { stages });
+  registerReviewCommands(program, io);
   registerSecretsCommands(program, io);
   registerSetupCommands(program, io);
 

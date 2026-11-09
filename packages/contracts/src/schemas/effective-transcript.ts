@@ -16,7 +16,7 @@ import {
 } from '../common.ts';
 import { EXCLUSION_REASONS, RECAP_INCLUSION } from './review-override.ts';
 
-const EffectiveSegment = Type.Object(
+export const EffectiveSegment = Type.Object(
   {
     segment_id: SegmentId(),
     speaker_id: SpeakerId(),
