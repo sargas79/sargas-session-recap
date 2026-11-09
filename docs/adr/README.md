@@ -23,32 +23,34 @@ JSON Schema 2020-12 files are committed in `packages/contracts/schemas/`, and sy
 | [ADR-009](ADR-009-data-root.md)                 | Data root and app-state locations                     | Accepted | T25 (#45) |
 | [ADR-010](ADR-010-recap-editorial-state.md)     | Recap editorial state and content-hash canonical form | Accepted | T27 (#46) |
 | [ADR-011](ADR-011-review-projection-details.md) | Review projection details                             | Accepted | T12 (#30) |
+| [ADR-012](ADR-012-recap-generation-details.md)  | Recap generation details                              | Accepted | T13 (#32) |
 
 ADR-008, ADR-009 and ADR-010 were reserved here so references stay stable. Their content belongs to
 the listed tasks.
 
 ## Contracts
 
-| Contract                      | Schema file                               | Stored as                                          | Owner (ADR-001)       |
-| ----------------------------- | ----------------------------------------- | -------------------------------------------------- | --------------------- |
-| `manifest`                    | `manifest.schema.json`                    | `manifest.json`                                    | package               |
-| `fragment`                    | `fragment.schema.json`                    | `fragments.jsonl`, one record per line             | capture / import      |
-| `foundry-event`               | `foundry-event.schema.json`               | `foundry.jsonl`, one record per line               | Foundry capture (T16) |
-| `transcription-segment`       | `transcription-segment.schema.json`       | `transcript/<transcription_run_id>/segments.jsonl` | transcription run     |
-| `chunk-plan`                  | `chunk-plan.schema.json`                  | `chunk-plans/<plan_hash_hex>.json`                 | chunk-plan stage      |
-| `classification-result`       | `classification-result.schema.json`       | `classify/<classification_run_id>/results.jsonl`   | classification run    |
-| `review-override`             | `review-override.schema.json`             | SQLite `review_overrides` row                      | SQLite                |
-| `effective-transcript`        | `effective-transcript.schema.json`        | computed on demand; a cache is never authoritative | derived               |
-| `effective-transcript-review` | `effective-transcript-review.schema.json` | computed on demand; adds provenance (ADR-011)      | derived               |
-| `recap`                       | `recap.schema.json`                       | `recap/<revision>/recap.json`                      | recap generation      |
-| `recap-package`               | `recap-package.schema.json`               | export file imported by the Foundry module         | derived snapshot      |
-| `job-record`                  | `job-record.schema.json`                  | SQLite `jobs` row                                  | SQLite                |
-| `recap-sentence-edit`         | `recap-sentence-edit.schema.json`         | SQLite `recap_edits` row                           | SQLite                |
-| `recap-editorial-transition`  | `recap-editorial-transition.schema.json`  | SQLite `recap_editorial_transitions` row           | SQLite                |
-| `recap-approval`              | `recap-approval.schema.json`              | SQLite `recap_approvals` row                       | SQLite                |
-| `recap-export-manifest`       | `recap-export-manifest.schema.json`       | SQLite `recap_exports` row                         | SQLite                |
-| `tools-lock`                  | `tools-lock.schema.json`                  | `packages/core/tools.lock.json`, in git            | git                   |
-| `whisper-overrides`           | `whisper-overrides.schema.json`           | `<data-root>/tools/whisper/overrides.yaml`         | operator              |
+| Contract                      | Schema file                               | Stored as                                          | Owner (ADR-001)            |
+| ----------------------------- | ----------------------------------------- | -------------------------------------------------- | -------------------------- |
+| `manifest`                    | `manifest.schema.json`                    | `manifest.json`                                    | package                    |
+| `fragment`                    | `fragment.schema.json`                    | `fragments.jsonl`, one record per line             | capture / import           |
+| `foundry-event`               | `foundry-event.schema.json`               | `foundry.jsonl`, one record per line               | Foundry capture (T16)      |
+| `transcription-segment`       | `transcription-segment.schema.json`       | `transcript/<transcription_run_id>/segments.jsonl` | transcription run          |
+| `chunk-plan`                  | `chunk-plan.schema.json`                  | `chunk-plans/<plan_hash_hex>.json`                 | chunk-plan stage           |
+| `classification-result`       | `classification-result.schema.json`       | `classify/<classification_run_id>/results.jsonl`   | classification run         |
+| `review-override`             | `review-override.schema.json`             | SQLite `review_overrides` row                      | SQLite                     |
+| `effective-transcript`        | `effective-transcript.schema.json`        | computed on demand; a cache is never authoritative | derived                    |
+| `effective-transcript-review` | `effective-transcript-review.schema.json` | computed on demand; adds provenance (ADR-011)      | derived                    |
+| `recap`                       | `recap.schema.json`                       | `recap/<revision>/recap.json`                      | recap generation           |
+| `recap-model-output`          | `recap-model-output.schema.json`          | response of one recap LLM call (T13)               | core turns it into `recap` |
+| `recap-package`               | `recap-package.schema.json`               | export file imported by the Foundry module         | derived snapshot           |
+| `job-record`                  | `job-record.schema.json`                  | SQLite `jobs` row                                  | SQLite                     |
+| `recap-sentence-edit`         | `recap-sentence-edit.schema.json`         | SQLite `recap_edits` row                           | SQLite                     |
+| `recap-editorial-transition`  | `recap-editorial-transition.schema.json`  | SQLite `recap_editorial_transitions` row           | SQLite                     |
+| `recap-approval`              | `recap-approval.schema.json`              | SQLite `recap_approvals` row                       | SQLite                     |
+| `recap-export-manifest`       | `recap-export-manifest.schema.json`       | SQLite `recap_exports` row                         | SQLite                     |
+| `tools-lock`                  | `tools-lock.schema.json`                  | `packages/core/tools.lock.json`, in git            | git                        |
+| `whisper-overrides`           | `whisper-overrides.schema.json`           | `<data-root>/tools/whisper/overrides.yaml`         | operator                   |
 
 ## Session package path layout
 
@@ -71,6 +73,7 @@ segments, no drive letters).
   recap/<revision>/
     recap.json                                   generated draft (immutable)
     recap.md                                     rendered Markdown with footnotes (T13)
+    gm-notes.md                                  GM-only notes, kept apart from recap.md (T13)
 ```
 
 `<transcription_run_id>` and `<classification_run_id>` are ULIDs; `<revision>` is the integer recap

@@ -20,7 +20,7 @@ import {
   TRANSCRIPT,
   validClassification,
   validClassificationOutput,
-  validRecap,
+  validRecapOutput,
   type FakeRun,
 } from './helpers.ts';
 
@@ -187,9 +187,9 @@ describe('Claude Code results', () => {
   });
 
   it('writes a recap with the recap model', async () => {
-    const r = start('valid', validRecap());
+    const r = start('valid', validRecapOutput());
     const result = await r.backend().writeRecap({ ...call, prompt: recapPrompt() });
-    expect(result.output.title).toBe(validRecap().title);
+    expect(result.output.title).toBe(validRecapOutput().title);
     const { args } = r.record();
     expect(args[args.indexOf('--model') + 1]).toBe('model-for-recap');
   });

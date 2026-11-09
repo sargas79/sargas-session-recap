@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "title": "Sessão 7: A ponte de pedra",
+  "sentences": [
+    {
+      "text": "O grupo chegou a uma ponte de pedra coberta de musgo.",
+      "assertion": "completed",
+      "citations": { "segment_refs": ["12:3"], "event_ids": [] }
+    },
+    {
+      "text": "Bruno procurou armadilhas e notou a Vela escondida.",
+      "assertion": "completed",
+      "outcome_basis": "roll",
+      "citations": { "segment_refs": ["13:0"], "event_ids": ["fvtt:01JBX7A0B1C2D3E4F5G6H7J8K9:42"] }
+    }
+  ],
+  "gm_notes": [
+    {
+      "reason": "unresolved",
+      "text": "Não ficou claro se o grupo atravessou a ponte.",
+      "citations": { "segment_refs": [], "event_ids": [] }
+    }
+  ]
+}

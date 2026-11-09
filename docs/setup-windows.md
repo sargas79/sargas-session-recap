@@ -394,8 +394,7 @@ npm run recap -- run classify --campaign my-campaign --session s07 `
 npm run recap -- status --campaign my-campaign --session s07     # --all for history, --json
 ```
 
-`chunk-plan`, `transcribe` and `classify` are available today; the recap stage arrives with its own
-task.
+`chunk-plan`, `transcribe`, `classify` and `recap` are available today.
 
 - **Only what changed runs again.** Each job records the hashes of its inputs: upstream outputs, the
   config fields that stage actually uses, prompts and models. A stage reruns only when one of them
@@ -485,6 +484,32 @@ npm run recap -- overrides reconcile --campaign my-campaign --session s07 --over
 If a line was split, run the first command once per part. If two lines were merged and the new one
 already has an override, change that override with `overrides set`, then discard the other. A recap
 is refused while a `spoiler` or `privacy` exclusion is waiting here.
+
+## Recap draft
+
+`recap run recap` writes a Portuguese draft from the effective transcript, through the backend named
+in `campaign.yaml`. It never publishes anything: the draft waits for your review.
+
+```powershell
+npm run recap -- run recap --campaign my-campaign --session s07 `
+  --config "D:\Recap Data\campaigns\my-campaign\campaign.yaml" `
+  --glossary "D:\Recap Data\campaigns\my-campaign\glossary.yaml"
+```
+
+- **What goes in.** Only lines whose recap inclusion is `include`. Excluded lines and lines waiting
+  for your decision are not sent. Earlier recaps of the campaign and the glossary go along as
+  background, which never counts as evidence.
+- **Refusals.** A recap is refused, before anything is sent, while a `spoiler` or `privacy` exclusion
+  is waiting for reconciliation, and when no line is included.
+- **Output.** A new `recap\<revision>\` for each generation; older revisions stay as they are.
+  `recap.json` is the draft, `recap.md` is the same text with footnotes, and `gm-notes.md` is for you
+  alone: it lists what the draft could not support, and the lines waiting for your decision. Do not
+  send that file to players.
+- **Citations.** Every sentence cites transcript lines. A citation of a line that was not sent fails
+  the attempt, and a sentence with no citation, or one based only on background, becomes a GM note.
+- **Foundry events** are not used yet (T17, T18), so sentences cite only the transcript.
+- **Prompts are a first version.** No labelled data exists, so recap quality is unmeasured. Read the
+  draft against its footnotes before using it.
 
 ## Campaign config and consent
 

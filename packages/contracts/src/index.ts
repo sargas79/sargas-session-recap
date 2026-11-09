@@ -25,6 +25,7 @@ export * from './schemas/manifest.ts';
 export * from './schemas/recap-approval.ts';
 export * from './schemas/recap-editorial-transition.ts';
 export * from './schemas/recap-export-manifest.ts';
+export * from './schemas/recap-model-output.ts';
 export * from './schemas/recap-package.ts';
 export * from './schemas/recap-sentence-edit.ts';
 export * from './schemas/recap.ts';

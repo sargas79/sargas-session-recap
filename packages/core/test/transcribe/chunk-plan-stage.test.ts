@@ -32,6 +32,7 @@ function config(chunking?: CampaignConfig['chunking']): RunConfig {
 
 function context(pkg: TempPackage, overrides: Partial<StageContext> = {}): StageContext {
   return {
+    db: {} as StageContext['db'],
     campaignId: 'test-campaign',
     sessionId: 's01',
     paths: undefined,

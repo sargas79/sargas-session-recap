@@ -2,7 +2,11 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { CampaignConfig, ClassificationModelResult, Recap } from '@sargas-recap/contracts';
+import type {
+  CampaignConfig,
+  ClassificationModelResult,
+  RecapModelOutput,
+} from '@sargas-recap/contracts';
 import { createLlmBackend, type LlmBackend, type LlmBackendOptions } from '../../src/llm/index.ts';
 import { createLogger } from '../../src/log/index.ts';
 import { loadPromptRegistry, type PromptAsset } from '../../src/prompts/index.ts';
@@ -27,7 +31,8 @@ export const validClassificationOutput = (): unknown => ({
   schema_version: 1,
   results: [validClassification()],
 });
-export const validRecap = (): Recap => contractFixture('recap') as Recap;
+export const validRecapOutput = (): RecapModelOutput =>
+  contractFixture('recap-model-output') as RecapModelOutput;
 
 export const probes = (): string[] =>
   (
@@ -55,7 +60,7 @@ const registry = loadPromptRegistry();
 export const prompts = registry;
 // Pinned: these tests exercise the backend, and v1 has the single `transcript` slot they fill.
 export const classifyPrompt = (): PromptAsset => registry.get('classification.window', 1);
-export const recapPrompt = (): PromptAsset => registry.latest('recap.draft');
+export const recapPrompt = (): PromptAsset => registry.get('recap.draft', 1);
 
 export const TRANSCRIPT = 'SYNTHETIC-TRANSCRIPT-LINE the party opens the door';
 
