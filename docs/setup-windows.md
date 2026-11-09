@@ -511,6 +511,44 @@ npm run recap -- run recap --campaign my-campaign --session s07 `
 - **Prompts are a first version.** No labelled data exists, so recap quality is unmeasured. Read the
   draft against its footnotes before using it.
 
+## Review screen
+
+`recap review` opens one session on a page on your own machine, for correcting the transcript and
+reading the draft against its evidence. Run `npm run build` first, so the page has its small script.
+
+```powershell
+npm run recap -- review --campaign my-campaign --session s07 `
+  --config "D:\Recap Data\campaigns\my-campaign\campaign.yaml" `
+  --glossary "D:\Recap Data\campaigns\my-campaign\glossary.yaml"
+```
+
+The command prints a link. Open it in your browser and press Ctrl+C in the terminal when you are
+done. `--port` picks a port; without it a free one is used. Without `--config` and `--glossary`
+everything works except regenerating the recap.
+
+- **Private.** The server answers only on `127.0.0.1`. The link holds a secret that changes every
+  run, so a link from an earlier run stops working. Do not paste it anywhere. Windows Firewall has
+  nothing to allow.
+- **Review queue.** Overrides waiting for reconciliation come first, then lines flagged as possible
+  spoilers, then unresolved ones, then doubtful audio and spelling corrections. A line leaves the
+  queue when you mark it reviewed.
+- **Possible spoilers.** Recap generation does not remove them. A flagged line stays included until
+  you exclude it, so check each one before regenerating.
+- **What changed.** A line whose text was altered shows the original next to the result, with each
+  correction. A spelling correction with no glossary entry is highlighted.
+- **Corrections.** Each line has quick buttons and an `Edit override` form with the same choices as
+  `recap overrides set`. If the override changed elsewhere after the page loaded, the save is refused:
+  reload and redo it. The list can be filtered, and `j` / `k` move between lines.
+- **Foundry events** appear in the list when the session has them. Their position is an estimate.
+- **Recap panel.** Footnotes jump to the cited lines. The player-facing draft and the GM notes are
+  separate panels; GM notes are for you alone. Nothing is published from this page. Editing, approval
+  and export come later.
+- **Regenerate.** Asks for a confirmation, because it sends the included lines to the provider. It
+  writes a new revision, and corrections are locked until it ends. It reports `no new revision` when
+  nothing changed since the last draft, and is refused while a spoiler or privacy exclusion waits for
+  reconciliation.
+- **Logs** carry only the route, the status and the timing, never session text.
+
 ## Campaign config and consent
 
 Each campaign has a `campaign.yaml` (speakers, per-stage provider, consent mode and records) and a

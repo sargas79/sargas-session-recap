@@ -24,6 +24,7 @@ JSON Schema 2020-12 files are committed in `packages/contracts/schemas/`, and sy
 | [ADR-010](ADR-010-recap-editorial-state.md)     | Recap editorial state and content-hash canonical form | Accepted | T27 (#46) |
 | [ADR-011](ADR-011-review-projection-details.md) | Review projection details                             | Accepted | T12 (#30) |
 | [ADR-012](ADR-012-recap-generation-details.md)  | Recap generation details                              | Accepted | T13 (#32) |
+| [ADR-013](ADR-013-review-ui-details.md)         | Review UI details                                     | Accepted | T14 (#33) |
 
 ADR-008, ADR-009 and ADR-010 were reserved here so references stay stable. Their content belongs to
 the listed tasks.

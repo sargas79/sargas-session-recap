@@ -24,7 +24,7 @@
     "tools.lock.json"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && node scripts/copy-migrations.js",
+    "build": "tsc -p tsconfig.build.json && node scripts/copy-migrations.js && node scripts/build-review-client.js",
     "typecheck": "tsc -p tsconfig.json",
     "recap": "node src/cli/main.ts"
   },
@@ -39,6 +39,7 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "9.6.0",
-    "@types/yauzl": "3.4.0"
+    "@types/yauzl": "3.4.0",
+    "esbuild": "0.28.2"
   }
 }

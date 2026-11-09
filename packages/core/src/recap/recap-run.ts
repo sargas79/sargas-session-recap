@@ -174,7 +174,7 @@ function loadPrompts(options: RecapStageOptions): StagePrompts {
 }
 
 /** Exactly what the prompt can show of the GM's decisions, so a change to it reruns the stage. */
-function overridesHash(view: EffectiveTranscriptReview): string {
+export function overridesHash(view: EffectiveTranscriptReview): string {
   const { included, unresolved } = selectRecapInput(view);
   return contentHash({
     included: included.map((s) => ({ id: s.segment_id, text: s.text, label: s.label })),
