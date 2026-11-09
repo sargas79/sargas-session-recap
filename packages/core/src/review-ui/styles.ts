@@ -86,4 +86,10 @@ ul.notes li { margin-bottom: 6px; overflow-wrap: anywhere; }
 #filters[hidden] { display: none; }
 #filters button[aria-pressed="true"] { outline: 2px solid var(--ic); }
 .spoiler-list a { display: inline-block; margin-right: 8px; }
+section.approval dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 2px 10px; margin: 0 0 8px; font-size: 13px; }
+section.approval dd { margin: 0; overflow-wrap: anywhere; }
+.state-draft { color: var(--muted); } .state-reviewed { color: var(--warn); }
+.state-approved, .state-exported { color: var(--player); font-weight: 700; }
+textarea#copy-source { min-height: 110px; font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+.removed { color: var(--muted); text-decoration: line-through; }
 `;

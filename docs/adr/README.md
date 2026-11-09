@@ -25,6 +25,7 @@ JSON Schema 2020-12 files are committed in `packages/contracts/schemas/`, and sy
 | [ADR-011](ADR-011-review-projection-details.md) | Review projection details                             | Accepted | T12 (#30) |
 | [ADR-012](ADR-012-recap-generation-details.md)  | Recap generation details                              | Accepted | T13 (#32) |
 | [ADR-013](ADR-013-review-ui-details.md)         | Review UI details                                     | Accepted | T14 (#33) |
+| [ADR-014](ADR-014-recap-approval-details.md)    | Recap editing and approval details                    | Accepted | T15 (#35) |
 
 ADR-008, ADR-009 and ADR-010 were reserved here so references stay stable. Their content belongs to
 the listed tasks.
@@ -75,6 +76,7 @@ segments, no drive letters).
     recap.json                                   generated draft (immutable)
     recap.md                                     rendered Markdown with footnotes (T13)
     gm-notes.md                                  GM-only notes, kept apart from recap.md (T13)
+  exports/recap-r<revision>-<export_id>.json     approved recap package, derived (T15, ADR-014)
 ```
 
 `<transcription_run_id>` and `<classification_run_id>` are ULIDs; `<revision>` is the integer recap

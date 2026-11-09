@@ -1,5 +1,5 @@
 /**
- * Recap: evidence-backed recap generation (T13). Approval and export build on this (T15).
+ * Recap: evidence-backed recap generation (T13), and its editing, approval and export (T15).
  */
 export const MODULE_NAME = 'recap';
 
@@ -33,4 +33,31 @@ export {
   type SegmentSource,
   type SegmentSources,
 } from './render.ts';
-export { allocateRecapRevision } from './revisions.ts';
+export { allocateForkRevision, allocateRecapRevision } from './revisions.ts';
+export {
+  applyRecapEdit,
+  approvedRecapMarkdown,
+  approveRecap,
+  effectiveRecap,
+  exportRecap,
+  latestExportFile,
+  latestRecapRevision,
+  loadEditorialView,
+  loadRecapDraft,
+  markRecapReviewed,
+  normalizeEditText,
+  reopenRecap,
+  releaseBlockers,
+  type EditOutcome,
+  type EditRequest,
+  type EffectiveNote,
+  type EffectiveRecap,
+  type EffectiveSentence,
+  type ExportFile,
+  type ExportOutcome,
+  type RecapEditorialView,
+  type ReleaseBlocker,
+  type SpoilerAcknowledgement,
+} from './editorial.ts';
+export { isRecapEditorialError, RecapEditorialError } from './errors.ts';
+export { buildRecapPackage, EXPORT_GENERATOR_VERSION } from './export-package.ts';

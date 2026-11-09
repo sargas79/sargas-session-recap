@@ -49,13 +49,18 @@ function sources(citations: RecapCitations, known: SegmentSources): string {
 
 /** The player-facing draft: one sentence per line, one footnote per sentence. */
 export function renderRecapMarkdown(recap: Recap, known: SegmentSources): string {
+  // A GM-edited sentence may have no citations (T15); generated sentences always do.
+  const cited = (sentence: Recap['sentences'][number]): boolean =>
+    sentence.citations.segment_ids.length + sentence.citations.event_ids.length > 0;
   const lines = recap.sentences.map(
-    (sentence, n) => `${markdownText(sentence.text)}[^${String(n + 1)}]`,
+    (sentence, n) =>
+      `${markdownText(sentence.text)}${cited(sentence) ? `[^${String(n + 1)}]` : ''}`,
   );
-  const footnotes = recap.sentences.map(
-    (sentence, n) => `[^${String(n + 1)}]: ${sources(sentence.citations, known)}`,
+  const footnotes = recap.sentences.flatMap((sentence, n) =>
+    cited(sentence) ? [`[^${String(n + 1)}]: ${sources(sentence.citations, known)}`] : [],
   );
-  return `# ${markdownText(recap.title)}\n\n${lines.join('\n')}\n\n${footnotes.join('\n')}\n`;
+  const notes = footnotes.length === 0 ? '' : `\n\n${footnotes.join('\n')}`;
+  return `# ${markdownText(recap.title)}\n\n${lines.join('\n')}${notes}\n`;
 }
 
 /** GM-only notes, in a file of their own so `recap.md` can be read without them. */

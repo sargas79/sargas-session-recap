@@ -4,6 +4,7 @@
  * `reconcile --discard`, `recap run recap`). No review or recap logic lives here.
  */
 import { LABELS, type ClassificationLabel } from '@sargas-recap/contracts';
+import type { EditRequest, SpoilerAcknowledgement } from '../recap/editorial.ts';
 import { unreconciledExclusions } from '../review/project.ts';
 import {
   discardUnreconciled,
@@ -203,6 +204,137 @@ export function assertRegenerationConfirmed(raw: unknown): void {
   if (body['confirm'] !== 'yes') {
     throw bad('regeneration needs confirm=yes: it sends the included lines to the provider');
   }
+}
+
+const EDIT_FIELDS = [
+  'target_kind',
+  'target_id',
+  'action',
+  'text',
+  'citations',
+  'expected_edit_count',
+];
+
+function stringOf(field: string, value: unknown): string {
+  if (typeof value !== 'string') throw bad(`${field} must be a string`);
+  return value;
+}
+
+function stringList(field: string, value: unknown): string[] {
+  if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) {
+    throw bad(`${field} must be a list of strings`);
+  }
+  return value as string[];
+}
+
+function countOf(field: string, value: unknown): number {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) {
+    throw bad(`${field} must be a non-negative integer`);
+  }
+  return value;
+}
+
+const EDIT_TARGETS = ['title', 'sentence', 'gm_note'] as const;
+const EDIT_ACTIONS = ['replace', 'remove', 'revert'] as const;
+
+function parseEditCitations(raw: unknown): NonNullable<EditRequest['citations']> | undefined {
+  if (raw === undefined) return undefined;
+  const citations = asObject(raw, 'citations');
+  onlyKeys(citations, ['segment_ids', 'event_ids'], 'citations');
+  return {
+    segment_ids: stringList('citations.segment_ids', citations['segment_ids']),
+    ...(citations['event_ids'] === undefined
+      ? {}
+      : { event_ids: stringList('citations.event_ids', citations['event_ids']) }),
+  };
+}
+
+export function parseEditRequest(raw: unknown): EditRequest {
+  const body = asObject(raw, 'the edit');
+  onlyKeys(body, EDIT_FIELDS, 'the edit');
+  return {
+    targetKind: oneOf('target_kind', body['target_kind'], EDIT_TARGETS),
+    targetId: stringOf('target_id', body['target_id']),
+    action: oneOf('action', body['action'], EDIT_ACTIONS),
+    ...(body['text'] === undefined ? {} : { text: stringOf('text', body['text']) }),
+    citations: parseEditCitations(body['citations']),
+    expectedEditCount: countOf('expected_edit_count', body['expected_edit_count']),
+  };
+}
+
+/**
+ * An edit form as the JSON body of the API. The citations box holds whitespace- or comma-separated
+ * segment refs; it is sent only by a sentence's own form, and ignored unless replacing.
+ */
+export function editBodyFromForm(form: URLSearchParams): Record<string, unknown> {
+  for (const key of form.keys()) {
+    if (!EDIT_FIELDS.includes(key)) throw bad('the edit: unknown field');
+  }
+  const action = form.get('action');
+  const text = form.get('text');
+  const citations = form.get('citations');
+  const body: Record<string, unknown> = {
+    target_kind: form.get('target_kind'),
+    target_id: form.get('target_id'),
+    action,
+    expected_edit_count: Number(form.get('expected_edit_count') ?? 'NaN'),
+  };
+  if (action === 'replace') {
+    if (text !== null) body['text'] = text;
+    if (citations !== null) {
+      body['citations'] = {
+        segment_ids: citations.split(/[\s,]+/).filter((id) => id !== ''),
+      };
+    }
+  }
+  return body;
+}
+
+export interface ReleaseRequest {
+  readonly expectedHash: string;
+  readonly spoilers: SpoilerAcknowledgement;
+}
+
+/** Review, approval and export must name the exact content hash the GM looked at. */
+export function parseExpectedHash(raw: unknown): string {
+  const body = asObject(raw, 'the request');
+  onlyKeys(body, ['expected_hash'], 'the request');
+  return stringOf('expected_hash', body['expected_hash']);
+}
+
+export function parseReleaseRequest(raw: unknown): ReleaseRequest {
+  const body = asObject(raw, 'the request');
+  onlyKeys(body, ['expected_hash', 'spoilers_ack', 'spoilers_confirm'], 'the request');
+  return {
+    expectedHash: stringOf('expected_hash', body['expected_hash']),
+    spoilers: {
+      segmentIds:
+        body['spoilers_ack'] === undefined ? [] : stringList('spoilers_ack', body['spoilers_ack']),
+      confirmed: body['spoilers_confirm'] === 'yes',
+    },
+  };
+}
+
+export function releaseBodyFromForm(form: URLSearchParams): Record<string, unknown> {
+  for (const key of form.keys()) {
+    if (!['expected_hash', 'spoilers_ack', 'spoilers_confirm'].includes(key)) {
+      throw bad('the request: unknown field');
+    }
+  }
+  const body: Record<string, unknown> = {
+    expected_hash: form.get('expected_hash'),
+    spoilers_ack: form.getAll('spoilers_ack'),
+  };
+  const confirm = form.get('spoilers_confirm');
+  if (confirm !== null) body['spoilers_confirm'] = confirm;
+  return body;
+}
+
+/** A revision number from a route. */
+export function parseRevision(value: string | undefined): number {
+  const revision = Number(value);
+  if (!Number.isSafeInteger(revision) || revision < 1) throw bad('the revision is not valid');
+  return revision;
 }
 
 /** The check of ADR-005, point 7, in time to tell the GM. The stage enforces it again. */

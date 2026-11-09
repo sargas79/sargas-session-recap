@@ -589,7 +589,7 @@ describe('review screen', () => {
     expect(player).toContain('cites a possible spoiler');
   });
 
-  it('offers no publish, approval or export action', async () => {
+  it('offers no publish action, and no approval or export on an unreviewed draft', async () => {
     await writeRecap(world, 1, {
       sentences: [
         {
@@ -606,7 +606,7 @@ describe('review screen', () => {
     const forms = [...page.matchAll(/action="([^"]+)"/g)].map((m) => m[1] ?? '');
     for (const action of forms) {
       expect(action).toMatch(
-        /^\/api\/(segments|overrides)\/[^/]+\/\w+$|^\/api\/recap\/regenerate$/,
+        /^\/api\/(segments|overrides)\/[^/]+\/\w+$|^\/api\/recap\/regenerate$|^\/api\/recap\/revisions\/\d+\/(edits|review|approve|reopen|export)$/,
       );
     }
     expect(page).not.toMatch(/<button[^>]*>\s*(Publish|Approve|Export)/i);

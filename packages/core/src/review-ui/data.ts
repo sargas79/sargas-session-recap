@@ -10,21 +10,23 @@ import {
   type FoundryEvent,
   type Recap,
 } from '@sargas-recap/contracts';
-import { latestJob } from '../jobs/store.ts';
 import {
   FOUNDRY_FILE,
   MANIFEST_FILE,
   realPackageRoot,
   resolveInsidePackage,
 } from '../package/index.ts';
-import { overridesHash } from '../recap/recap-run.ts';
-import { isReviewError, ReviewError } from '../review/errors.ts';
 import {
-  findJobOutput,
-  loadSessionReview,
-  readJobOutput,
-  type SessionRef,
-} from '../review/session.ts';
+  generationJob,
+  latestRecapRevision,
+  loadEditorialView,
+  loadRecapDraft,
+  type RecapEditorialView,
+} from '../recap/editorial.ts';
+import { isRecapEditorialError } from '../recap/errors.ts';
+import { overridesHash } from '../recap/recap-run.ts';
+import { isReviewError } from '../review/errors.ts';
+import { loadSessionReview, type SessionRef } from '../review/session.ts';
 import type { StoredOverride } from '../review/store.ts';
 
 export type ReviewSegment = EffectiveTranscriptReview['segments'][number];
@@ -73,8 +75,10 @@ export type RecapStaleness = 'other-transcription' | 'corrected-since';
 
 export interface RecapDraftView {
   readonly revision: number;
+  /** The generated draft; what the GM reads and edits is `editorial.effective`. */
   readonly recap: Recap;
   readonly staleness: readonly RecapStaleness[];
+  readonly editorial: RecapEditorialView;
 }
 
 export interface PlacedEvent {
@@ -103,33 +107,25 @@ async function loadRecap(
   ref: SessionRef,
   view: EffectiveTranscriptReview,
 ): Promise<RecapDraftView | null> {
-  const job = latestJob(ref.db, ref.campaignId, ref.sessionId, 'recap', 'succeeded');
-  const revision = job?.outputRecapRevision;
-  if (job === undefined || revision === undefined) return null;
-  const root = await realPackageRoot(ref.paths.sessionDir(ref.campaignId, ref.sessionId));
-  const output = findJobOutput(job, `recap/${String(revision)}/`, 'recap.json');
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(await readJobOutput(root, output));
-  } catch (error) {
-    if (isReviewError(error)) throw error;
-    throw new ReviewError('REVIEW_RUN_INVALID', `${output.path}: bad JSON`);
-  }
-  const checked = validateContract('recap', parsed);
-  if (!checked.ok) {
-    throw new ReviewError('REVIEW_RUN_INVALID', `${output.path} does not fit the recap contract`);
-  }
-  const recorded = job.inputs.find(
+  const revision = latestRecapRevision(ref);
+  if (revision === undefined) return null;
+  const recap = await loadRecapDraft(ref, revision);
+  const recorded = generationJob(ref, revision)?.inputs.find(
     (input) => input.kind === 'overrides' && input.ref === 'effective-transcript',
   );
   const staleness: RecapStaleness[] = [];
-  if (checked.value.transcription_run_id !== view.transcription_run_id) {
+  if (recap.transcription_run_id !== view.transcription_run_id) {
     staleness.push('other-transcription');
   }
   if (recorded !== undefined && recorded.hash !== overridesHash(view)) {
     staleness.push('corrected-since');
   }
-  return { revision, recap: checked.value, staleness };
+  return {
+    revision,
+    recap,
+    staleness,
+    editorial: await loadEditorialView(ref, revision, view),
+  };
 }
 
 async function readIfPresent(root: string, rel: string): Promise<string | undefined> {
@@ -214,7 +210,7 @@ export async function loadReviewScreen(ref: SessionRef): Promise<ReviewScreen> {
   try {
     recap = await loadRecap(ref, view);
   } catch (error) {
-    if (!isReviewError(error)) throw error;
+    if (!isReviewError(error) && !isRecapEditorialError(error)) throw error;
     recapProblem = error.message;
   }
   return { view, overrides, recap, recapProblem, foundry: await loadFoundryEvents(ref) };
