@@ -106,6 +106,12 @@ export interface StageDefinition {
    */
   receipts?(ctx: InputContext): readonly JobInput[] | Promise<readonly JobInput[]>;
   readonly provider?: StageProvider | undefined;
+  /**
+   * True when the source this stage reads is gone for good (ADR-006: audio purged). When the stage
+   * is upstream of the target, its latest succeeded job stands and its inputs are not recomputed,
+   * so what can still be derived from existing runs keeps working. As the target it runs as usual.
+   */
+  sourcePurged?(ctx: InputContext): boolean | Promise<boolean>;
   readonly retry?: Partial<RetryPolicy> | undefined;
   run(ctx: StageContext): Promise<StageResult | undefined> | StageResult | undefined;
 }

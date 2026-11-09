@@ -66,6 +66,8 @@ function describeOutcome(o: StageOutcome): string {
   const job = o.jobId === undefined ? '' : ` (job ${o.jobId})`;
   switch (o.action) {
     case 'up-to-date': {
+      if (o.reason === 'source-purged')
+        return `${o.stage}: kept as it is${job}; the audio is purged`;
       const stale = o.staleReceipts ?? [];
       if (stale.length === 0) return `${o.stage}: up to date${job}`;
       return (

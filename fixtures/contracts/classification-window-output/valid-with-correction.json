@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "results": [
+    {
+      "segment_ref": "0:0",
+      "label": "ic",
+      "corrections": [{ "kind": "name", "from": "Kira", "to": "Kyra", "glossary_id": "kyra" }],
+      "unmatched_names": ["Zebulon"],
+      "possible_spoiler": true
+    }
+  ]
+}

@@ -19,7 +19,8 @@ export const CLASSIFICATION_FLAGS = [
   'possible_spoiler',
 ] as const;
 
-const Correction = Type.Object(
+/** One proposed or applied text correction. `from` is a literal substring of the text. */
+export const CorrectionSchema = Type.Object(
   {
     kind: StringEnum(['name', 'term', 'spelling'] as const),
     from: Type.String({ minLength: 1, maxLength: 200 }),
@@ -43,7 +44,7 @@ export const ClassificationResultSchema = Type.Object(
     label: Label(),
     review_required: Type.Boolean({ description: 'Always true for mixed and uncertain.' }),
     text_corrected: Type.Optional(Text({ description: 'text_original with corrections applied.' })),
-    corrections: Type.Array(Correction),
+    corrections: Type.Array(CorrectionSchema),
     event_ids: Type.Array(EventId(), {
       uniqueItems: true,
       description: 'Foundry events used as evidence; only with verified alignment (T18).',

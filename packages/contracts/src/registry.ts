@@ -1,7 +1,9 @@
 import type { TSchema } from '@sinclair/typebox';
 import { CampaignConfigSchema } from './schemas/campaign-config.ts';
 import { ChunkPlanSchema } from './schemas/chunk-plan.ts';
+import { ClassificationCorrectionsReportSchema } from './schemas/classification-corrections-report.ts';
 import { ClassificationResultSchema } from './schemas/classification-result.ts';
+import { ClassificationWindowOutputSchema } from './schemas/classification-window-output.ts';
 import { EffectiveTranscriptSchema } from './schemas/effective-transcript.ts';
 import { FoundryEventSchema } from './schemas/foundry-event.ts';
 import { FragmentSchema } from './schemas/fragment.ts';
@@ -55,6 +57,16 @@ export const CONTRACTS = {
     schema: ClassificationResultSchema,
     title: 'Classification result',
     where: 'classify/<classification_run_id>/results.jsonl (one record per line)',
+  },
+  'classification-window-output': {
+    schema: ClassificationWindowOutputSchema,
+    title: 'Classification model output for one window',
+    where: 'the response of one LLM call (T11); core turns it into classification-result records',
+  },
+  'classification-corrections-report': {
+    schema: ClassificationCorrectionsReportSchema,
+    title: 'Classification corrections report',
+    where: 'classify/<classification_run_id>/corrections-report.json',
   },
   'review-override': {
     schema: ReviewOverrideSchema,

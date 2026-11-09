@@ -86,7 +86,13 @@ export interface StageOutcome {
   readonly attempts: number;
   /** Why the stage ran: `never-run`, `inputs-changed`, `recovering`, `previous-run-failed`. */
   readonly reason:
-    'never-run' | 'inputs-changed' | 'recovering' | 'previous-not-succeeded' | 'current' | 'forced';
+    | 'never-run'
+    | 'inputs-changed'
+    | 'recovering'
+    | 'previous-not-succeeded'
+    | 'current'
+    | 'forced'
+    | 'source-purged';
   /** Names (`kind:ref`) of dependency inputs that differ from the last succeeded job. */
   readonly changedInputs: readonly string[];
   /** For `up-to-date`: receipts that changed since that job ran, so it does not reflect them. */
@@ -253,6 +259,26 @@ export async function runStage(options: RunOptions): Promise<RunReport> {
           }),
         ),
       };
+      if (stage.name !== options.stage && (await stage.sourcePurged?.(ctx)) === true) {
+        const kept = latestJob(db, campaignId, sessionId, stage.name, 'succeeded');
+        if (kept === undefined) {
+          throw new JobError(
+            'JOB_INVALID_INPUT',
+            `stage ${stage.name} never finished for this session and its audio is purged, so ${options.stage} has nothing to work from`,
+          );
+        }
+        upstream.set(stage.name, toUpstream(kept));
+        outcomes.push({
+          stage: stage.name,
+          action: 'up-to-date',
+          jobId: kept.jobId,
+          attempts: 0,
+          reason: 'source-purged',
+          changedInputs: [],
+          error: undefined,
+        });
+        continue;
+      }
       const inputs = await stageInputs(stage, ctx);
       const receipts = dedupeInputs((await stage.receipts?.(ctx)) ?? []);
       validateInputs(receipts, stage.name);

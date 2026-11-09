@@ -13,7 +13,7 @@ import {
   formatIssues,
   validateContract,
   type CampaignConfig,
-  type ClassificationResult,
+  type ClassificationModelResult,
   type Recap,
   type ValidationIssue,
 } from '@sargas-recap/contracts';
@@ -33,7 +33,7 @@ import { addUsage, type LlmAdapter } from './adapter.ts';
 import { createClaudeApiAdapter, type ClaudeApiOptions } from './claude-api.ts';
 import { createClaudeCodeAdapter, type ClaudeCodeOptions } from './claude-code.ts';
 import { isLlmError, LlmError } from './errors.ts';
-import { modelListSchema, modelSchema } from './output-schema.ts';
+import { modelSchema } from './output-schema.ts';
 
 export const LLM_PROVIDERS = ['claude-cli', 'claude-api'] as const;
 export type LlmProvider = (typeof LLM_PROVIDERS)[number];
@@ -67,7 +67,10 @@ export interface LlmResult<T> {
 }
 
 export interface LlmBackend {
-  classify(call: LlmCall<ClassificationResult[]>): Promise<LlmResult<ClassificationResult[]>>;
+  /** Returns what the model can know; the classify stage (T11) completes the records. */
+  classify(
+    call: LlmCall<ClassificationModelResult[]>,
+  ): Promise<LlmResult<ClassificationModelResult[]>>;
   writeRecap(call: LlmCall<Recap>): Promise<LlmResult<Recap>>;
 }
 
@@ -104,24 +107,10 @@ function schemaFailure(errors: readonly ValidationIssue[]): LlmError {
   );
 }
 
-function parseClassification(output: unknown): ClassificationResult[] {
-  const results = (output as { results?: unknown } | null)?.results;
-  if (!Array.isArray(results)) {
-    throw schemaFailure([{ path: '/results', keyword: 'type', message: 'must be an array' }]);
-  }
-  const issues: ValidationIssue[] = [];
-  const parsed: ClassificationResult[] = [];
-  results.forEach((item: unknown, index) => {
-    const result = validateContract('classification-result', item);
-    if (result.ok) parsed.push(result.value);
-    else {
-      issues.push(
-        ...result.errors.map((e) => ({ ...e, path: `/results/${String(index)}${e.path}` })),
-      );
-    }
-  });
-  if (issues.length > 0) throw schemaFailure(issues);
-  return parsed;
+function parseClassification(output: unknown): ClassificationModelResult[] {
+  const result = validateContract('classification-window-output', output);
+  if (!result.ok) throw schemaFailure(result.errors);
+  return result.value.results;
 }
 
 function parseRecap(output: unknown): Recap {
@@ -258,7 +247,7 @@ export function createLlmBackend(options: LlmBackendOptions): LlmBackend {
 
   return {
     classify: (call) =>
-      run('classification', call, modelListSchema('classification-result'), parseClassification),
+      run('classification', call, modelSchema('classification-window-output'), parseClassification),
     writeRecap: (call) => run('recap', call, modelSchema('recap'), parseRecap),
   };
 }

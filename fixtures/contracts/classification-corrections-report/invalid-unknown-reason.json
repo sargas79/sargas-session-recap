@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "classification_run_id": "01JBX7RA3C5E7G9J1K3M5N7P9Q",
+  "transcription_run_id": "01JBX7Q8M2N4P6R8S0T2V4W6XY",
+  "fixed": [],
+  "unmatched": [],
+  "rejected": [
+    {
+      "segment_id": "01JBX7Q8M2N4P6R8S0T2V4W6XY:12:5",
+      "kind": "spelling",
+      "from": "absent",
+      "to": "present",
+      "reason": "because"
+    }
+  ]
+}

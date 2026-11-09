@@ -7,6 +7,7 @@ import {
   type AudioToolchainOptions,
 } from '../audio/index.ts';
 import { registerImportCommands } from '../capture/cli.ts';
+import { createClassifyStage } from '../classify/classify-stage.ts';
 import { registerConfigCommands } from '../config/cli.ts';
 import { registerJobCommands } from '../jobs/cli.ts';
 import { defineStages } from '../jobs/stage.ts';
@@ -133,7 +134,11 @@ export function buildProgram(io: CliIo = defaultIo): Command {
   registerImportCommands(program, io, { toolVersion: readVersion() });
   registerPackageCommands(program, io);
   registerConfigCommands(program, io);
-  const stages = defineStages([createChunkPlanStage(), createTranscribeStage()]);
+  const stages = defineStages([
+    createChunkPlanStage(),
+    createTranscribeStage(),
+    createClassifyStage(),
+  ]);
   registerJobCommands(program, io, { stages });
   registerRetranscribeCommand(program, io, { stages });
   registerSecretsCommands(program, io);

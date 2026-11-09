@@ -16,7 +16,7 @@ import {
   type LlmError,
   type SecretStore,
 } from '../../src/llm/index.ts';
-import { modelListSchema, modelSchema } from '../../src/llm/output-schema.ts';
+import { modelSchema } from '../../src/llm/output-schema.ts';
 import { createLogger, SecretRedactor } from '../../src/log/index.ts';
 import { promptJobInput } from '../../src/prompts/index.ts';
 import { glossary } from '../config/helpers.ts';
@@ -29,7 +29,7 @@ import {
   recapPrompt,
   speakerIds,
   TRANSCRIPT,
-  validClassification,
+  validClassificationOutput,
   type FakeRun,
 } from './helpers.ts';
 
@@ -83,7 +83,7 @@ describe('backend selection', () => {
   });
 
   it('sends the registry system prompt', async () => {
-    run = fakeRun('valid', { results: [validClassification()] });
+    run = fakeRun('valid', validClassificationOutput());
     await run.backend().classify(call());
     const { args } = run.record();
     expect(args[args.indexOf('--system-prompt') + 1]).toBe(
@@ -111,7 +111,7 @@ describe('provider schema', () => {
   }
 
   it('drops what structured output rejects and keeps the shape', () => {
-    for (const schema of [modelListSchema('classification-result'), modelSchema('recap')]) {
+    for (const schema of [modelSchema('classification-window-output'), modelSchema('recap')]) {
       const found = keywords(schema, new Set());
       for (const keyword of FORBIDDEN) expect(found.has(keyword)).toBe(false);
       expect(schema['type']).toBe('object');
@@ -152,9 +152,10 @@ describe('job records', () => {
 
   it('records the usage of every attempt on the job', async () => {
     fixture = await openFixture();
-    const { config, runConfig, stages } = setup('schema-invalid,valid', {
-      results: [validClassification()],
-    });
+    const { config, runConfig, stages } = setup(
+      'schema-invalid,valid',
+      validClassificationOutput(),
+    );
     const report = await runStage({
       db: fixture.db,
       campaignId: config.campaign_id,

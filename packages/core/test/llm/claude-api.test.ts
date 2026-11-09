@@ -20,7 +20,7 @@ import {
   prompts,
   speakerIds,
   TRANSCRIPT,
-  validClassification,
+  validClassificationOutput,
 } from './helpers.ts';
 
 const anthropicCtor = vi.hoisted(() => vi.fn());
@@ -50,7 +50,7 @@ const store = (value: string | undefined): (() => Promise<SecretStore>) =>
     }),
   );
 
-const ok = (output: unknown = { results: [validClassification()] }): AnthropicResponse => ({
+const ok = (output: unknown = validClassificationOutput()): AnthropicResponse => ({
   stop_reason: 'end_turn',
   usage: { input_tokens: 5, output_tokens: 7, cache_read_input_tokens: 2 },
   content: [{ type: 'text', text: JSON.stringify(output) }],

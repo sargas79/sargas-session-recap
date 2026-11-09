@@ -9,6 +9,7 @@ import type { ResolvedTool } from '../audio/index.ts';
 import { requireConfig, type StageDefinition } from '../jobs/stage.ts';
 import type { JobInput } from '../jobs/store.ts';
 import type { WhisperTools } from '../tools/inspect.ts';
+import { audioPurged } from './chunk-plan-stage.ts';
 
 export const ASR_GLOSSARY_RECEIPT: Pick<JobInput, 'kind' | 'ref'> = {
   kind: 'glossary',
@@ -34,6 +35,7 @@ export function createTranscribeStage(options: TranscribeStageOptions = {}): Sta
   return {
     name: 'transcribe',
     upstream: ['chunk-plan'],
+    sourcePurged: audioPurged,
     provider: {
       purpose: 'asr',
       speakerIds: async (ctx) => (await import('./transcribe-run.ts')).planSpeakers(ctx),
