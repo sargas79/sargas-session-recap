@@ -19,6 +19,7 @@ import {
   speakerIds,
   TRANSCRIPT,
   validClassification,
+  validClassificationOutput,
   validRecap,
   type FakeRun,
 } from './helpers.ts';
@@ -29,7 +30,7 @@ const call = {
   data: { transcript: TRANSCRIPT },
   speakerIds: speakerIds(config),
 };
-const validOutput = (): unknown => ({ results: [validClassification()] });
+const validOutput = (): unknown => validClassificationOutput();
 
 let run: FakeRun | undefined;
 function start(modes: string, output: unknown = validOutput()): FakeRun {

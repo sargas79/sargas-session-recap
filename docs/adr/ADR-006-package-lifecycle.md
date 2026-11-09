@@ -69,6 +69,8 @@ chunk-plans/<plan_hash_hex>.json
 transcript/<transcription_run_id>/segments.jsonl
 transcript/<transcription_run_id>/raw/
 classify/<classification_run_id>/results.jsonl
+classify/<classification_run_id>/corrections-report.json
+classify/<classification_run_id>/windows/
 recap/<revision>/recap.json
 recap/<revision>/recap.md
 ```
@@ -83,6 +85,11 @@ recap/<revision>/recap.md
   removes it.
 - `transcript/<transcription_run_id>/raw/chunk-<chunk_index>.json` is whisper.cpp's output for that
   chunk, unchanged (T09). It is not a contract and nothing else reads it.
+- `classify/<classification_run_id>/windows/window-<window_index>.json` is the finished work of one
+  window, kept so a failed window costs only itself (T11). It is not a contract; `results.jsonl` is
+  the authoritative output and is built from these files.
+- A purged package keeps running what needs no audio: when audio is purged, a stage upstream of the
+  target stands on its latest succeeded job and is not recomputed (T11, `StageDefinition.sourcePurged`).
 
 ## Consequences
 

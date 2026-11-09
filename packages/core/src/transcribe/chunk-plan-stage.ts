@@ -106,6 +106,19 @@ async function loadParams(ctx: Pick<InputContext, 'config'>): Promise<ChunkPlanP
   }
 }
 
+/** True when the package's audio was purged (ADR-006). Unreadable manifests fail elsewhere. */
+export async function audioPurged(ctx: Pick<InputContext, 'sessionDir'>): Promise<boolean> {
+  if (ctx.sessionDir === undefined) return false;
+  const { readFile } = await import('node:fs/promises');
+  const path = await import('node:path');
+  try {
+    const text = await readFile(path.join(ctx.sessionDir, 'manifest.json'), 'utf8');
+    return (JSON.parse(text) as { lifecycle?: unknown }).lifecycle === 'audio-purged';
+  } catch {
+    return false;
+  }
+}
+
 /** The manifest of a sealed package whose audio is still present. */
 export async function readSealedManifest(root: string, stage = 'chunk-plan'): Promise<Manifest> {
   const { readFile } = await import('node:fs/promises');
@@ -218,6 +231,7 @@ export function createChunkPlanStage(options: ChunkPlanStageOptions = {}): Stage
   const resolveFfmpeg = options.resolveFfmpeg ?? defaultResolveFfmpeg;
   return {
     name: 'chunk-plan',
+    sourcePurged: audioPurged,
     inputs: (ctx) => stageJobInputs(ctx, resolveFfmpeg),
     run: async (ctx) => {
       const root = requireSessionDir(ctx);

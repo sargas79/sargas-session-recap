@@ -394,8 +394,8 @@ npm run recap -- run classify --campaign my-campaign --session s07 `
 npm run recap -- status --campaign my-campaign --session s07     # --all for history, --json
 ```
 
-The real stages arrive with the transcription, classification and recap tasks; until then
-`recap run` answers that no stages are registered.
+`chunk-plan`, `transcribe` and `classify` are available today; the recap stage arrives with its own
+task.
 
 - **Only what changed runs again.** Each job records the hashes of its inputs: upstream outputs, the
   config fields that stage actually uses, prompts and models. A stage reruns only when one of them
@@ -416,6 +416,34 @@ The real stages arrive with the transcription, classification and recap tasks; u
   `--max-attempts <n>`. Other errors fail the job at once. Error messages never contain transcript or
   prompt text.
 - Exit codes: `0` succeeded, `1` failed or refused, `2` bad arguments, `130` cancelled.
+
+## Classification
+
+`recap run classify` labels every segment of the current transcription through the backend named in
+`campaign.yaml` (see LLM backend). It reads the transcript only, needs no Foundry events, and keeps
+working after `package purge-audio`: the earlier stages stand as they are and only classification runs.
+
+```powershell
+npm run recap -- run classify --campaign my-campaign --session s07 `
+  --config "D:\Recap Data\campaigns\my-campaign\campaign.yaml" `
+  --glossary "D:\Recap Data\campaigns\my-campaign\glossary.yaml"
+```
+
+- **Windows.** Core cuts the session into windows of about 20 to 30 minutes, preferring pauses. Each
+  segment is classified in exactly one window; a little of the neighbouring windows goes along as
+  context only. The model sees the campaign speakers and glossary, never display names.
+- **Labels.** `ic`, `narration`, `rules`, `ooc`, `mixed`, `uncertain`. `mixed`, `uncertain` and
+  repetition loops are marked for review. OOC stays in the results but is left out of the recap by
+  default.
+- **Output.** `classify\<run>\results.jsonl` (labels, corrections, flags) and
+  `corrections-report.json`: names fixed, names the model could not match to the glossary, and
+  corrections core refused and why. The original transcript text is never changed.
+- **A failed window.** Each window is retried a bounded number of times (`--max-attempts`). If one
+  still fails validation, the others are finished and kept and the job fails naming the window; run
+  the same command again and only that window is sent again. Nothing is retranscribed. A provider
+  failure such as a usage limit stops the run instead, with what was finished kept.
+- **Prompts are a first version.** No labelled tuning data exists yet, so classification quality is
+  unmeasured. Treat labels as a draft and review them.
 
 ## Campaign config and consent
 

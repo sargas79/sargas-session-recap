@@ -40,13 +40,3 @@ function reduce(schema: unknown): unknown {
 export function modelSchema(contract: ContractName): Json {
   return reduce(toJsonSchema(contract)) as Json;
 }
-
-/** A contract that holds one record, as the array of records one model call returns. */
-export function modelListSchema(contract: ContractName): Json {
-  return {
-    type: 'object',
-    properties: { results: { type: 'array', items: modelSchema(contract) } },
-    required: ['results'],
-    additionalProperties: false,
-  };
-}

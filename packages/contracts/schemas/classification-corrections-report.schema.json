@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sargas-recap:schema:classification-corrections-report:v1",
+  "title": "Classification corrections report",
+  "$comment": "Generated from packages/contracts/src by npm run schemas. Do not edit. Stored as: classify/<classification_run_id>/corrections-report.json.",
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "schema_version",
+    "classification_run_id",
+    "transcription_run_id",
+    "fixed",
+    "unmatched",
+    "rejected"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Per-record schema version (ADR-002).",
+      "const": 1,
+      "type": "number"
+    },
+    "classification_run_id": {
+      "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$",
+      "type": "string"
+    },
+    "transcription_run_id": {
+      "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}$",
+      "type": "string"
+    },
+    "fixed": {
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "segment_id",
+          "kind",
+          "from",
+          "to"
+        ],
+        "properties": {
+          "segment_id": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}:(?:0|[1-9][0-9]{0,15}):(?:0|[1-9][0-9]{0,15})$",
+            "description": "<transcription_run_id>:<chunk_index>:<n> (ADR-004).",
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "name",
+              "term",
+              "spelling"
+            ]
+          },
+          "from": {
+            "minLength": 1,
+            "maxLength": 200,
+            "type": "string"
+          },
+          "to": {
+            "minLength": 1,
+            "maxLength": 200,
+            "type": "string"
+          },
+          "glossary_id": {
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+            "description": "Glossary entry that justified it (T04).",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "unmatched": {
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "segment_id",
+          "name"
+        ],
+        "properties": {
+          "segment_id": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}:(?:0|[1-9][0-9]{0,15}):(?:0|[1-9][0-9]{0,15})$",
+            "description": "<transcription_run_id>:<chunk_index>:<n> (ADR-004).",
+            "type": "string"
+          },
+          "name": {
+            "minLength": 1,
+            "maxLength": 120,
+            "type": "string"
+          }
+        }
+      }
+    },
+    "rejected": {
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "segment_id",
+          "kind",
+          "from",
+          "to",
+          "reason"
+        ],
+        "properties": {
+          "segment_id": {
+            "pattern": "^[0-7][0-9A-HJKMNP-TV-Z]{25}:(?:0|[1-9][0-9]{0,15}):(?:0|[1-9][0-9]{0,15})$",
+            "description": "<transcription_run_id>:<chunk_index>:<n> (ADR-004).",
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "name",
+              "term",
+              "spelling"
+            ]
+          },
+          "from": {
+            "minLength": 1,
+            "maxLength": 200,
+            "type": "string"
+          },
+          "to": {
+            "minLength": 1,
+            "maxLength": 200,
+            "type": "string"
+          },
+          "glossary_id": {
+            "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+            "description": "Glossary entry that justified it (T04).",
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "source-not-in-text",
+              "unknown-glossary-entry",
+              "glossary-mismatch",
+              "no-change",
+              "overlap"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

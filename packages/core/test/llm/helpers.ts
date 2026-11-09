@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { CampaignConfig, ClassificationResult, Recap } from '@sargas-recap/contracts';
+import type { CampaignConfig, ClassificationModelResult, Recap } from '@sargas-recap/contracts';
 import { createLlmBackend, type LlmBackend, type LlmBackendOptions } from '../../src/llm/index.ts';
 import { createLogger } from '../../src/log/index.ts';
 import { loadPromptRegistry, type PromptAsset } from '../../src/prompts/index.ts';
@@ -15,8 +15,18 @@ function contractFixture(name: string): unknown {
   return JSON.parse(readFileSync(new URL(`${name}/valid.json`, CONTRACTS), 'utf8'));
 }
 
-export const validClassification = (): ClassificationResult =>
-  contractFixture('classification-result') as ClassificationResult;
+export const validClassification = (): ClassificationModelResult => {
+  const output = contractFixture('classification-window-output') as {
+    results: ClassificationModelResult[];
+  };
+  const [first] = output.results;
+  if (first === undefined) throw new Error('the fixture has no result');
+  return first;
+};
+export const validClassificationOutput = (): unknown => ({
+  schema_version: 1,
+  results: [validClassification()],
+});
 export const validRecap = (): Recap => contractFixture('recap') as Recap;
 
 export const probes = (): string[] =>
@@ -43,7 +53,8 @@ export const speakerIds = (config: CampaignConfig): string[] =>
 
 const registry = loadPromptRegistry();
 export const prompts = registry;
-export const classifyPrompt = (): PromptAsset => registry.latest('classification.window');
+// Pinned: these tests exercise the backend, and v1 has the single `transcript` slot they fill.
+export const classifyPrompt = (): PromptAsset => registry.get('classification.window', 1);
 export const recapPrompt = (): PromptAsset => registry.latest('recap.draft');
 
 export const TRANSCRIPT = 'SYNTHETIC-TRANSCRIPT-LINE the party opens the door';

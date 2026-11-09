@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:sargas-recap:schema:classification-window-output:v1",
+  "title": "Classification model output for one window",
+  "$comment": "Generated from packages/contracts/src by npm run schemas. Do not edit. Stored as: the response of one LLM call (T11); core turns it into classification-result records.",
+  "additionalProperties": false,
+  "type": "object",
+  "required": [
+    "schema_version",
+    "results"
+  ],
+  "properties": {
+    "schema_version": {
+      "description": "Per-record schema version (ADR-002).",
+      "const": 1,
+      "type": "number"
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "segment_ref",
+          "label",
+          "corrections",
+          "unmatched_names",
+          "possible_spoiler"
+        ],
+        "properties": {
+          "segment_ref": {
+            "pattern": "^(?:0|[1-9][0-9]*):(?:0|[1-9][0-9]*)$",
+            "maxLength": 24,
+            "description": "The ref of a segment in the core region, copied from the input.",
+            "type": "string"
+          },
+          "label": {
+            "description": "Classification label (T11).",
+            "type": "string",
+            "enum": [
+              "ic",
+              "narration",
+              "rules",
+              "ooc",
+              "mixed",
+              "uncertain"
+            ]
+          },
+          "corrections": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "additionalProperties": false,
+              "type": "object",
+              "required": [
+                "kind",
+                "from",
+                "to"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "name",
+                    "term",
+                    "spelling"
+                  ]
+                },
+                "from": {
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                "to": {
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                "glossary_id": {
+                  "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+                  "description": "Glossary entry that justified it (T04).",
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "unmatched_names": {
+            "maxItems": 20,
+            "description": "Names in this segment that match no glossary entry.",
+            "type": "array",
+            "items": {
+              "minLength": 1,
+              "maxLength": 120,
+              "type": "string"
+            }
+          },
+          "possible_spoiler": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

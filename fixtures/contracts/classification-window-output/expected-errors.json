@@ -1,0 +1,7 @@
+{
+  "invalid-pipeline-field.json": [
+    { "path": "/results/0/classification_run_id", "keyword": "additionalProperties" }
+  ],
+  "invalid-unknown-label.json": [{ "path": "/results/0/label", "keyword": "enum" }],
+  "invalid-full-segment-id.json": [{ "path": "/results/0/segment_ref", "keyword": "pattern" }]
+}

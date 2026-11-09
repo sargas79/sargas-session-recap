@@ -1,0 +1,4 @@
+{
+  "invalid-unknown-reason.json": [{ "path": "/rejected/0/reason", "keyword": "enum" }],
+  "invalid-missing-unmatched.json": [{ "path": "/unmatched", "keyword": "required" }]
+}

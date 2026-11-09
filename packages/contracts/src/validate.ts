@@ -3,7 +3,9 @@ import addFormatsModule from 'ajv-formats';
 import type { CampaignConfig } from './schemas/campaign-config.ts';
 import { CONTRACT_NAMES, schemaId, toJsonSchema, type ContractName } from './registry.ts';
 import type { ChunkPlan } from './schemas/chunk-plan.ts';
+import type { ClassificationCorrectionsReport } from './schemas/classification-corrections-report.ts';
 import type { ClassificationResult } from './schemas/classification-result.ts';
+import type { ClassificationWindowOutput } from './schemas/classification-window-output.ts';
 import type { EffectiveTranscript } from './schemas/effective-transcript.ts';
 import type { FoundryEvent } from './schemas/foundry-event.ts';
 import type { Fragment } from './schemas/fragment.ts';
@@ -43,6 +45,8 @@ export interface ContractTypes {
   'transcription-segment': TranscriptionSegment;
   'chunk-plan': ChunkPlan;
   'classification-result': ClassificationResult;
+  'classification-window-output': ClassificationWindowOutput;
+  'classification-corrections-report': ClassificationCorrectionsReport;
   'review-override': ReviewOverride;
   'effective-transcript': EffectiveTranscript;
   recap: Recap;

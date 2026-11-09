@@ -72,6 +72,14 @@ describe('prompt registry: shipped prompts', () => {
         file: 'classification/window.v1.md',
       },
       {
+        id: 'classification.window',
+        version: 2,
+        stage: 'classification',
+        outputSchema: 'classification-window-output',
+        dataSlots: ['campaign', 'context_before', 'segments', 'context_after'],
+        file: 'classification/window.v2.md',
+      },
+      {
         id: 'recap.draft',
         version: 1,
         stage: 'recap',

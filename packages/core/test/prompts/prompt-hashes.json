@@ -1,6 +1,7 @@
 {
   "classification.system@v1": "sha256:b6942d7007e03796c71785ef596e62d3e5b6f5dfe31c187448b60694330cdbe6",
   "classification.window@v1": "sha256:cb06552f2ba9ed465097551f8b8796d11cd3b3a0e91b82cbb7d3baf08b84ad7a",
+  "classification.window@v2": "sha256:62d7ad40a77609915b88bd3fb27734af856c80046bf7956eb2fb168174898047",
   "recap.draft@v1": "sha256:16bd2525015ef22e6e0e0cfc693214bc036bd0abe2311438b179d7f6e861cb0b",
   "recap.system@v1": "sha256:d975891bf48bbb1e35e3ea071e47d174ea78991a19ed78f8482a201484d9ddc2"
 }

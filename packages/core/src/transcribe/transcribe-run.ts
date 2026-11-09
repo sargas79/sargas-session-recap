@@ -217,13 +217,17 @@ async function assertAudioUntouched(root: string): Promise<void> {
   }
 }
 
-interface PartialRun {
+export interface PartialRun {
   readonly dir: string;
   readonly runId: string;
 }
 
 /** The unfinished run for `key`, or a new one. Unfinished runs for other inputs are removed. */
-async function openPartialRun(transcriptDir: string, key: string, now: Date): Promise<PartialRun> {
+export async function openPartialRun(
+  transcriptDir: string,
+  key: string,
+  now: Date,
+): Promise<PartialRun> {
   let found: PartialRun | undefined;
   for (const name of await readdir(transcriptDir)) {
     const match = UNFINISHED_RUN.exec(name);
