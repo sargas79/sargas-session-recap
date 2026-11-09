@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "campaign_id": "abomination-vaults",
+  "session_id": "s07",
+  "transcription_run_id": "01JBX7Q8M2N4P6R8S0T2V4W6XY",
+  "classification_run_id": "01JBX7RA3C5E7G9J1K3M5N7P9Q",
+  "generated_at": "2026-11-02T20:06:00.000Z",
+  "segments": [
+    {
+      "segment_id": "01JBX7Q8M2N4P6R8S0T2V4W6XY:13:0",
+      "speaker_id": "player-bruno",
+      "start_offset_ms": 1205100,
+      "end_offset_ms": 1209000,
+      "timing_uncertainty_ms": 40,
+      "text": "Rolo Percepção para a Vela.",
+      "text_source": "override",
+      "label": "ic",
+      "label_source": "override",
+      "recap_inclusion": "include",
+      "exclusion_reasons": [],
+      "review_required": true,
+      "review_status": "reviewed",
+      "text_original": "Rolo percepção pra vela, passa o refri.",
+      "text_hash": "sha256:c62b941888f76dc1e94ff0a3036d47dba6eb54bdbab651863bf76c05205e54d5",
+      "text_corrected": "Rolo Percepção pra Vela, passa o refri.",
+      "text_override": "Rolo Percepção para a Vela.",
+      "corrections": [
+        {
+          "kind": "name",
+          "from": "vela",
+          "to": "Vela",
+          "glossary_id": "vela"
+        }
+      ],
+      "classification_label": "mixed",
+      "segment_flags": [
+        "low_confidence"
+      ],
+      "classification_flags": [
+        "low_asr_confidence"
+      ],
+      "confidence_permille": 412,
+      "override_id": "01JBX8M0N1P2Q3R4S5T6V7W8X9",
+      "surprise": true
+    }
+  ],
+  "needs_reconciliation": []
+}

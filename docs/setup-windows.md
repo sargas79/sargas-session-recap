@@ -445,6 +445,47 @@ npm run recap -- run classify --campaign my-campaign --session s07 `
 - **Prompts are a first version.** No labelled tuning data exists yet, so classification quality is
   unmeasured. Treat labels as a draft and review them.
 
+## Review overrides
+
+Your review decisions live in the state database, apart from the transcript and the labels. Running
+classification again never changes them. The effective transcript is worked out on demand from the
+latest transcription, its latest classification and your overrides.
+
+```powershell
+npm run recap -- overrides effective --campaign my-campaign --session s07 --text
+npm run recap -- overrides set --campaign my-campaign --session s07 --segment <segment-id> `
+  --label ic --inclusion include --status reviewed
+npm run recap -- overrides set --campaign my-campaign --session s07 --segment <segment-id> `
+  --text-file "D:\Recap Data\cleaned.txt"
+npm run recap -- overrides set --campaign my-campaign --session s07 --segment <segment-id> `
+  --exclusion spoiler
+npm run recap -- overrides list --campaign my-campaign --session s07
+npm run recap -- overrides history --campaign my-campaign --session s07 --override <override-id>
+```
+
+- **Accents.** PowerShell can mangle accented text passed with `--text`. Use `--text-file` with a
+  UTF-8 file.
+- **Clearing.** `--clear-label`, `--clear-text`, `--clear-exclusions`, and `--inclusion default` to
+  take back an inclusion decision. Every change is kept in the history.
+- **Recap inclusion.** An exclusion (`spoiler`, `privacy`, `off-topic`) always wins. Otherwise your
+  decision applies, and without one the label decides: OOC is left out, `mixed` and `uncertain` wait
+  for you. A `mixed` line goes in only with a cleaned text or `--inclusion include`.
+- **Doubtful audio.** Repetition loops and low-confidence lines stay in the list, marked for review.
+  `overrides effective --text` also shows the original text whenever the effective text differs.
+
+**After `recap retranscribe`** the new run has new segment IDs, so every override of the old run
+stops applying and appears under `needs reconciliation` in `overrides list`. recap never moves one
+for you, even to a line with the same words. For each one:
+
+```powershell
+npm run recap -- overrides reconcile --campaign my-campaign --session s07 --override <override-id> --segment <new-segment-id>
+npm run recap -- overrides reconcile --campaign my-campaign --session s07 --override <override-id> --discard
+```
+
+If a line was split, run the first command once per part. If two lines were merged and the new one
+already has an override, change that override with `overrides set`, then discard the other. A recap
+is refused while a `spoiler` or `privacy` exclusion is waiting here.
+
 ## Campaign config and consent
 
 Each campaign has a `campaign.yaml` (speakers, per-stage provider, consent mode and records) and a
