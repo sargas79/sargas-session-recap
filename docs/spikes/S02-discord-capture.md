@@ -95,8 +95,8 @@ Audio is written with synchronous `write()` (no user-space buffer) and fsynced e
   0.19.2 drops packets of unsubscribed users before decryption), and `CaptureSession.onPacket` rejects any packet from a
   non-allowlisted ID before decoding. Non-opted-in IDs are never written to disk; their voice-state changes are logged
   as `non_optin: true` with no ID.
-- Every participant (opted in or not) must be told before `/spike start`. The bot also announces recording publicly
-  in the channel where `/spike start` was run. Participants who do not consent are simply left off the allowlist.
+- The bot announces recording publicly in the channel where `/spike start` was run. Only allowlisted IDs (the GM's
+  own table) are recorded; anyone else is ignored. No written consent step is needed (GM decision, 2026-11-09).
 - The token is read only from `S02_DISCORD_TOKEN`, never logged, never in config (config validation rejects a `token`
   key) and never in the manifest. `output_root` must be outside the git repository (validation refuses otherwise);
   `.gitignore` also excludes `s02.config.json`, `*.wav`, `*.part`, manifests and reports.
@@ -203,8 +203,8 @@ each `/spike mark`; compare clap-to-clap intervals between the local recording a
 3. **Test server.** A dedicated throwaway server with one voice channel and one text channel. Invite with OAuth2 URL
    scopes `bot applications.commands`; permissions: View Channel, Connect, Speak, Send Messages, Use Application
    Commands. Enable Developer Mode in Discord to copy IDs.
-4. **Consent.** Each participant agrees in writing (in the text channel is fine) to being recorded for this spike, that
-   audio stays on the GM's machine, and that it is deleted after the spike. Record only those IDs in the allowlist.
+4. **Participants.** Put only the IDs of the people at your table in the allowlist. No written consent step is needed:
+   the GM decided on 2026-11-09 that playing at the table is consent. Audio stays on the GM's machine.
 5. **Config.** `cd spikes/s02-discord-capture; copy s02.config.example.json s02.config.json`; fill in IDs, labels
    (`p1`, `p2`, … no real names), and `output_root` **outside the repo** (e.g.
    `%LOCALAPPDATA%\sargas-recap-spikes\s02`).

@@ -14,12 +14,12 @@ export type ConsentPurpose = (typeof CONSENT_PURPOSES)[number];
 /**
  * How consent is established for the campaign (T04):
  * - `records`: every included speaker needs an active, dated consent record per purpose and provider.
- * - `implied`: taking part in the session is consent. No records are needed; only speakers listed in
+ * - `implied` (the default): taking part in the session is consent. No records are needed; only speakers listed in
  *   campaign.yaml are processed. Switch with `recap config consent on|off <campaign.yaml>`.
  */
 export const CONSENT_MODES = ['records', 'implied'] as const;
 export type ConsentMode = (typeof CONSENT_MODES)[number];
-export const DEFAULT_CONSENT_MODE: ConsentMode = 'records';
+export const DEFAULT_CONSENT_MODE: ConsentMode = 'implied';
 
 export const SPEAKER_ROLES = ['gm', 'player', 'guest'] as const;
 export type SpeakerRole = (typeof SPEAKER_ROLES)[number];
@@ -102,7 +102,7 @@ export const CampaignConfigSchema = Type.Object(
     consent_mode: Type.Optional(
       StringEnum(CONSENT_MODES, {
         description:
-          'How consent is established: `records` (default) or `implied` (attending the session is consent).',
+          'How consent is established: `implied` (default; attending the session is consent) or `records` (dated consent records per speaker).',
       }),
     ),
     background: Type.Optional(

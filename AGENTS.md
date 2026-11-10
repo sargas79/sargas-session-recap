@@ -40,9 +40,10 @@ Follow the recorded decisions. Do not silently add a facts service, distributed 
 publishing to players, or an additional AI provider. Spike harnesses under `spikes/` are throwaway and must
 never be imported by `packages/*`.
 Every provider call (capture, ASR, classification, recap) must first pass `assertConsent()` from
-`packages/core/src/config/` (T04); never reimplement or bypass the consent check. The GM can turn
-record checks off per campaign (`consent_mode: implied`, `recap config consent off`); `assertConsent()`
-still runs and still refuses speakers not listed in `campaign.yaml`.
+`packages/core/src/config/` (T04); never reimplement or bypass the consent check. The default is
+`consent_mode: implied` (attending the GM's table is consent, no records needed); the GM can require
+dated records per campaign (`consent_mode: records`, `recap config consent on`). In both modes
+`assertConsent()` still runs and still refuses speakers not listed in `campaign.yaml`.
 
 ### Prompts (T26)
 

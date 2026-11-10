@@ -572,24 +572,25 @@ Each campaign has a `campaign.yaml` (speakers, per-stage provider, consent mode 
 their consent. Start from the synthetic examples in `fixtures/config/`. Notepad's UTF-8 (with or without
 BOM) and CRLF line endings are fine.
 
-- **Consent switch.** By default recap checks consent records (below). If attending your table is
-  consent enough, turn the checks off for that campaign; turn them back on the same way:
+- **Consent.** By default, attending your table is consent (`consent_mode: implied`): speakers need no
+  `consent:` entries. Only speakers listed in `campaign.yaml` are processed, so audio from anyone else is
+  refused, and every run records that consent was implied. To require dated consent records instead,
+  turn record checks on for that campaign, and off again the same way:
 
   ```powershell
-  npm run recap -- config consent off "D:\Recap Data\campaigns\my-campaign\campaign.yaml"
-  npm run recap -- config consent status "D:\Recap Data\campaigns\my-campaign\campaign.yaml"
   npm run recap -- config consent on "D:\Recap Data\campaigns\my-campaign\campaign.yaml"
+  npm run recap -- config consent status "D:\Recap Data\campaigns\my-campaign\campaign.yaml"
+  npm run recap -- config consent off "D:\Recap Data\campaigns\my-campaign\campaign.yaml"
   ```
 
-  This sets `consent_mode: implied` (off) or `records` (on) in `campaign.yaml`, keeping your comments.
-  When off, speakers need no `consent:` entries, but only speakers listed in `campaign.yaml` are
-  processed, and every run records that consent was implied.
+  This sets `consent_mode: records` (on) or `implied` (off) in `campaign.yaml`, keeping your comments.
 
-- Consent is recorded per speaker, per purpose (`recording`, `asr`, `classification`, `recap`) and per
-  provider, with the date (`granted_on: 2026-01-10`, optional `withdrawn_on`). Keep signed forms or call
-  notes next to the config and point at them with `evidence_ref`; recap never opens or copies them.
-- Changing a stage's provider in `campaign.yaml` needs new consent records for that provider. Until they
-  exist, processing refuses to run and names the speakers whose consent is missing.
+- With record checks on, consent is recorded per speaker, per purpose (`recording`, `asr`,
+  `classification`, `recap`) and per provider, with the date (`granted_on: 2026-01-10`, optional
+  `withdrawn_on`). Keep signed forms or call notes next to the config and point at them with
+  `evidence_ref`; recap never opens or copies them. Changing a stage's provider then needs new consent
+  records for that provider; until they exist, processing refuses to run and names the speakers whose
+  consent is missing.
 - Invalid files are reported as `<file>:<line>:<col>: <path>: <problem>`. Values are never printed.
 
 ## LLM backend

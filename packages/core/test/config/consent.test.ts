@@ -145,6 +145,29 @@ describe('assertConsent', () => {
       return c;
     };
 
+    it('is the default: a campaign.yaml without consent_mode needs no consent records', () => {
+      const c = campaign();
+      delete c.consent_mode;
+      for (const sp of c.speakers) delete sp.consent;
+      const receipt = assertConsent({
+        campaign: c,
+        speakerIds: c.speakers.map((sp) => sp.speaker_id),
+        provider: 'claude-cli',
+        stage: 'recap',
+        now: NOW,
+      });
+      expect(receipt.mode).toBe('implied');
+      // Speakers not listed in campaign.yaml are still refused.
+      expect(
+        refusal({
+          campaign: c,
+          speakerIds: ['stray-track'],
+          provider: 'claude-cli',
+          stage: 'recap',
+        }).refusals,
+      ).toEqual([{ speaker_id: 'stray-track', reason: 'unknown-speaker' }]);
+    });
+
     it('allows every listed speaker without any consent records', () => {
       const c = implied();
       const receipt = assertConsent({

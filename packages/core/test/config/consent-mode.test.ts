@@ -55,6 +55,12 @@ describe('setConsentMode', () => {
     ).not.toThrow();
   });
 
+  it('reads a campaign.yaml without consent_mode as implied (record checks off)', async () => {
+    writeFileSync(file, campaignText().replace(/^consent_mode: .*\r?\n/m, ''));
+    expect(readFileSync(file, 'utf8')).not.toMatch(/^consent_mode:/m);
+    expect(await readConsentMode(file)).toBe('implied');
+  });
+
   it('does not rewrite the file when the mode is already set', async () => {
     await setConsentMode(file, 'implied');
     const before = readFileSync(file, 'utf8');
