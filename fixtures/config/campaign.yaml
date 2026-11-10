@@ -4,6 +4,8 @@ schema_version: 1
 campaign_id: synthetic-vaults
 system: pf2e
 language: pt-BR
+# Explicit, so the tests can exercise consent records (the default is implied).
+consent_mode: records
 background: >
   SYNTHETIC. The party explores a ruined lighthouse above a sealed dungeon
   near the town of Otari.

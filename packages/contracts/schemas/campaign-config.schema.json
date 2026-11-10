@@ -34,7 +34,7 @@
       "type": "string"
     },
     "consent_mode": {
-      "description": "How consent is established: `records` (default) or `implied` (attending the session is consent).",
+      "description": "How consent is established: `implied` (default; attending the session is consent) or `records` (dated consent records per speaker).",
       "type": "string",
       "enum": [
         "records",
